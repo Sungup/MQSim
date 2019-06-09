@@ -7,8 +7,4 @@ namespace SSD_Components
 		: MQSimEngine::Sim_Object(id)
 	{
 	}
-
-	NVM_PHY_Base::~NVM_PHY_Base()
-	{
-	}
 }

@@ -1,3 +1,12 @@
 MQSim
 build/
+debug/
 
+# CLion's project files
+.idea/
+cmake-build-*/
+
+# macOS
+.DS_Store
+
+temp/

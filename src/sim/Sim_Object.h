@@ -15,6 +15,8 @@ namespace MQSimEngine
 			_id = id;
 			_triggersSetUp = false;
 		}
+    virtual ~Sim_Object() = default;
+
 		sim_object_id_type ID()
 		{
 			return this->_id;

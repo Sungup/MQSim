@@ -22,7 +22,7 @@ namespace SSD_Components
 			unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie)
 			: NVM_PHY_Base(id),
 			channel_count(ChannelCount), chip_no_per_channel(chip_no_per_channel), die_no_per_chip(DieNoPerChip), plane_no_per_die(PlaneNoPerDie){}
-		~NVM_PHY_ONFI() {};
+		~NVM_PHY_ONFI() override = default;
 
 
 		virtual BusChannelStatus Get_channel_status(flash_channel_ID_type) = 0;

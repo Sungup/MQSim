@@ -21,6 +21,14 @@ namespace Host_Components
 		generator_type(generator_type), Average_inter_arrival_time_nano_sec(Average_inter_arrival_time_nano_sec), average_number_of_enqueued_requests(average_number_of_enqueued_requests),
 		seed(seed), generate_aligned_addresses(generate_aligned_addresses), alignment_value(alignment_value)
 	{
+	  // Initialize at first time
+    random_request_type_generator = nullptr;
+    random_address_generator = nullptr;
+    random_hot_cold_generator = nullptr;
+    random_hot_address_generator = nullptr;
+    random_request_size_generator = nullptr;
+    random_time_interval_generator = nullptr;
+
 		if (read_ratio == 0.0)//If read ratio is 0, then we change its value to a negative one so that in request generation we never generate a read request
 			read_ratio = -1.0;
 		random_request_type_generator_seed = seed++;

@@ -17,7 +17,7 @@ namespace Host_Components
 			std::string trace_file_path, Trace_Time_Unit time_unit, unsigned int total_replay_count, unsigned int percentage_to_be_simulated,
 			HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
 			bool enabled_logging, sim_time_type logging_period, std::string logging_file_path);
-		~IO_Flow_Trace_Based();
+		~IO_Flow_Trace_Based() final;
 		Host_IO_Request* Generate_next_request();
 		void NVMe_consume_io_request(Completion_Queue_Entry*);
 		void SATA_consume_io_request(Host_IO_Request*);
