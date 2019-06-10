@@ -20,11 +20,11 @@ namespace SSD_Components
   {
   public:
     NVM_Transaction_Flash(Transaction_Source_Type source, Transaction_Type type, stream_id_type stream_id,
-      unsigned int data_size_in_byte, LPA_type lpa, PPA_type ppa, User_Request* user_request);
+      uint32_t data_size_in_byte, LPA_type lpa, PPA_type ppa, User_Request* user_request);
     NVM_Transaction_Flash(Transaction_Source_Type source, Transaction_Type type, stream_id_type stream_id,
-      unsigned int data_size_in_byte, LPA_type lpa, PPA_type ppa, const NVM::FlashMemory::Physical_Page_Address& address, User_Request* user_request);
+      uint32_t data_size_in_byte, LPA_type lpa, PPA_type ppa, const NVM::FlashMemory::Physical_Page_Address& address, User_Request* user_request);
     NVM::FlashMemory::Physical_Page_Address Address;
-    unsigned int Data_and_metadata_size_in_byte; //number of bytes contained in the request: bytes in the real page + bytes of metadata
+    uint32_t Data_and_metadata_size_in_byte; //number of bytes contained in the request: bytes in the real page + bytes of metadata
 
     LPA_type LPA;
     PPA_type PPA;

@@ -2,7 +2,7 @@
 
 namespace SSD_Components
 {
-  ONFI_Channel_NVDDR2::ONFI_Channel_NVDDR2(flash_channel_ID_type channelID, unsigned int chipCount, NVM::FlashMemory::Flash_Chip** flashChips, unsigned int ChannelWidth,
+  ONFI_Channel_NVDDR2::ONFI_Channel_NVDDR2(flash_channel_ID_type channelID, uint32_t chipCount, NVM::FlashMemory::Flash_Chip** flashChips, uint32_t ChannelWidth,
     sim_time_type t_RC, sim_time_type t_DSC,
     sim_time_type t_DBSY, sim_time_type t_CS, sim_time_type t_RR,
     sim_time_type t_WB, sim_time_type t_WC, sim_time_type t_ADL, sim_time_type t_CALS,

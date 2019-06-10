@@ -9,9 +9,9 @@ namespace SSD_Components
   {
   public:
     Address_Mapping_Unit_Hybrid(sim_object_id_type id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
-      bool ideal_mapping_table, unsigned int ConcurrentStreamNo,
-      unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie,
-      unsigned int Block_no_per_plane, unsigned int Page_no_per_block, unsigned int SectorsPerPage, unsigned int PageSizeInBytes,
+      bool ideal_mapping_table, uint32_t ConcurrentStreamNo,
+      uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
+      uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
       double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED, bool fold_large_addresses = true);
     void Setup_triggers();
     void Start_simulation();
@@ -20,8 +20,8 @@ namespace SSD_Components
 
     void Allocate_address_for_preconditioning(const stream_id_type stream_id, std::map<LPA_type, page_status_type>& lpa_list, std::vector<double>& steady_state_distribution);
     int Bring_to_CMT_for_preconditioning(stream_id_type stream_id, LPA_type lpa);
-    unsigned int Get_cmt_capacity();
-    unsigned int Get_current_cmt_occupancy_for_stream(stream_id_type stream_id);
+    uint32_t Get_cmt_capacity();
+    uint32_t Get_current_cmt_occupancy_for_stream(stream_id_type stream_id);
     void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactionList);
     void Get_data_mapping_info_for_gc(const stream_id_type stream_id, const LPA_type lpa, PPA_type& ppa, page_status_type& page_state);
     void Get_translation_mapping_info_for_gc(const stream_id_type stream_id, const MVPN_type mvpn, MPPN_type& mppa, sim_time_type& timestamp);

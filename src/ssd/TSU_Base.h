@@ -18,7 +18,7 @@ namespace SSD_Components
   {
   public:
     TSU_Base(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, Flash_Scheduling_Type Type,
-      unsigned int Channel_no, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie,
+      uint32_t Channel_no, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
       bool EraseSuspensionEnabled, bool ProgramSuspensionEnabled,
       sim_time_type WriteReasonableSuspensionTimeForRead,
       sim_time_type EraseReasonableSuspensionTimeForRead,
@@ -52,10 +52,10 @@ namespace SSD_Components
     FTL* ftl;
     NVM_PHY_ONFI_NVDDR2* _NVMController;
     Flash_Scheduling_Type type;
-    unsigned int channel_count;
-    unsigned int chip_no_per_channel;
-    unsigned int die_no_per_chip;
-    unsigned int plane_no_per_die;
+    uint32_t channel_count;
+    uint32_t chip_no_per_channel;
+    uint32_t die_no_per_chip;
+    uint32_t plane_no_per_die;
     bool eraseSuspensionEnabled, programSuspensionEnabled;
     sim_time_type writeReasonableSuspensionTimeForRead;
     sim_time_type eraseReasonableSuspensionTimeForRead;//the time period 

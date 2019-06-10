@@ -13,7 +13,7 @@ namespace Host_Components
     PCIe_Destination_Type Destination;
     PCIe_Message_Type Type;
     void* Payload;
-    unsigned int Payload_size;
+    uint32_t Payload_size;
     uint64_t Address;
   };
 }

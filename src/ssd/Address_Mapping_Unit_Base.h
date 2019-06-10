@@ -36,9 +36,9 @@ namespace SSD_Components
   {
   public:
     Address_Mapping_Unit_Base(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* FlashController, Flash_Block_Manager_Base* block_manager,
-      bool ideal_mapping_table, unsigned int no_of_input_streams,
-      unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie,
-      unsigned int Block_no_per_plane, unsigned int Page_no_per_block, unsigned int SectorsPerPage, unsigned int PageSizeInBytes,
+      bool ideal_mapping_table, uint32_t no_of_input_streams,
+      uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
+      uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
       double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED, bool fold_large_addresses = true);
     virtual ~Address_Mapping_Unit_Base();
 
@@ -48,10 +48,10 @@ namespace SSD_Components
     virtual void Store_mapping_table_on_flash_at_start() = 0; //It should only be invoked at the begenning of the simulation to store mapping table entries on the flash space
 
     
-    virtual unsigned int Get_cmt_capacity() = 0;//Returns the maximum number of entries that could be stored in the cached mapping table
-    virtual unsigned int Get_current_cmt_occupancy_for_stream(stream_id_type stream_id) = 0;
+    virtual uint32_t Get_cmt_capacity() = 0;//Returns the maximum number of entries that could be stored in the cached mapping table
+    virtual uint32_t Get_current_cmt_occupancy_for_stream(stream_id_type stream_id) = 0;
     virtual LPA_type Get_logical_pages_count(stream_id_type stream_id) = 0; //Returns the number of logical pages allocated to an I/O stream
-    unsigned int Get_no_of_input_streams() { return no_of_input_streams; }
+    uint32_t Get_no_of_input_streams() { return no_of_input_streams; }
     bool Is_ideal_mapping_table(); //Checks if ideal mapping table is enabled in which all address translations entries are always in CMT (i.e., CMT is infinite in size) and thus all adddress translation requests are always successful
 
     //Address translation functions
@@ -59,7 +59,7 @@ namespace SSD_Components
     virtual void Get_data_mapping_info_for_gc(const stream_id_type stream_id, const LPA_type lpa, PPA_type& ppa, page_status_type& page_state) = 0;
     virtual void Get_translation_mapping_info_for_gc(const stream_id_type stream_id, const MVPN_type mvpn, MPPN_type& mppa, sim_time_type& timestamp) = 0;
     virtual void Allocate_new_page_for_gc(NVM_Transaction_Flash_WR* transaction, bool is_translation_page) = 0;
-    unsigned int Get_device_physical_pages_count();//Returns the number of physical pages in the device
+    uint32_t Get_device_physical_pages_count();//Returns the number of physical pages in the device
     CMT_Sharing_Mode Get_CMT_sharing_mode();
     virtual NVM::FlashMemory::Physical_Page_Address Convert_ppa_to_address(const PPA_type ppa) = 0;
     virtual void Convert_ppa_to_address(const PPA_type ppa, NVM::FlashMemory::Physical_Page_Address& address) = 0;
@@ -85,23 +85,23 @@ namespace SSD_Components
     Flash_Block_Manager_Base* block_manager;
     CMT_Sharing_Mode sharing_mode;
     bool ideal_mapping_table;//If mapping is ideal, then all the mapping entries are found in the DRAM and there is no need to read mapping entries from flash
-    unsigned int no_of_input_streams;
+    uint32_t no_of_input_streams;
     LHA_type max_logical_sector_address;
-    unsigned int total_logical_pages_no = 0;
+    uint32_t total_logical_pages_no = 0;
 
-    unsigned int channel_count;
-    unsigned int chip_no_per_channel;
-    unsigned int die_no_per_chip;
-    unsigned int plane_no_per_die;
-    unsigned int block_no_per_plane;
-    unsigned int pages_no_per_block;
-    unsigned int sector_no_per_page;
-    unsigned int page_size_in_byte;
-    unsigned int total_physical_pages_no = 0;
-    unsigned int page_no_per_channel = 0;
-    unsigned int page_no_per_chip = 0;
-    unsigned int page_no_per_die = 0;
-    unsigned int page_no_per_plane = 0;
+    uint32_t channel_count;
+    uint32_t chip_no_per_channel;
+    uint32_t die_no_per_chip;
+    uint32_t plane_no_per_die;
+    uint32_t block_no_per_plane;
+    uint32_t pages_no_per_block;
+    uint32_t sector_no_per_page;
+    uint32_t page_size_in_byte;
+    uint32_t total_physical_pages_no = 0;
+    uint32_t page_no_per_channel = 0;
+    uint32_t page_no_per_chip = 0;
+    uint32_t page_no_per_die = 0;
+    uint32_t page_no_per_plane = 0;
     double overprovisioning_ratio;
     bool fold_large_addresses;
     bool mapping_table_stored_on_flash;

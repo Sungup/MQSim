@@ -9,7 +9,7 @@ class Host_Parameter_Set : public Parameter_Set_Base
 {
 public:
   static double PCIe_Lane_Bandwidth;//uint is GB/s
-  static unsigned int PCIe_Lane_Count;
+  static uint32_t PCIe_Lane_Count;
   static sim_time_type SATA_Processing_Delay;//The overall hardware and software processing delay to send/receive a SATA message in nanoseconds
   static bool Enable_ResponseTime_Logging;
   static sim_time_type ResponseTime_Logging_Period_Length;

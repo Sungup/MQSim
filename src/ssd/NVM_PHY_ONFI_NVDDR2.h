@@ -76,8 +76,8 @@ namespace SSD_Components
     sim_time_type Last_transfer_finish_time;
     bool HasSuspend;
     std::queue<DieBookKeepingEntry*> OngoingDieCMDTransfers;
-    unsigned int WaitingReadTXCount;
-    unsigned int No_of_active_dies;
+    uint32_t WaitingReadTXCount;
+    uint32_t No_of_active_dies;
 
     void PrepareSuspend() { HasSuspend = true; No_of_active_dies = 0; }
     void PrepareResume() { HasSuspend = false; }
@@ -87,7 +87,7 @@ namespace SSD_Components
   {
   public:
     NVM_PHY_ONFI_NVDDR2(const sim_object_id_type& id, ONFI_Channel_NVDDR2** channels,
-      unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie);
+      uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie);
     ~NVM_PHY_ONFI_NVDDR2() final = default;
 
     void Setup_triggers();

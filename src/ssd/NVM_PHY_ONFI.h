@@ -19,7 +19,7 @@ namespace SSD_Components
   {
   public:
     NVM_PHY_ONFI(sim_object_id_type id,
-      unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie)
+      uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie)
       : NVM_PHY_Base(id),
       channel_count(ChannelCount), chip_no_per_channel(chip_no_per_channel), die_no_per_chip(DieNoPerChip), plane_no_per_die(PlaneNoPerDie){}
     ~NVM_PHY_ONFI() override = default;
@@ -42,10 +42,10 @@ namespace SSD_Components
     typedef void(*ChipIdleHandlerType) (NVM::FlashMemory::Flash_Chip*);
     void ConnectToChipIdleSignal(ChipIdleHandlerType);
   protected:
-    unsigned int channel_count;
-    unsigned int chip_no_per_channel;
-    unsigned int die_no_per_chip;
-    unsigned int plane_no_per_die;
+    uint32_t channel_count;
+    uint32_t chip_no_per_channel;
+    uint32_t die_no_per_chip;
+    uint32_t plane_no_per_die;
     std::vector<TransactionServicedHandlerType> connectedTransactionServicedHandlers;
     void broadcastTransactionServicedSignal(NVM_Transaction_Flash* transaction);
     std::vector<ChannelIdleHandlerType> connectedChannelIdleHandlers;

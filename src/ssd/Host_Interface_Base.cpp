@@ -26,7 +26,7 @@ namespace SSD_Components
 
   Host_Interface_Base* Host_Interface_Base::_my_instance = NULL;
 
-  Host_Interface_Base::Host_Interface_Base(const sim_object_id_type& id, HostInterface_Types type, LHA_type max_logical_sector_address, unsigned int sectors_per_page, 
+  Host_Interface_Base::Host_Interface_Base(const sim_object_id_type& id, HostInterface_Types type, LHA_type max_logical_sector_address, uint32_t sectors_per_page,
     Data_Cache_Manager_Base* cache)
     : MQSimEngine::Sim_Object(id), type(type), max_logical_sector_address(max_logical_sector_address), 
     sectors_per_page(sectors_per_page), cache(cache)
@@ -48,7 +48,7 @@ namespace SSD_Components
   }
   void Host_Interface_Base::Validate_simulation_config()
   {}
-  void Host_Interface_Base::Send_read_message_to_host(uint64_t addresss, unsigned int request_read_data_size)
+  void Host_Interface_Base::Send_read_message_to_host(uint64_t addresss, uint32_t request_read_data_size)
   {
     Host_Components::PCIe_Message* pcie_message = new Host_Components::PCIe_Message;
     pcie_message->Type = Host_Components::PCIe_Message_Type::READ_REQ;
@@ -58,7 +58,7 @@ namespace SSD_Components
     pcie_message->Payload_size = sizeof(request_read_data_size);
     pcie_switch->Send_to_host(pcie_message);
   }
-  void Host_Interface_Base::Send_write_message_to_host(uint64_t addresss, void* message, unsigned int message_size)
+  void Host_Interface_Base::Send_write_message_to_host(uint64_t addresss, void* message, uint32_t message_size)
   {
     Host_Components::PCIe_Message* pcie_message = new Host_Components::PCIe_Message;
     pcie_message->Type = Host_Components::PCIe_Message_Type::WRITE_REQ;
@@ -76,7 +76,7 @@ namespace SSD_Components
   {
     return max_logical_sector_address;
   }
-  unsigned int Host_Interface_Base::Get_no_of_LHAs_in_an_NVM_write_unit()
+  uint32_t Host_Interface_Base::Get_no_of_LHAs_in_an_NVM_write_unit()
   {
     return sectors_per_page;
   }

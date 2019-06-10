@@ -5,9 +5,9 @@
 
 namespace SSD_Components
 {
-  Flash_Block_Manager::Flash_Block_Manager(GC_and_WL_Unit_Base* gc_and_wl_unit, unsigned int max_allowed_block_erase_count, unsigned int total_concurrent_streams_no,
-    unsigned int channel_count, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die,
-    unsigned int block_no_per_plane, unsigned int page_no_per_block)
+  Flash_Block_Manager::Flash_Block_Manager(GC_and_WL_Unit_Base* gc_and_wl_unit, uint32_t max_allowed_block_erase_count, uint32_t total_concurrent_streams_no,
+    uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
+    uint32_t block_no_per_plane, uint32_t page_no_per_block)
     : Flash_Block_Manager_Base(gc_and_wl_unit, max_allowed_block_erase_count, total_concurrent_streams_no, channel_count, chip_no_per_channel, die_no_per_chip,
       plane_no_per_die, block_no_per_plane, page_no_per_block)
   {
@@ -133,8 +133,8 @@ namespace SSD_Components
     plane_record->Check_bookkeeping_correctness(block_address);
   }
 
-  inline unsigned int Flash_Block_Manager::Get_pool_size(const NVM::FlashMemory::Physical_Page_Address& plane_address)
+  inline uint32_t Flash_Block_Manager::Get_pool_size(const NVM::FlashMemory::Physical_Page_Address& plane_address)
   {
-    return (unsigned int) plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID].Free_block_pool.size();
+    return (uint32_t) plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID].Free_block_pool.size();
   }
 }

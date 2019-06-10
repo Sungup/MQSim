@@ -125,11 +125,11 @@ namespace SSD_Components
   {
     LHA_type lsa = user_request->Start_LBA;
     LHA_type lsa2 = user_request->Start_LBA;
-    unsigned int req_size = user_request->SizeInSectors;
+    uint32_t req_size = user_request->SizeInSectors;
 
     page_status_type access_status_bitmap = 0;
-    unsigned int hanled_sectors_count = 0;
-    unsigned int transaction_size = 0;
+    uint32_t hanled_sectors_count = 0;
+    uint32_t transaction_size = 0;
     while (hanled_sectors_count < req_size)
     {
       //Check if LSA is in the correct range allocted to the stream
@@ -139,7 +139,7 @@ namespace SSD_Components
       LHA_type internal_lsa = lsa - ((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->Start_logical_sector_address;//For each flow, all lsa's should be translated into a range starting from zero
 
 
-      transaction_size = host_interface->sectors_per_page - (unsigned int)(lsa % host_interface->sectors_per_page);
+      transaction_size = host_interface->sectors_per_page - (uint32_t)(lsa % host_interface->sectors_per_page);
       if (hanled_sectors_count + transaction_size >= req_size)
       {
         transaction_size = req_size - hanled_sectors_count;
@@ -172,7 +172,7 @@ namespace SSD_Components
   Request_Fetch_Unit_SATA::Request_Fetch_Unit_SATA(Host_Interface_Base* host_interface, uint16_t ncq_depth) :
     Request_Fetch_Unit_Base(host_interface), current_phase(0xffff), number_of_sent_cqe(0), ncq_depth(ncq_depth) {}
 
-  void Request_Fetch_Unit_SATA::Process_pcie_write_message(uint64_t address, void * payload, unsigned int payload_size)
+  void Request_Fetch_Unit_SATA::Process_pcie_write_message(uint64_t address, void * payload, uint32_t payload_size)
   {
     Host_Interface_SATA* hi = (Host_Interface_SATA*)host_interface;
     uint64_t val = (uint64_t)payload;
@@ -189,7 +189,7 @@ namespace SSD_Components
     }
   }
 
-  void Request_Fetch_Unit_SATA::Process_pcie_read_message(uint64_t address, void * payload, unsigned int payload_size)
+  void Request_Fetch_Unit_SATA::Process_pcie_read_message(uint64_t address, void * payload, uint32_t payload_size)
   {
     Host_Interface_SATA* hi = (Host_Interface_SATA*)host_interface;
     DMA_Req_Item* dma_req_item = dma_list.front();
@@ -284,7 +284,7 @@ namespace SSD_Components
   }
 
   Host_Interface_SATA::Host_Interface_SATA(const sim_object_id_type& id,
-    const uint16_t ncq_depth, const LHA_type max_logical_sector_address, const unsigned int sectors_per_page, Data_Cache_Manager_Base* cache) :
+    const uint16_t ncq_depth, const LHA_type max_logical_sector_address, const uint32_t sectors_per_page, Data_Cache_Manager_Base* cache) :
     Host_Interface_Base(id, HostInterface_Types::SATA, max_logical_sector_address, sectors_per_page, cache), ncq_depth(ncq_depth)
   {
     this->input_stream_manager = new Input_Stream_Manager_SATA(this, ncq_depth, 0, max_logical_sector_address);

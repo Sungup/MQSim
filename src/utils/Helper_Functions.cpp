@@ -17,13 +17,13 @@ namespace Utils
     return result;
   }
 
-  double Combination_count(unsigned int n, unsigned int k)
+  double Combination_count(uint32_t n, uint32_t k)
   {
     return Combination_count(double(n), double(k));
   }
 
 
-  void Euler_estimation(std::vector<double>& mu, unsigned int b, double rho, int d, double h, double max_diff, int itr_max)
+  void Euler_estimation(std::vector<double>& mu, uint32_t b, double rho, int d, double h, double max_diff, int itr_max)
   {
     std::vector<double> w_0, w;
     for (int i = 0; i <= mu.size(); i++)
@@ -48,15 +48,15 @@ namespace Utils
     while (itr < itr_max && diff > max_diff)
     {
       double sigma = 0;
-      for (unsigned int j = 1; j <= b; j++)
+      for (uint32_t j = 1; j <= b; j++)
         sigma += std::pow(w_0[j], d);
 
-      for (unsigned int i = 1; i < b; i++)
+      for (uint32_t i = 1; i < b; i++)
         w[i] = w_0[i] + h * (1 - std::pow(w_0[i], d) - (b - sigma) * ((i * (w_0[i] - w_0[i + 1])) / (b * rho)));
 
 
       diff = std::abs(w[0] - w_0[0]);
-      for (unsigned int i = 1; i <= b; i++)
+      for (uint32_t i = 1; i <= b; i++)
         if (std::abs(w[i] - w_0[i]) > diff)
           diff = std::abs(w[i] - w_0[i]);
 
@@ -67,7 +67,7 @@ namespace Utils
       itr++;
     }
 
-    for (unsigned int i = 0; i <= b; i++)
+    for (uint32_t i = 0; i <= b; i++)
       mu[i] = w_0[i] - w_0[i + 1];
   }
 }

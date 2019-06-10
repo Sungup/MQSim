@@ -24,16 +24,16 @@ public:
   static uint16_t Queue_Fetch_Size;//Used in NVMe host interface
   static SSD_Components::Caching_Mechanism Caching_Mechanism;
   static SSD_Components::Cache_Sharing_Mode Data_Cache_Sharing_Mode;//Data cache sharing among concurrently running I/O flows, if NVMe host interface is used
-  static unsigned int Data_Cache_Capacity;//Data cache capacity in bytes
-  static unsigned int Data_Cache_DRAM_Row_Size;//The row size of DRAM in the data cache, the unit is bytes
-  static unsigned int Data_Cache_DRAM_Data_Rate;//Data access rate to access DRAM in the data cache, the unit is MT/s
-  static unsigned int Data_Cache_DRAM_Data_Busrt_Size;//The number of bytes that are transferred in one burst (it depends on the number of DRAM chips)
+  static uint32_t Data_Cache_Capacity;//Data cache capacity in bytes
+  static uint32_t Data_Cache_DRAM_Row_Size;//The row size of DRAM in the data cache, the unit is bytes
+  static uint32_t Data_Cache_DRAM_Data_Rate;//Data access rate to access DRAM in the data cache, the unit is MT/s
+  static uint32_t Data_Cache_DRAM_Data_Busrt_Size;//The number of bytes that are transferred in one burst (it depends on the number of DRAM chips)
   static sim_time_type Data_Cache_DRAM_tRCD;//tRCD parameter to access DRAM in the data cache, the unit is nano-seconds
   static sim_time_type Data_Cache_DRAM_tCL;//tCL parameter to access DRAM in the data cache, the unit is nano-seconds
   static sim_time_type Data_Cache_DRAM_tRP;//tRP parameter to access DRAM in the data cache, the unit is nano-seconds
   static SSD_Components::Flash_Address_Mapping_Type Address_Mapping;
   static bool Ideal_Mapping_Table;//If mapping is ideal, then all the mapping entries are found in the DRAM and there is no need to read mapping entries from flash
-  static unsigned int CMT_Capacity;//Size of SRAM/DRAM space that is used to cache address mapping table, the unit is bytes
+  static uint32_t CMT_Capacity;//Size of SRAM/DRAM space that is used to cache address mapping table, the unit is bytes
   static SSD_Components::CMT_Sharing_Mode CMT_Sharing_Mode;//How the entire CMT space is shared among concurrently running flows
   static SSD_Components::Flash_Plane_Allocation_Scheme_Type Plane_Allocation_Scheme;
   static SSD_Components::Flash_Scheduling_Type Transaction_Scheduling_Policy;
@@ -45,14 +45,14 @@ public:
   static double GC_Hard_Threshold;//The hard gc execution threshold, used to stop preemptible gc execution
   static bool Dynamic_Wearleveling_Enabled;
   static bool Static_Wearleveling_Enabled;
-  static unsigned int Static_Wearleveling_Threshold;
+  static uint32_t Static_Wearleveling_Threshold;
   static sim_time_type Preferred_suspend_erase_time_for_read;//in nano-seconds, if the remaining time of the ongoing erase is smaller than Prefered_suspend_erase_time_for_read, then the ongoing erase operation will be suspended
   static sim_time_type Preferred_suspend_erase_time_for_write;//in nano-seconds, if the remaining time of the ongoing erase is smaller than Prefered_suspend_erase_time_for_write, then the ongoing erase operation will be suspended
   static sim_time_type Preferred_suspend_write_time_for_read;//in nano-seconds, if the remaining time of the ongoing write is smaller than Prefered_suspend_write_time_for_read, then the ongoing erase operation will be suspended
-  static unsigned int Flash_Channel_Count;
-  static unsigned int Flash_Channel_Width;//Channel width in byte
-  static unsigned int Channel_Transfer_Rate;//MT/s
-  static unsigned int Chip_No_Per_Channel;
+  static uint32_t Flash_Channel_Count;
+  static uint32_t Flash_Channel_Width;//Channel width in byte
+  static uint32_t Channel_Transfer_Rate;//MT/s
+  static uint32_t Chip_No_Per_Channel;
   static SSD_Components::ONFI_Protocol Flash_Comm_Protocol;
   static Flash_Parameter_Set Flash_Parameters;
   void XML_serialize(Utils::XmlWriter& xmlwriter);

@@ -13,10 +13,10 @@ namespace NVM
     class Die
     {
     public:
-      Die(unsigned int PlanesNoPerDie, unsigned int BlocksNoPerPlane, unsigned int PagesNoPerBlock);
+      Die(uint32_t PlanesNoPerDie, uint32_t BlocksNoPerPlane, uint32_t PagesNoPerBlock);
       ~Die();
       Plane** Planes;
-      unsigned int Plane_no;
+      uint32_t Plane_no;
       DieStatus Status;
       MQSimEngine::Sim_Event* CommandFinishEvent;
       sim_time_type Expected_finish_time;

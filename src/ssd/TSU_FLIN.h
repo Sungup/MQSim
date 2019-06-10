@@ -15,12 +15,12 @@ namespace SSD_Components
 
   struct FLIN_Flow_Monitoring_Unit
   {
-    unsigned int Serviced_read_requests_history;//FLIN, in its current implementation, does not use history!
-    unsigned int Serviced_read_requests_recent;
-    unsigned int Serviced_read_requests_total;
-    unsigned int Serviced_write_requests_history;//FLIN, in its current implementation, does not use history!
-    unsigned int Serviced_write_requests_recent;
-    unsigned int Serviced_write_requests_total;
+    uint32_t Serviced_read_requests_history;//FLIN, in its current implementation, does not use history!
+    uint32_t Serviced_read_requests_recent;
+    uint32_t Serviced_read_requests_total;
+    uint32_t Serviced_write_requests_history;//FLIN, in its current implementation, does not use history!
+    uint32_t Serviced_write_requests_recent;
+    uint32_t Serviced_write_requests_total;
     double Sum_read_slowdown;
     double Sum_write_slowdown;
   };
@@ -37,9 +37,9 @@ namespace SSD_Components
   {
   public:
     TSU_FLIN(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, 
-      const unsigned int Channel_no, const unsigned int chip_no_per_channel, const unsigned int die_no_per_chip, const unsigned int plane_no_per_die, unsigned int flash_page_size,
-      const sim_time_type flow_classification_epoch, const unsigned int alpha_read, const unsigned int alpha_write,
-      const unsigned int no_of_priority_classes, const stream_id_type max_flow_id, const unsigned int* stream_count_per_priority_class, stream_id_type** stream_ids_per_priority_class,
+      const uint32_t Channel_no, const uint32_t chip_no_per_channel, const uint32_t die_no_per_chip, const uint32_t plane_no_per_die, uint32_t flash_page_size,
+      const sim_time_type flow_classification_epoch, const uint32_t alpha_read, const uint32_t alpha_write,
+      const uint32_t no_of_priority_classes, const stream_id_type max_flow_id, const uint32_t* stream_count_per_priority_class, stream_id_type** stream_ids_per_priority_class,
       const double f_thr,
       const sim_time_type WriteReasonableSuspensionTimeForRead,
       const sim_time_type EraseReasonableSuspensionTimeForRead,
@@ -55,12 +55,12 @@ namespace SSD_Components
     void Execute_simulator_event(MQSimEngine::Sim_Event*);
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
   private:
-    unsigned int* stream_count_per_priority_class;
+    uint32_t* stream_count_per_priority_class;
     stream_id_type** stream_ids_per_priority_class;
     FLIN_Flow_Monitoring_Unit**** flow_activity_info;
     sim_time_type flow_classification_epoch;
-    unsigned int alpha_read_for_epoch, alpha_write_for_epoch;
-    unsigned int no_of_priority_classes;
+    uint32_t alpha_read_for_epoch, alpha_write_for_epoch;
+    uint32_t no_of_priority_classes;
     double F_thr;//Fairness threshold for high intensity flows, as described in Alg 1 of the FLIN paper
     std::set<stream_id_type> ***low_intensity_class_read, *** low_intensity_class_write;//As described in Alg 1 of the FLIN paper
     std::list<NVM_Transaction_Flash*>::iterator*** head_high_read;//Due to programming limitations, for read queues, MQSim keeps Head_high instread of Tail_low which is described in Alg 1 of the FLIN paper
@@ -77,7 +77,7 @@ namespace SSD_Components
 
     void reorder_for_fairness(Flash_Transaction_Queue* queue, std::list<NVM_Transaction_Flash*>::iterator start, std::list<NVM_Transaction_Flash*>::iterator end);
     void estimate_alone_waiting_time(Flash_Transaction_Queue* queue, std::list<NVM_Transaction_Flash*>::iterator position);
-    double fairness_based_on_average_slowdown(unsigned int channel_id, unsigned int chip_id, unsigned int priority_class, bool is_read, stream_id_type& flow_with_max_average_slowdown);
+    double fairness_based_on_average_slowdown(uint32_t channel_id, uint32_t chip_id, uint32_t priority_class, bool is_read, stream_id_type& flow_with_max_average_slowdown);
     void move_forward(Flash_Transaction_Queue* queue, std::list<NVM_Transaction_Flash*>::iterator TRnew_pos, std::list<NVM_Transaction_Flash*>::iterator ultimate_posistion);
     bool service_read_transaction(NVM::FlashMemory::Flash_Chip* chip);
     bool service_write_transaction(NVM::FlashMemory::Flash_Chip* chip);
@@ -85,7 +85,7 @@ namespace SSD_Components
 
 
     void initialize_scheduling_turns();
-    std::vector<unsigned int> scheduling_turn_assignments_read, scheduling_turn_assignments_write;
+    std::vector<uint32_t> scheduling_turn_assignments_read, scheduling_turn_assignments_write;
     int current_turn_read, current_turn_write;
   };
 }

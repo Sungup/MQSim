@@ -4,7 +4,7 @@ namespace NVM
 {
   namespace FlashMemory
   {
-    Block::Block(unsigned int PagesNoPerBlock, flash_block_ID_type BlockID)
+    Block::Block(uint32_t PagesNoPerBlock, flash_block_ID_type BlockID)
     {
       ID = BlockID;
       Pages = new Page[PagesNoPerBlock];

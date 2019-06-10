@@ -7,9 +7,9 @@ namespace SSD_Components
 {
 
   TSU_FLIN::TSU_FLIN(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, 
-    const unsigned int channel_count, const unsigned int chip_no_per_channel, const unsigned int die_no_per_chip, const unsigned int plane_no_per_die, unsigned int flash_page_size,
-    const sim_time_type flow_classification_epoch, const unsigned int alpha_read, const unsigned int alpha_write,
-    const unsigned int no_of_priority_classes, const stream_id_type max_flow_id, const unsigned int* stream_count_per_priority_class, stream_id_type** stream_ids_per_priority_class, const double f_thr,
+    const uint32_t channel_count, const uint32_t chip_no_per_channel, const uint32_t die_no_per_chip, const uint32_t plane_no_per_die, uint32_t flash_page_size,
+    const sim_time_type flow_classification_epoch, const uint32_t alpha_read, const uint32_t alpha_write,
+    const uint32_t no_of_priority_classes, const stream_id_type max_flow_id, const uint32_t* stream_count_per_priority_class, stream_id_type** stream_ids_per_priority_class, const double f_thr,
     const sim_time_type WriteReasonableSuspensionTimeForRead,
     const sim_time_type EraseReasonableSuspensionTimeForRead,
     const sim_time_type EraseReasonableSuspensionTimeForWrite,
@@ -22,9 +22,9 @@ namespace SSD_Components
   {
     alpha_read_for_epoch = alpha_read / (channel_count * chip_no_per_channel) / flash_page_size;
     alpha_write_for_epoch = alpha_write / (channel_count * chip_no_per_channel) / flash_page_size,
-    this->stream_count_per_priority_class = new unsigned int[no_of_priority_classes];
+    this->stream_count_per_priority_class = new uint32_t[no_of_priority_classes];
     this->stream_ids_per_priority_class = new stream_id_type*[no_of_priority_classes];
-    for (unsigned int i = 0; i < no_of_priority_classes; i++)
+    for (uint32_t i = 0; i < no_of_priority_classes; i++)
     {
       this->stream_count_per_priority_class[i] = stream_count_per_priority_class[i];
       this->stream_ids_per_priority_class[i] = new stream_id_type[stream_count_per_priority_class[i]];
@@ -43,7 +43,7 @@ namespace SSD_Components
     flow_activity_info = new FLIN_Flow_Monitoring_Unit***[channel_count];
     low_intensity_class_read = new std::set<stream_id_type>**[channel_count];
     low_intensity_class_write = new std::set<stream_id_type>**[channel_count];
-    for (unsigned int channel_id = 0; channel_id < channel_count; channel_id++)
+    for (uint32_t channel_id = 0; channel_id < channel_count; channel_id++)
     {
       UserReadTRQueue[channel_id] = new Flash_Transaction_Queue*[chip_no_per_channel];
       Read_slot[channel_id] = new NVM_Transaction_Flash_RD**[chip_no_per_channel];
@@ -58,7 +58,7 @@ namespace SSD_Components
       low_intensity_class_read[channel_id] = new std::set<stream_id_type>*[chip_no_per_channel];
       low_intensity_class_write[channel_id] = new std::set<stream_id_type>*[chip_no_per_channel];
         
-      for (unsigned int chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
+      for (uint32_t chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
       {
         UserReadTRQueue[channel_id][chip_id] = new Flash_Transaction_Queue[no_of_priority_classes];
         Read_slot[channel_id][chip_id] = new NVM_Transaction_Flash_RD*[no_of_priority_classes];
@@ -73,7 +73,7 @@ namespace SSD_Components
         MappingWriteTRQueue[channel_id][chip_id].Set_id("Mapping_Write_TR_Queue@" + std::to_string(channel_id) + "@" + std::to_string(chip_id));
         GCWriteTRQueue[channel_id][chip_id].Set_id("GC_Write_TR_Queue@" + std::to_string(channel_id) + "@" + std::to_string(chip_id));
         GCEraseTRQueue[channel_id][chip_id].Set_id("GC_Erase_TR_Queue@" + std::to_string(channel_id) + "@" + std::to_string(chip_id));
-        for (unsigned int pclass_id = 0; pclass_id < no_of_priority_classes; pclass_id++)
+        for (uint32_t pclass_id = 0; pclass_id < no_of_priority_classes; pclass_id++)
         {
           flow_activity_info[channel_id][chip_id][pclass_id] = new FLIN_Flow_Monitoring_Unit[max_flow_id];
           for (int stream_cntr = 0; stream_cntr < max_flow_id; stream_cntr++)
@@ -100,9 +100,9 @@ namespace SSD_Components
   TSU_FLIN::~TSU_FLIN()
   {
     delete[] this->stream_count_per_priority_class;
-    for (unsigned int channel_id = 0; channel_id < channel_count; channel_id++)
+    for (uint32_t channel_id = 0; channel_id < channel_count; channel_id++)
     {
-      for (unsigned int chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
+      for (uint32_t chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
       {
         delete[] UserReadTRQueue[channel_id][chip_id];
         delete[] Read_slot[channel_id][chip_id];
@@ -146,18 +146,18 @@ namespace SSD_Components
   void TSU_FLIN::Execute_simulator_event(MQSimEngine::Sim_Event* event) 
   {
     //Flow classification as described in Section 5.1 of FLIN paper in ISCA 2018
-    for (unsigned int channel_id = 0; channel_id < channel_count; channel_id++)
+    for (uint32_t channel_id = 0; channel_id < channel_count; channel_id++)
     {
-      for (unsigned int chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
+      for (uint32_t chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
       {
-        for (unsigned int pclass_id = 0; pclass_id < no_of_priority_classes; pclass_id++)
+        for (uint32_t pclass_id = 0; pclass_id < no_of_priority_classes; pclass_id++)
         {
           if (stream_count_per_priority_class[pclass_id] < 2)
             return;
 
           low_intensity_class_read[channel_id][chip_id][pclass_id].clear();
           low_intensity_class_write[channel_id][chip_id][pclass_id].clear();
-          for (unsigned int stream_cntr = 0; stream_cntr < stream_count_per_priority_class[pclass_id]; stream_cntr++)
+          for (uint32_t stream_cntr = 0; stream_cntr < stream_count_per_priority_class[pclass_id]; stream_cntr++)
           {
             if (flow_activity_info[channel_id][chip_id][pclass_id][stream_ids_per_priority_class[pclass_id][stream_cntr]].Serviced_read_requests_recent < alpha_read_for_epoch)
               low_intensity_class_read[channel_id][chip_id][pclass_id].insert(stream_ids_per_priority_class[pclass_id][stream_cntr]);
@@ -204,7 +204,7 @@ namespace SSD_Components
     {
       flash_channel_ID_type channel_id = (*it)->Address.ChannelID;
       flash_chip_ID_type chip_id = (*it)->Address.ChipID;
-      unsigned int priority_class = ((int)(*it)->UserIORequest->Priority_class) - 1;
+      uint32_t priority_class = ((int)(*it)->UserIORequest->Priority_class) - 1;
       stream_id_type stream_id = (*it)->Stream_id;
       switch ((*it)->Type)
       {
@@ -317,7 +317,7 @@ namespace SSD_Components
     {
       if (_NVMController->Get_channel_status(channel_id) == BusChannelStatus::IDLE)
       {
-        for (unsigned int i = 0; i < chip_no_per_channel; i++) {
+        for (uint32_t i = 0; i < chip_no_per_channel; i++) {
           NVM::FlashMemory::Flash_Chip* chip = _NVMController->Get_chip(channel_id, Round_robin_turn_of_channel[channel_id]);
           //The TSU does not check if the chip is idle or not since it is possible to suspend a busy chip and issue a new command
           if (!service_read_transaction(chip))
@@ -467,13 +467,13 @@ namespace SSD_Components
       (*position)->Estimated_alone_waiting_time = expected_last_time - Simulator->Time();
   }
 
-  double TSU_FLIN::fairness_based_on_average_slowdown(unsigned int channel_id, unsigned int chip_id, unsigned int priority_class, bool is_read, stream_id_type& flow_with_max_average_slowdown)
+  double TSU_FLIN::fairness_based_on_average_slowdown(uint32_t channel_id, uint32_t chip_id, uint32_t priority_class, bool is_read, stream_id_type& flow_with_max_average_slowdown)
   {
     double slowdown_max = 0, slowdown_min = 10000000000000000000.0;
     
     if (is_read)
     {
-      for (unsigned int i = 0; i < stream_count_per_priority_class[priority_class]; i++)
+      for (uint32_t i = 0; i < stream_count_per_priority_class[priority_class]; i++)
       {
         double average_slowdown = flow_activity_info[channel_id][chip_id][priority_class][stream_ids_per_priority_class[priority_class][i]].Sum_read_slowdown++;
         if (average_slowdown > slowdown_max)
@@ -484,7 +484,7 @@ namespace SSD_Components
     }
     else
     {
-      for (unsigned int i = 0; i < stream_count_per_priority_class[priority_class]; i++)
+      for (uint32_t i = 0; i < stream_count_per_priority_class[priority_class]; i++)
       {
         double average_slowdown = flow_activity_info[channel_id][chip_id][priority_class][stream_ids_per_priority_class[priority_class][i]].Sum_write_slowdown++;
         if (average_slowdown > slowdown_max)
@@ -525,8 +525,8 @@ namespace SSD_Components
 
   void TSU_FLIN::initialize_scheduling_turns()
   {
-    unsigned int total_turns = (int)std::pow(2, no_of_priority_classes) - 1;
-    for (unsigned int i = 0; i < total_turns; i++)
+    uint32_t total_turns = (int)std::pow(2, no_of_priority_classes) - 1;
+    for (uint32_t i = 0; i < total_turns; i++)
     {
       scheduling_turn_assignments_read.push_back(i);
       scheduling_turn_assignments_write.push_back(i);
@@ -537,8 +537,8 @@ namespace SSD_Components
   
     while (priority_class <= int(no_of_priority_classes))
     {
-      unsigned int step = (unsigned int)std::pow(2, no_of_priority_classes);
-      for (unsigned int i = (unsigned int)std::pow(2, no_of_priority_classes - 1); i < total_turns; i += step)
+      uint32_t step = (uint32_t)std::pow(2, no_of_priority_classes);
+      for (uint32_t i = (uint32_t)std::pow(2, no_of_priority_classes - 1); i < total_turns; i += step)
       {
         scheduling_turn_assignments_read[i] = priority_class;
         scheduling_turn_assignments_write[i] = priority_class;

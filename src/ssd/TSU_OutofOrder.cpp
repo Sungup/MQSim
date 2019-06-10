@@ -3,8 +3,8 @@
 namespace SSD_Components
 {
 
-  TSU_OutOfOrder::TSU_OutOfOrder(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, unsigned int ChannelCount, unsigned int chip_no_per_channel,
-    unsigned int DieNoPerChip, unsigned int PlaneNoPerDie,
+  TSU_OutOfOrder::TSU_OutOfOrder(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, uint32_t ChannelCount, uint32_t chip_no_per_channel,
+    uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
     sim_time_type WriteReasonableSuspensionTimeForRead,
     sim_time_type EraseReasonableSuspensionTimeForRead,
     sim_time_type EraseReasonableSuspensionTimeForWrite, 
@@ -20,7 +20,7 @@ namespace SSD_Components
     GCEraseTRQueue = new Flash_Transaction_Queue*[channel_count];
     MappingReadTRQueue = new Flash_Transaction_Queue*[channel_count];
     MappingWriteTRQueue = new Flash_Transaction_Queue*[channel_count];
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
     {
       UserReadTRQueue[channelID] = new Flash_Transaction_Queue[chip_no_per_channel];
       UserWriteTRQueue[channelID] = new Flash_Transaction_Queue[chip_no_per_channel];
@@ -29,7 +29,7 @@ namespace SSD_Components
       GCEraseTRQueue[channelID] = new Flash_Transaction_Queue[chip_no_per_channel];
       MappingReadTRQueue[channelID] = new Flash_Transaction_Queue[chip_no_per_channel];
       MappingWriteTRQueue[channelID] = new Flash_Transaction_Queue[chip_no_per_channel];
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
       {
         UserReadTRQueue[channelID][chip_cntr].Set_id("User_Read_TR_Queue@" + std::to_string(channelID) + "@" + std::to_string(chip_cntr));
         UserWriteTRQueue[channelID][chip_cntr].Set_id("User_Write_TR_Queue@" + std::to_string(channelID) + "@" + std::to_string(chip_cntr));
@@ -44,7 +44,7 @@ namespace SSD_Components
   
   TSU_OutOfOrder::~TSU_OutOfOrder()
   {
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
     {
       delete[] UserReadTRQueue[channelID];
       delete[] UserWriteTRQueue[channelID];
@@ -76,32 +76,32 @@ namespace SSD_Components
 
     TSU_Base::Report_results_in_XML(name_prefix, xmlwriter);
 
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
         UserReadTRQueue[channelID][chip_cntr].Report_results_in_XML(name_prefix + ".User_Read_TR_Queue", xmlwriter);
 
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
         UserWriteTRQueue[channelID][chip_cntr].Report_results_in_XML(name_prefix + ".User_Write_TR_Queue", xmlwriter);
 
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
         MappingReadTRQueue[channelID][chip_cntr].Report_results_in_XML(name_prefix + ".Mapping_Read_TR_Queue", xmlwriter);
 
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
         MappingWriteTRQueue[channelID][chip_cntr].Report_results_in_XML(name_prefix + ".Mapping_Write_TR_Queue", xmlwriter);
 
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
         GCReadTRQueue[channelID][chip_cntr].Report_results_in_XML(name_prefix + ".GC_Read_TR_Queue", xmlwriter);
 
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
         GCWriteTRQueue[channelID][chip_cntr].Report_results_in_XML(name_prefix + ".GC_Write_TR_Queue", xmlwriter);
 
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
         GCEraseTRQueue[channelID][chip_cntr].Report_results_in_XML(name_prefix + ".GC_Erase_TR_Queue", xmlwriter);
   
     xmlwriter.Write_close_tag();
@@ -181,7 +181,7 @@ namespace SSD_Components
     {
       if (_NVMController->Get_channel_status(channelID) == BusChannelStatus::IDLE)
       {
-        for (unsigned int i = 0; i < chip_no_per_channel; i++) {
+        for (uint32_t i = 0; i < chip_no_per_channel; i++) {
           NVM::FlashMemory::Flash_Chip* chip = _NVMController->Get_chip(channelID, Round_robin_turn_of_channel[channelID]);
           //The TSU does not check if the chip is idle or not since it is possible to suspend a busy chip and issue a new command
           if (!service_read_transaction(chip))
@@ -262,8 +262,8 @@ namespace SSD_Components
     
     flash_die_ID_type dieID = sourceQueue1->front()->Address.DieID;
     flash_page_ID_type pageID = sourceQueue1->front()->Address.PageID;
-    unsigned int planeVector = 0;
-    for (unsigned int i = 0; i < die_no_per_chip; i++)
+    uint32_t planeVector = 0;
+    for (uint32_t i = 0; i < die_no_per_chip; i++)
     {
       transaction_dispatch_slots.clear();
       planeVector = 0;
@@ -360,8 +360,8 @@ namespace SSD_Components
 
     flash_die_ID_type dieID = sourceQueue1->front()->Address.DieID;
     flash_page_ID_type pageID = sourceQueue1->front()->Address.PageID;
-    unsigned int planeVector = 0;
-    for (unsigned int i = 0; i < die_no_per_chip; i++)
+    uint32_t planeVector = 0;
+    for (uint32_t i = 0; i < die_no_per_chip; i++)
     {
       transaction_dispatch_slots.clear();
       planeVector = 0;
@@ -417,8 +417,8 @@ namespace SSD_Components
       return false;
 
     flash_die_ID_type dieID = source_queue->front()->Address.DieID;
-    unsigned int planeVector = 0;
-    for (unsigned int i = 0; i < die_no_per_chip; i++)
+    uint32_t planeVector = 0;
+    for (uint32_t i = 0; i < die_no_per_chip; i++)
     {
       transaction_dispatch_slots.clear();
       planeVector = 0;

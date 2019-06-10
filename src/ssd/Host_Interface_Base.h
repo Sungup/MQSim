@@ -34,10 +34,10 @@ namespace SSD_Components
   public:
     Input_Stream_Base();
     virtual ~Input_Stream_Base();
-    unsigned int STAT_number_of_read_requests;
-    unsigned int STAT_number_of_write_requests;
-    unsigned int STAT_number_of_read_transactions;
-    unsigned int STAT_number_of_write_transactions;
+    uint32_t STAT_number_of_read_requests;
+    uint32_t STAT_number_of_write_requests;
+    uint32_t STAT_number_of_read_transactions;
+    uint32_t STAT_number_of_write_transactions;
     sim_time_type STAT_sum_of_read_transactions_execution_time, STAT_sum_of_read_transactions_transfer_time, STAT_sum_of_read_transactions_waiting_time;
     sim_time_type STAT_sum_of_write_transactions_execution_time, STAT_sum_of_write_transactions_transfer_time, STAT_sum_of_write_transactions_waiting_time;
   };
@@ -76,8 +76,8 @@ namespace SSD_Components
     virtual void Fetch_next_request(stream_id_type stream_id) = 0;
     virtual void Fetch_write_data(User_Request* request) = 0;
     virtual void Send_read_data(User_Request* request) = 0;
-    virtual void Process_pcie_write_message(uint64_t, void *, unsigned int) = 0;
-    virtual void Process_pcie_read_message(uint64_t, void *, unsigned int) = 0;
+    virtual void Process_pcie_write_message(uint64_t, void *, uint32_t) = 0;
+    virtual void Process_pcie_read_message(uint64_t, void *, uint32_t) = 0;
   protected:
     enum class DMA_Req_Type { REQUEST_INFO, WRITE_DATA };
     struct DMA_Req_Item
@@ -99,7 +99,7 @@ namespace SSD_Components
     friend class Request_Fetch_Unit_SATA;
   public:
     Host_Interface_Base(const sim_object_id_type& id, HostInterface_Types type, LHA_type max_logical_sector_address, 
-      unsigned int sectors_per_page, Data_Cache_Manager_Base* cache);
+      uint32_t sectors_per_page, Data_Cache_Manager_Base* cache);
     virtual ~Host_Interface_Base();
     void Setup_triggers();
     void Validate_simulation_config();
@@ -118,17 +118,17 @@ namespace SSD_Components
         request_fetch_unit->Process_pcie_write_message(message->Address, message->Payload, message->Payload_size);
       delete message;
     }
-    void Send_read_message_to_host(uint64_t addresss, unsigned int request_read_data_size);
-    void Send_write_message_to_host(uint64_t addresss, void* message, unsigned int message_size);
+    void Send_read_message_to_host(uint64_t addresss, uint32_t request_read_data_size);
+    void Send_write_message_to_host(uint64_t addresss, void* message, uint32_t message_size);
 
     HostInterface_Types GetType() { return type; }
     void Attach_to_device(Host_Components::PCIe_Switch* pcie_switch);
     LHA_type Get_max_logical_sector_address();
-    unsigned int Get_no_of_LHAs_in_an_NVM_write_unit();
+    uint32_t Get_no_of_LHAs_in_an_NVM_write_unit();
   protected:
     HostInterface_Types type;
     LHA_type max_logical_sector_address;
-    unsigned int sectors_per_page;
+    uint32_t sectors_per_page;
     static Host_Interface_Base* _my_instance;
     Input_Stream_Manager_Base* input_stream_manager;
     Request_Fetch_Unit_Base* request_fetch_unit;

@@ -3,25 +3,25 @@
 
 namespace SSD_Components
 {
-  unsigned int Block_Pool_Slot_Type::Page_vector_size = 0;
-  Flash_Block_Manager_Base::Flash_Block_Manager_Base(GC_and_WL_Unit_Base* gc_and_wl_unit, unsigned int max_allowed_block_erase_count, unsigned int total_concurrent_streams_no,
-    unsigned int channel_count, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die,
-    unsigned int block_no_per_plane, unsigned int page_no_per_block)
+  uint32_t Block_Pool_Slot_Type::Page_vector_size = 0;
+  Flash_Block_Manager_Base::Flash_Block_Manager_Base(GC_and_WL_Unit_Base* gc_and_wl_unit, uint32_t max_allowed_block_erase_count, uint32_t total_concurrent_streams_no,
+    uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
+    uint32_t block_no_per_plane, uint32_t page_no_per_block)
     : gc_and_wl_unit(gc_and_wl_unit), max_allowed_block_erase_count(max_allowed_block_erase_count), total_concurrent_streams_no(total_concurrent_streams_no),
     channel_count(channel_count), chip_no_per_channel(chip_no_per_channel), die_no_per_chip(die_no_per_chip), plane_no_per_die(plane_no_per_die),
     block_no_per_plane(block_no_per_plane), pages_no_per_block(page_no_per_block)
   {
     plane_manager = new PlaneBookKeepingType***[channel_count];
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++)
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++)
     {
       plane_manager[channelID] = new PlaneBookKeepingType**[chip_no_per_channel];
-      for (unsigned int chipID = 0; chipID < chip_no_per_channel; chipID++)
+      for (uint32_t chipID = 0; chipID < chip_no_per_channel; chipID++)
       {
         plane_manager[channelID][chipID] = new PlaneBookKeepingType*[die_no_per_chip];
-        for (unsigned int dieID = 0; dieID < die_no_per_chip; dieID++)
+        for (uint32_t dieID = 0; dieID < die_no_per_chip; dieID++)
         {
           plane_manager[channelID][chipID][dieID] = new PlaneBookKeepingType[plane_no_per_die];
-          for (unsigned int planeID = 0; planeID < plane_no_per_die; planeID++)//Initialize plane book keeping data structure
+          for (uint32_t planeID = 0; planeID < plane_no_per_die; planeID++)//Initialize plane book keeping data structure
           {
             plane_manager[channelID][chipID][dieID][planeID].Total_pages_count = block_no_per_plane * pages_no_per_block;
             plane_manager[channelID][chipID][dieID][planeID].Free_pages_count = block_no_per_plane * pages_no_per_block;
@@ -29,7 +29,7 @@ namespace SSD_Components
             plane_manager[channelID][chipID][dieID][planeID].Invalid_pages_count = 0;
             plane_manager[channelID][chipID][dieID][planeID].Ongoing_erase_operations.clear();
             plane_manager[channelID][chipID][dieID][planeID].Blocks = new Block_Pool_Slot_Type[block_no_per_plane];
-            for (unsigned int blockID = 0; blockID < block_no_per_plane; blockID++)//Initialize block pool for plane
+            for (uint32_t blockID = 0; blockID < block_no_per_plane; blockID++)//Initialize block pool for plane
             {
               plane_manager[channelID][chipID][dieID][planeID].Blocks[blockID].BlockID = blockID;
               plane_manager[channelID][chipID][dieID][planeID].Blocks[blockID].Current_page_write_index = 0;
@@ -43,14 +43,14 @@ namespace SSD_Components
               plane_manager[channelID][chipID][dieID][planeID].Blocks[blockID].Ongoing_user_read_count = 0;
               Block_Pool_Slot_Type::Page_vector_size = pages_no_per_block / (sizeof(uint64_t) * 8) + (pages_no_per_block % (sizeof(uint64_t) * 8) == 0 ? 0 : 1);
               plane_manager[channelID][chipID][dieID][planeID].Blocks[blockID].Invalid_page_bitmap = new uint64_t[Block_Pool_Slot_Type::Page_vector_size];
-              for (unsigned int i = 0; i < Block_Pool_Slot_Type::Page_vector_size; i++)
+              for (uint32_t i = 0; i < Block_Pool_Slot_Type::Page_vector_size; i++)
                 plane_manager[channelID][chipID][dieID][planeID].Blocks[blockID].Invalid_page_bitmap[i] = All_VALID_PAGE;
               plane_manager[channelID][chipID][dieID][planeID].Add_to_free_block_pool(&plane_manager[channelID][chipID][dieID][planeID].Blocks[blockID], false);
             }
             plane_manager[channelID][chipID][dieID][planeID].Data_wf = new Block_Pool_Slot_Type*[total_concurrent_streams_no];
             plane_manager[channelID][chipID][dieID][planeID].Translation_wf = new Block_Pool_Slot_Type*[total_concurrent_streams_no];
             plane_manager[channelID][chipID][dieID][planeID].GC_wf = new Block_Pool_Slot_Type*[total_concurrent_streams_no];
-            for (unsigned int stream_cntr = 0; stream_cntr < total_concurrent_streams_no; stream_cntr++)
+            for (uint32_t stream_cntr = 0; stream_cntr < total_concurrent_streams_no; stream_cntr++)
             {
               plane_manager[channelID][chipID][dieID][planeID].Data_wf[stream_cntr] = plane_manager[channelID][chipID][dieID][planeID].Get_a_free_block(stream_cntr, false);
               plane_manager[channelID][chipID][dieID][planeID].Translation_wf[stream_cntr] = plane_manager[channelID][chipID][dieID][planeID].Get_a_free_block(stream_cntr, true);
@@ -64,15 +64,15 @@ namespace SSD_Components
 
   Flash_Block_Manager_Base::~Flash_Block_Manager_Base() 
   {
-    for (unsigned int channel_id = 0; channel_id < channel_count; channel_id++)
+    for (uint32_t channel_id = 0; channel_id < channel_count; channel_id++)
     {
-      for (unsigned int chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
+      for (uint32_t chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
       {
-        for (unsigned int die_id = 0; die_id < die_no_per_chip; die_id++)
+        for (uint32_t die_id = 0; die_id < die_no_per_chip; die_id++)
         {
-          for (unsigned int plane_id = 0; plane_id < plane_no_per_die; plane_id++)
+          for (uint32_t plane_id = 0; plane_id < plane_no_per_die; plane_id++)
           {
-            for (unsigned int blockID = 0; blockID < block_no_per_plane; blockID++)
+            for (uint32_t blockID = 0; blockID < block_no_per_plane; blockID++)
               delete[] plane_manager[channel_id][chip_id][die_id][plane_id].Blocks[blockID].Invalid_page_bitmap;
             delete[] plane_manager[channel_id][chip_id][die_id][plane_id].Blocks;
             delete[] plane_manager[channel_id][chip_id][die_id][plane_id].GC_wf;
@@ -95,7 +95,7 @@ namespace SSD_Components
     Current_page_write_index = 0;
     Invalid_page_count = 0;
     Erase_count++;
-    for (unsigned int i = 0; i < Block_Pool_Slot_Type::Page_vector_size; i++)
+    for (uint32_t i = 0; i < Block_Pool_Slot_Type::Page_vector_size; i++)
       Invalid_page_bitmap[i] = All_VALID_PAGE;
     Stream_id = NO_STREAM;
     Holds_mapping_data = false;
@@ -124,32 +124,32 @@ namespace SSD_Components
       PRINT_ERROR("Plane " << "@" << plane_address.ChannelID << "@" << plane_address.ChipID << "@" << plane_address.DieID << "@" << plane_address.PlaneID << " pool size: " << Get_free_block_pool_size() << " ran out of free pages! Bad resource management! It is not safe to continue simulation!");
   }
 
-  unsigned int PlaneBookKeepingType::Get_free_block_pool_size()
+  uint32_t PlaneBookKeepingType::Get_free_block_pool_size()
   {
-    return (unsigned int)Free_block_pool.size();
+    return (uint32_t)Free_block_pool.size();
   }
 
   void PlaneBookKeepingType::Add_to_free_block_pool(Block_Pool_Slot_Type* block, bool consider_dynamic_wl)
   {
     if (consider_dynamic_wl)
     {
-      std::pair<unsigned int, Block_Pool_Slot_Type*> entry(block->Erase_count, block);
+      std::pair<uint32_t, Block_Pool_Slot_Type*> entry(block->Erase_count, block);
       Free_block_pool.insert(entry);
     }
     else
     {
-      std::pair<unsigned int, Block_Pool_Slot_Type*> entry(0, block);
+      std::pair<uint32_t, Block_Pool_Slot_Type*> entry(0, block);
       Free_block_pool.insert(entry);
     }
   }
 
-  unsigned int Flash_Block_Manager_Base::Get_min_max_erase_difference(const NVM::FlashMemory::Physical_Page_Address& plane_address)
+  uint32_t Flash_Block_Manager_Base::Get_min_max_erase_difference(const NVM::FlashMemory::Physical_Page_Address& plane_address)
   {
-    unsigned int min_erased_block = 0;
-    unsigned int max_erased_block = 0;
+    uint32_t min_erased_block = 0;
+    uint32_t max_erased_block = 0;
     PlaneBookKeepingType *plane_record = &plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID];
 
-    for (unsigned int i = 1; i < block_no_per_plane; i++)
+    for (uint32_t i = 1; i < block_no_per_plane; i++)
     {
       if (plane_record->Blocks[i].Erase_count > plane_record->Blocks[i].Erase_count)
         max_erased_block = i;
@@ -162,10 +162,10 @@ namespace SSD_Components
 
   flash_block_ID_type Flash_Block_Manager_Base::Get_coldest_block_id(const NVM::FlashMemory::Physical_Page_Address& plane_address)
   {
-    unsigned int min_erased_block = 0;
+    uint32_t min_erased_block = 0;
     PlaneBookKeepingType *plane_record = &plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID];
 
-    for (unsigned int i = 1; i < block_no_per_plane; i++)
+    for (uint32_t i = 1; i < block_no_per_plane; i++)
     {
       if (plane_record->Blocks[i].Erase_count < plane_record->Blocks[i].Erase_count)
         min_erased_block = i;

@@ -10,7 +10,7 @@ namespace SSD_Components
   class ONFI_Channel_Base : public NVM_Channel_Base
   {
   public:
-    ONFI_Channel_Base(flash_channel_ID_type channelID, unsigned int chipCount, NVM::FlashMemory::Flash_Chip** flashChips, ONFI_Protocol type);
+    ONFI_Channel_Base(flash_channel_ID_type channelID, uint32_t chipCount, NVM::FlashMemory::Flash_Chip** flashChips, ONFI_Protocol type);
     flash_channel_ID_type ChannelID;
     NVM::FlashMemory::Flash_Chip** Chips;
     ONFI_Protocol Type;

@@ -14,7 +14,7 @@ namespace Host_Components
   public:
     IO_Flow_Trace_Based(const sim_object_id_type& name, uint16_t flow_id, LHA_type start_lsa_on_device, LHA_type end_lsa_on_device, uint16_t io_queue_id,
       uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, IO_Flow_Priority_Class priority_class, double initial_occupancy_ratio,
-      std::string trace_file_path, Trace_Time_Unit time_unit, unsigned int total_replay_count, unsigned int percentage_to_be_simulated,
+      std::string trace_file_path, Trace_Time_Unit time_unit, uint32_t total_replay_count, uint32_t percentage_to_be_simulated,
       HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
       bool enabled_logging, sim_time_type logging_period, std::string logging_file_path);
     ~IO_Flow_Trace_Based() final;
@@ -28,11 +28,11 @@ namespace Host_Components
       page_status_type(*Find_NVM_subunit_access_bitmap)(LHA_type lha));
   private:
     Trace_Time_Unit time_unit;
-    unsigned int percentage_to_be_simulated;
+    uint32_t percentage_to_be_simulated;
     std::string trace_file_path;
     std::ifstream trace_file;
-    unsigned int total_replay_no, replay_counter;
-    unsigned int total_requests_in_file;
+    uint32_t total_replay_no, replay_counter;
+    uint32_t total_requests_in_file;
     std::vector<std::string> current_trace_line;
     sim_time_type time_offset;
   };

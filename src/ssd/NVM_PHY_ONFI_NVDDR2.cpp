@@ -8,7 +8,7 @@ namespace SSD_Components {
   NVM_PHY_ONFI_NVDDR2* NVM_PHY_ONFI_NVDDR2::_my_instance;
 
   NVM_PHY_ONFI_NVDDR2::NVM_PHY_ONFI_NVDDR2(const sim_object_id_type& id, ONFI_Channel_NVDDR2** channels,
-    unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie)
+    uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie)
     : NVM_PHY_ONFI(id, ChannelCount, chip_no_per_channel, DieNoPerChip, PlaneNoPerDie), channels(channels)
   {
     WaitingReadTX = new Flash_Transaction_Queue[channel_count];
@@ -16,9 +16,9 @@ namespace SSD_Components {
     WaitingMappingRead_TX = new Flash_Transaction_Queue[channel_count];
     WaitingCopybackWrites = new std::list<DieBookKeepingEntry*>[channel_count];
     bookKeepingTable = new ChipBookKeepingEntry*[channel_count];
-    for (unsigned int channelID = 0; channelID < channel_count; channelID++) {
+    for (uint32_t channelID = 0; channelID < channel_count; channelID++) {
       bookKeepingTable[channelID] = new ChipBookKeepingEntry[chip_no_per_channel];
-      for (unsigned int chipID = 0; chipID < chip_no_per_channel; chipID++) {
+      for (uint32_t chipID = 0; chipID < chip_no_per_channel; chipID++) {
         bookKeepingTable[channelID][chipID].Expected_command_exec_finish_time = T0; 
         bookKeepingTable[channelID][chipID].Last_transfer_finish_time = T0;
         bookKeepingTable[channelID][chipID].Die_book_keeping_records = new DieBookKeepingEntry[DieNoPerChip];
@@ -26,7 +26,7 @@ namespace SSD_Components {
         bookKeepingTable[channelID][chipID].HasSuspend = false;
         bookKeepingTable[channelID][chipID].WaitingReadTXCount = 0;
         bookKeepingTable[channelID][chipID].No_of_active_dies = 0;
-        for (unsigned int dieID = 0; dieID < DieNoPerChip; dieID++) {
+        for (uint32_t dieID = 0; dieID < DieNoPerChip; dieID++) {
           bookKeepingTable[channelID][chipID].Die_book_keeping_records[dieID].ActiveCommand = NULL;
           bookKeepingTable[channelID][chipID].Die_book_keeping_records[dieID].ActiveTransactions.clear();
           bookKeepingTable[channelID][chipID].Die_book_keeping_records[dieID].SuspendedCommand = NULL;
@@ -45,8 +45,8 @@ namespace SSD_Components {
   void NVM_PHY_ONFI_NVDDR2::Setup_triggers()
   {
     Sim_Object::Setup_triggers();
-    for (unsigned int i = 0; i < channel_count; i++)
-      for (unsigned int j = 0; j < chip_no_per_channel; j++)
+    for (uint32_t i = 0; i < channel_count; i++)
+      for (uint32_t j = 0; j < chip_no_per_channel; j++)
         channels[i]->Chips[j]->Connect_to_chip_ready_signal(handle_ready_signal_from_chip);
   }
 
@@ -99,7 +99,7 @@ namespace SSD_Components {
     ChipBookKeepingEntry* chipBKE = &bookKeepingTable[transaction->Address.ChannelID][transaction->Address.ChipID];
     stream_id_type stream_id = transaction->Stream_id;
 
-    for (unsigned int die_id = 0; die_id < die_no_per_chip; die_id++)
+    for (uint32_t die_id = 0; die_id < die_no_per_chip; die_id++)
       for (auto &tr : chipBKE->Die_book_keeping_records[die_id].ActiveTransactions)
         if (tr->Stream_id == stream_id)
           return tr;
@@ -690,7 +690,7 @@ namespace SSD_Components {
   inline void NVM_PHY_ONFI_NVDDR2::send_resume_command_to_chip(NVM::FlashMemory::Flash_Chip* chip, ChipBookKeepingEntry* chipBKE)
   {
     //DEBUG2("Chip " << chip->ChannelID << ", " << chip->ChipID << ": resume command " )
-    for (unsigned int i = 0; i < die_no_per_chip; i++)
+    for (uint32_t i = 0; i < die_no_per_chip; i++)
     {
       DieBookKeepingEntry *dieBKE = &chipBKE->Die_book_keeping_records[i];
       //Since the time required to send the resume command is very small, MQSim ignores it to simplify the simulation

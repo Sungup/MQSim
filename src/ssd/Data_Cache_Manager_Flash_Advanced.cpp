@@ -8,10 +8,10 @@
 namespace SSD_Components
 {
   Data_Cache_Manager_Flash_Advanced::Data_Cache_Manager_Flash_Advanced(const sim_object_id_type& id, Host_Interface_Base* host_interface, NVM_Firmware* firmware, NVM_PHY_ONFI* flash_controller,
-    unsigned int total_capacity_in_bytes,
-    unsigned int dram_row_size, unsigned int dram_data_rate, unsigned int dram_busrt_size, sim_time_type dram_tRCD, sim_time_type dram_tCL, sim_time_type dram_tRP,
-    Caching_Mode* caching_mode_per_input_stream, Cache_Sharing_Mode sharing_mode,unsigned int stream_count,
-    unsigned int sector_no_per_page, unsigned int back_pressure_buffer_max_depth)
+    uint32_t total_capacity_in_bytes,
+    uint32_t dram_row_size, uint32_t dram_data_rate, uint32_t dram_busrt_size, sim_time_type dram_tRCD, sim_time_type dram_tCL, sim_time_type dram_tRP,
+    Caching_Mode* caching_mode_per_input_stream, Cache_Sharing_Mode sharing_mode,uint32_t stream_count,
+    uint32_t sector_no_per_page, uint32_t back_pressure_buffer_max_depth)
     : Data_Cache_Manager_Base(id, host_interface, firmware, dram_row_size, dram_data_rate, dram_busrt_size, dram_tRCD, dram_tCL, dram_tRP, caching_mode_per_input_stream, sharing_mode, stream_count),
     flash_controller(flash_controller), capacity_in_bytes(total_capacity_in_bytes), sector_no_per_page(sector_no_per_page),  memory_channel_is_busy(false),
     dram_execution_list_turn(0), back_pressure_buffer_max_depth(back_pressure_buffer_max_depth)
@@ -23,23 +23,23 @@ namespace SSD_Components
     {
       Data_Cache_Flash* sharedCache = new Data_Cache_Flash(capacity_in_pages);
       per_stream_cache = new Data_Cache_Flash*[stream_count];
-      for (unsigned int i = 0; i < stream_count; i++)
+      for (uint32_t i = 0; i < stream_count; i++)
         per_stream_cache[i] = sharedCache;
       dram_execution_queue = new std::queue<Memory_Transfer_Info*>[1];
       waiting_user_requests_queue_for_dram_free_slot = new std::list<User_Request*>[1];
-      this->back_pressure_buffer_depth = new unsigned int[1];
+      this->back_pressure_buffer_depth = new uint32_t[1];
       this->back_pressure_buffer_depth[0] = 0;
       shared_dram_request_queue = true;
       break; 
     }
     case SSD_Components::Cache_Sharing_Mode::EQUAL_PARTITIONING:
       per_stream_cache = new Data_Cache_Flash*[stream_count];
-      for (unsigned int i = 0; i < stream_count; i++)
+      for (uint32_t i = 0; i < stream_count; i++)
         per_stream_cache[i] = new Data_Cache_Flash(capacity_in_pages / stream_count);
       dram_execution_queue = new std::queue<Memory_Transfer_Info*>[stream_count];
       waiting_user_requests_queue_for_dram_free_slot = new std::list<User_Request*>[stream_count];
-      this->back_pressure_buffer_depth = new unsigned int[stream_count];
-      for (unsigned int i = 0; i < stream_count; i++)
+      this->back_pressure_buffer_depth = new uint32_t[stream_count];
+      for (uint32_t i = 0; i < stream_count; i++)
         this->back_pressure_buffer_depth[i] = 0;
       shared_dram_request_queue = false;
       break;
@@ -67,7 +67,7 @@ namespace SSD_Components
       break;
     }
     case SSD_Components::Cache_Sharing_Mode::EQUAL_PARTITIONING:
-      for (unsigned int i = 0; i < stream_count; i++)
+      for (uint32_t i = 0; i < stream_count; i++)
       {
         delete per_stream_cache[i];
         while (dram_execution_queue[i].size())
@@ -120,7 +120,7 @@ namespace SSD_Components
         case Caching_Mode::WRITE_CACHE:
           if (stat->Type == Utils::Workload_Type::SYNTHETIC)
           {
-            unsigned int total_pages_accessed = 1;
+            uint32_t total_pages_accessed = 1;
             switch (stat->Address_distribution_type)
             {
             case Utils::Address_Distribution_Type::STREAMING:
@@ -172,7 +172,7 @@ namespace SSD_Components
           if (stat->Type == Utils::Workload_Type::SYNTHETIC)
           {
             //Estimate average write service rate
-            unsigned int total_pages_accessed = 1;
+            uint32_t total_pages_accessed = 1;
             /*double average_write_arrival_rate, stdev_write_arrival_rate;
             double average_read_arrival_rate, stdev_read_arrival_rate;
             double average_write_service_time, average_read_service_time;*/
@@ -287,9 +287,9 @@ namespace SSD_Components
   void Data_Cache_Manager_Flash_Advanced::write_to_destage_buffer(User_Request* user_request)
   {
     //To eliminate race condition, MQSim assumes the management information and user data are stored in separate DRAM modules
-    unsigned int cache_eviction_read_size_in_sectors = 0;//The size of data evicted from cache
-    unsigned int flash_written_back_write_size_in_sectors = 0;//The size of data that is both written back to flash and written to DRAM
-    unsigned int dram_write_size_in_sectors = 0;//The size of data written to DRAM (must be >= flash_written_back_write_size_in_sectors)
+    uint32_t cache_eviction_read_size_in_sectors = 0;//The size of data evicted from cache
+    uint32_t flash_written_back_write_size_in_sectors = 0;//The size of data that is both written back to flash and written to DRAM
+    uint32_t dram_write_size_in_sectors = 0;//The size of data written to DRAM (must be >= flash_written_back_write_size_in_sectors)
     std::list<NVM_Transaction*>* evicted_cache_slots = new std::list<NVM_Transaction*>;
     std::list<NVM_Transaction*> writeback_transactions;
     auto it = user_request->Transaction_list.begin();
@@ -597,7 +597,7 @@ namespace SSD_Components
     }
     else
     {
-      for (unsigned int i = 0; i < stream_count; i++)
+      for (uint32_t i = 0; i < stream_count; i++)
       {
         dram_execution_list_turn++;
         dram_execution_list_turn %= stream_count;

@@ -42,7 +42,7 @@ namespace SSD_Components
   class Cached_Mapping_Table
   {
   public:
-    Cached_Mapping_Table(unsigned int capacity);
+    Cached_Mapping_Table(uint32_t capacity);
     ~Cached_Mapping_Table();
     bool Exists(const stream_id_type streamID, const LPA_type lpa);
     PPA_type Retrieve_ppa(const stream_id_type streamID, const LPA_type lpa);
@@ -60,7 +60,7 @@ namespace SSD_Components
   private:
     std::unordered_map<LPA_type, CMTSlotType*> addressMap;
     std::list<std::pair<LPA_type, CMTSlotType*>> lruList;
-    unsigned int capacity;
+    uint32_t capacity;
   };
 
   /* Each stream has its own address mapping domain. It helps isolation of GC interference
@@ -71,12 +71,12 @@ namespace SSD_Components
   class AddressMappingDomain
   {
   public:
-    AddressMappingDomain(unsigned int cmt_capacity, unsigned int cmt_entry_size, unsigned int no_of_translation_entries_per_page,
+    AddressMappingDomain(uint32_t cmt_capacity, uint32_t cmt_entry_size, uint32_t no_of_translation_entries_per_page,
       Cached_Mapping_Table* CMT,
       Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
-      flash_channel_ID_type* channel_ids, unsigned int channel_no, flash_chip_ID_type* chip_ids, unsigned int chip_no,
-      flash_die_ID_type* die_ids, unsigned int die_no, flash_plane_ID_type* plane_ids, unsigned int plane_no,
-      PPA_type total_physical_sectors_no, LHA_type total_logical_sectors_no, unsigned int sectors_no_per_page);
+      flash_channel_ID_type* channel_ids, uint32_t channel_no, flash_chip_ID_type* chip_ids, uint32_t chip_no,
+      flash_die_ID_type* die_ids, uint32_t die_no, flash_plane_ID_type* plane_ids, uint32_t plane_no,
+      PPA_type total_physical_sectors_no, LHA_type total_logical_sectors_no, uint32_t sectors_no_per_page);
     ~AddressMappingDomain();
 
 
@@ -86,10 +86,10 @@ namespace SSD_Components
 
     /*The cached mapping table that is implemented based on the DFLT (Gupta et al., ASPLOS 2009) proposal.
     * It is always stored in volatile memory.*/
-    unsigned int CMT_entry_size;
-    unsigned int Translation_entries_per_page;
+    uint32_t CMT_entry_size;
+    uint32_t Translation_entries_per_page;
     Cached_Mapping_Table* CMT;
-    unsigned int No_of_inserted_entries_in_preconditioning;
+    uint32_t No_of_inserted_entries_in_preconditioning;
 
 
     /*The logical to physical address mapping of all data pages that is implemented based on the DFTL (Gupta et al., ASPLOS 2009(
@@ -115,13 +115,13 @@ namespace SSD_Components
 
     Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme;
     flash_channel_ID_type* Channel_ids;
-    unsigned int Channel_no;
+    uint32_t Channel_no;
     flash_chip_ID_type* Chip_ids;
-    unsigned int Chip_no;
+    uint32_t Chip_no;
     flash_die_ID_type* Die_ids;
-    unsigned int Die_no;
+    uint32_t Die_no;
     flash_plane_ID_type* Plane_ids;
-    unsigned int Plane_no;
+    uint32_t Plane_no;
 
     LHA_type max_logical_sector_address;
     LPA_type Total_logical_pages_no;
@@ -134,12 +134,12 @@ namespace SSD_Components
     friend class GC_and_WL_Unit_Page_Level;
   public:
     Address_Mapping_Unit_Page_Level(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
-      bool ideal_mapping_table, unsigned int cmt_capacity_in_byte, Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
-      unsigned int ConcurrentStreamNo,
-      unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int DieNoPerChip, unsigned int PlaneNoPerDie,
+      bool ideal_mapping_table, uint32_t cmt_capacity_in_byte, Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
+      uint32_t ConcurrentStreamNo,
+      uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
       std::vector<std::vector<flash_channel_ID_type>> stream_channel_ids, std::vector<std::vector<flash_chip_ID_type>> stream_chip_ids,
       std::vector<std::vector<flash_die_ID_type>> stream_die_ids, std::vector<std::vector<flash_plane_ID_type>> stream_plane_ids,
-      unsigned int Block_no_per_plane, unsigned int Page_no_per_block, unsigned int SectorsPerPage, unsigned int PageSizeInBytes,
+      uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
       double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED, bool fold_large_addresses = true);
     ~Address_Mapping_Unit_Page_Level();
     void Setup_triggers();
@@ -149,8 +149,8 @@ namespace SSD_Components
 
     void Allocate_address_for_preconditioning(const stream_id_type stream_id, std::map<LPA_type, page_status_type>& lpa_list, std::vector<double>& steady_state_distribution);
     int Bring_to_CMT_for_preconditioning(stream_id_type stream_id, LPA_type lpa);
-    unsigned int Get_cmt_capacity();
-    unsigned int Get_current_cmt_occupancy_for_stream(stream_id_type stream_id);
+    uint32_t Get_cmt_capacity();
+    uint32_t Get_current_cmt_occupancy_for_stream(stream_id_type stream_id);
     void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactionList);
     void Get_data_mapping_info_for_gc(const stream_id_type stream_id, const LPA_type lpa, PPA_type& ppa, page_status_type& page_state);
     void Get_translation_mapping_info_for_gc(const stream_id_type stream_id, const MVPN_type mvpn, MPPN_type& mppa, sim_time_type& timestamp);
@@ -170,9 +170,9 @@ namespace SSD_Components
     void Start_servicing_writes_for_overfull_plane(const NVM::FlashMemory::Physical_Page_Address plane_address);
   private:
     static Address_Mapping_Unit_Page_Level* _my_instance;
-    unsigned int cmt_capacity;
+    uint32_t cmt_capacity;
     AddressMappingDomain** domains;
-    unsigned int CMT_entry_size, GTD_entry_size;//In CMT MQSim stores (lpn, ppn, page status bits) but in GTD it only stores (ppn, page status bits)
+    uint32_t CMT_entry_size, GTD_entry_size;//In CMT MQSim stores (lpn, ppn, page status bits) but in GTD it only stores (ppn, page status bits)
     void allocate_plane_for_user_write(NVM_Transaction_Flash_WR* transaction);
     void allocate_page_in_plane_for_user_write(NVM_Transaction_Flash_WR* transaction, bool is_for_gc);
     void allocate_plane_for_translation_write(NVM_Transaction_Flash* transaction);
@@ -186,7 +186,7 @@ namespace SSD_Components
     void generate_flash_read_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
     void generate_flash_writeback_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
 
-    unsigned int no_of_translation_entries_per_page;
+    uint32_t no_of_translation_entries_per_page;
     MVPN_type get_MVPN(const LPA_type lpn, stream_id_type stream_id);
     LPA_type get_start_LPN_in_MVP(const MVPN_type);
     LPA_type get_end_LPN_in_MVP(const MVPN_type);

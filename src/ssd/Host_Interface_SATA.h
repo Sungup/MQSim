@@ -56,8 +56,8 @@ namespace SSD_Components
     void Fetch_write_data(User_Request* request);
     void Send_read_data(User_Request* request);
     void Send_completion_queue_element(User_Request* request, uint16_t ncq_head_value);
-    void Process_pcie_write_message(uint64_t, void *, unsigned int);
-    void Process_pcie_read_message(uint64_t, void *, unsigned int);
+    void Process_pcie_write_message(uint64_t, void *, uint32_t);
+    void Process_pcie_read_message(uint64_t, void *, uint32_t);
   private:
     uint16_t current_phase;
     uint32_t number_of_sent_cqe;
@@ -70,7 +70,7 @@ namespace SSD_Components
     friend class Request_Fetch_Unit_SATA;
   public:
     Host_Interface_SATA(const sim_object_id_type& id,
-      const uint16_t ncq_depth, const LHA_type max_logical_sector_address, const unsigned int sectors_per_page, Data_Cache_Manager_Base* cache);
+      const uint16_t ncq_depth, const LHA_type max_logical_sector_address, const uint32_t sectors_per_page, Data_Cache_Manager_Base* cache);
     void Set_ncq_address(const uint64_t submission_queue_base_address, const uint64_t completion_queue_base_address);
     uint16_t Get_ncq_depth();
     void Start_simulation();

@@ -24,40 +24,40 @@ namespace SSD_Components
   unsigned long Stats::Total_flash_writes_for_mapping = 0;
   unsigned long Stats::Total_flash_reads_for_mapping_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
   unsigned long Stats::Total_flash_writes_for_mapping_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
-  unsigned int***** Stats::Block_erase_histogram;
-  unsigned int  Stats::CMT_hits = 0, Stats::readTR_CMT_hits = 0, Stats::writeTR_CMT_hits = 0;
-  unsigned int  Stats::CMT_miss = 0, Stats::readTR_CMT_miss = 0, Stats::writeTR_CMT_miss = 0;
-  unsigned int  Stats::total_CMT_queries = 0, Stats::total_readTR_CMT_queries = 0, Stats::total_writeTR_CMT_queries = 0;
+  uint32_t***** Stats::Block_erase_histogram;
+  uint32_t  Stats::CMT_hits = 0, Stats::readTR_CMT_hits = 0, Stats::writeTR_CMT_hits = 0;
+  uint32_t  Stats::CMT_miss = 0, Stats::readTR_CMT_miss = 0, Stats::writeTR_CMT_miss = 0;
+  uint32_t  Stats::total_CMT_queries = 0, Stats::total_readTR_CMT_queries = 0, Stats::total_writeTR_CMT_queries = 0;
 
-  unsigned int Stats::Total_gc_executions = 0, Stats::Total_gc_executions_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
-  unsigned int Stats::Total_page_movements_for_gc = 0, Stats::Total_gc_page_movements_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
+  uint32_t Stats::Total_gc_executions = 0, Stats::Total_gc_executions_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
+  uint32_t Stats::Total_page_movements_for_gc = 0, Stats::Total_gc_page_movements_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
 
-  unsigned int Stats::Total_wl_executions = 0, Stats::Total_wl_executions_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
-  unsigned int Stats::Total_page_movements_for_wl = 0, Stats::Total_wl_page_movements_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
+  uint32_t Stats::Total_wl_executions = 0, Stats::Total_wl_executions_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
+  uint32_t Stats::Total_page_movements_for_wl = 0, Stats::Total_wl_page_movements_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
 
-  unsigned int Stats::CMT_hits_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::readTR_CMT_hits_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::writeTR_CMT_hits_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
-  unsigned int Stats::CMT_miss_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::readTR_CMT_miss_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::writeTR_CMT_miss_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
-  unsigned int Stats::total_CMT_queries_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::total_readTR_CMT_queries_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::total_writeTR_CMT_queries_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
+  uint32_t Stats::CMT_hits_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::readTR_CMT_hits_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::writeTR_CMT_hits_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
+  uint32_t Stats::CMT_miss_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::readTR_CMT_miss_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::writeTR_CMT_miss_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
+  uint32_t Stats::total_CMT_queries_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::total_readTR_CMT_queries_per_stream[MAX_SUPPORT_STREAMS] = { 0 }, Stats::total_writeTR_CMT_queries_per_stream[MAX_SUPPORT_STREAMS] = { 0 };
 
 
-  void Stats::Init_stats(unsigned int channel_no, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die, 
-    unsigned int block_no_per_plane, unsigned int page_no_per_block, unsigned int max_allowed_block_erase_count)
+  void Stats::Init_stats(uint32_t channel_no, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
+    uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t max_allowed_block_erase_count)
   {
-    Block_erase_histogram = new unsigned int ****[channel_no];
-    for (unsigned int channel_cntr = 0; channel_cntr < channel_no; channel_cntr++)
+    Block_erase_histogram = new uint32_t ****[channel_no];
+    for (uint32_t channel_cntr = 0; channel_cntr < channel_no; channel_cntr++)
     {
-      Block_erase_histogram[channel_cntr] = new unsigned int***[chip_no_per_channel];
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+      Block_erase_histogram[channel_cntr] = new uint32_t***[chip_no_per_channel];
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
       {
-        Block_erase_histogram[channel_cntr][chip_cntr] = new unsigned int**[die_no_per_chip];
-        for (unsigned int die_cntr = 0; die_cntr < die_no_per_chip; die_cntr++)
+        Block_erase_histogram[channel_cntr][chip_cntr] = new uint32_t**[die_no_per_chip];
+        for (uint32_t die_cntr = 0; die_cntr < die_no_per_chip; die_cntr++)
         {
-          Block_erase_histogram[channel_cntr][chip_cntr][die_cntr] = new unsigned int*[plane_no_per_die];
-          for (unsigned int plane_cntr = 0; plane_cntr < plane_no_per_die; plane_cntr++)
+          Block_erase_histogram[channel_cntr][chip_cntr][die_cntr] = new uint32_t*[plane_no_per_die];
+          for (uint32_t plane_cntr = 0; plane_cntr < plane_no_per_die; plane_cntr++)
           {
-            Block_erase_histogram[channel_cntr][chip_cntr][die_cntr][plane_cntr] = new unsigned int[max_allowed_block_erase_count];
+            Block_erase_histogram[channel_cntr][chip_cntr][die_cntr][plane_cntr] = new uint32_t[max_allowed_block_erase_count];
             Block_erase_histogram[channel_cntr][chip_cntr][die_cntr][plane_cntr][0] = block_no_per_plane * page_no_per_block; //At the start of the simulation all pages have zero erase count
-            for (unsigned int i = 1; i < max_allowed_block_erase_count; ++i)
+            for (uint32_t i = 1; i < max_allowed_block_erase_count; ++i)
               Block_erase_histogram[channel_cntr][chip_cntr][die_cntr][plane_cntr][i] = 0;
           }
         }
@@ -90,16 +90,16 @@ namespace SSD_Components
     }
   }
 
-  void Stats::Clear_stats(unsigned int channel_no, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die,
-    unsigned int block_no_per_plane, unsigned int page_no_per_block, unsigned int max_allowed_block_erase_count)
+  void Stats::Clear_stats(uint32_t channel_no, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
+    uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t max_allowed_block_erase_count)
   {
-    for (unsigned int channel_cntr = 0; channel_cntr < channel_no; channel_cntr++)
+    for (uint32_t channel_cntr = 0; channel_cntr < channel_no; channel_cntr++)
     {
-      for (unsigned int chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
+      for (uint32_t chip_cntr = 0; chip_cntr < chip_no_per_channel; chip_cntr++)
       {
-        for (unsigned int die_cntr = 0; die_cntr < die_no_per_chip; die_cntr++)
+        for (uint32_t die_cntr = 0; die_cntr < die_no_per_chip; die_cntr++)
         {
-          for (unsigned int plane_cntr = 0; plane_cntr < plane_no_per_die; plane_cntr++)
+          for (uint32_t plane_cntr = 0; plane_cntr < plane_no_per_die; plane_cntr++)
             delete[] Block_erase_histogram[channel_cntr][chip_cntr][die_cntr][plane_cntr];
           delete[] Block_erase_histogram[channel_cntr][chip_cntr][die_cntr];
         }

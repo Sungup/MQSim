@@ -30,7 +30,7 @@ namespace SSD_Components
 
   struct Memory_Transfer_Info
   {
-    unsigned int Size_in_bytes;
+    uint32_t Size_in_bytes;
     void* Related_request;
     Data_Cache_Simulation_Event_Type next_event_type;
     stream_id_type Stream_id;
@@ -39,11 +39,11 @@ namespace SSD_Components
   class Data_Cache_Flash
   {
   public:
-    Data_Cache_Flash(unsigned int capacity_in_pages = 0);
+    Data_Cache_Flash(uint32_t capacity_in_pages = 0);
     ~Data_Cache_Flash();
     bool Exists(const stream_id_type streamID, const LPA_type lpn);
     bool Check_free_slot_availability();
-    bool Check_free_slot_availability(unsigned int no_of_slots);
+    bool Check_free_slot_availability(uint32_t no_of_slots);
     bool Empty();
     bool Full();
     Data_Cache_Slot_Type Get_slot(const stream_id_type stream_id, const LPA_type lpn);
@@ -57,7 +57,7 @@ namespace SSD_Components
   private:
     std::unordered_map<LPA_type, Data_Cache_Slot_Type*> slots;
     std::list<std::pair<LPA_type, Data_Cache_Slot_Type*>> lru_list;
-    unsigned int capacity_in_pages;
+    uint32_t capacity_in_pages;
   };
 }
 

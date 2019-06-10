@@ -7,7 +7,7 @@ using std::cout;
 
 namespace SSD_Components {
   Controller::Controller(std::string id, SimulationMode simulationMode, InitialSimulationStatus initialSSDStatus, uint32_t percentageOfValidPages, uint32_t validPagesStdDev,
-    FCC* fcc, unsigned int channel_count, unsigned int die_no_per_chip, unsigned int plane_no_per_die, unsigned int block_no_per_plane, unsigned int pages_no_per_block,
+    FCC* fcc, uint32_t channel_count, uint32_t die_no_per_chip, uint32_t plane_no_per_die, uint32_t block_no_per_plane, uint32_t pages_no_per_block,
     bool loggingEnabled, int logLineCount, std::string logFilePath, int seed) : Sim_Object(id),
     simulationMode(simulationMode), InitialStatus(initialSSDStatus),
     initialPercentageOfValidPages(percentageOfValidPages), initialPercentagesOfValidPagesStdDev(validPagesStdDev),

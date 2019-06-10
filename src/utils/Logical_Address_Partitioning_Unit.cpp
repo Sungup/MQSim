@@ -13,10 +13,10 @@ namespace Utils
   std::vector<LHA_type> Logical_Address_Partitioning_Unit::pdas_per_flow;
   std::vector<LHA_type> Logical_Address_Partitioning_Unit::start_lhas_per_flow;
   std::vector<LHA_type> Logical_Address_Partitioning_Unit::end_lhas_per_flow;
-  unsigned int Logical_Address_Partitioning_Unit::channel_count;
-  unsigned int Logical_Address_Partitioning_Unit::chip_no_per_channel;
-  unsigned int Logical_Address_Partitioning_Unit::die_no_per_chip;
-  unsigned int Logical_Address_Partitioning_Unit::plane_no_per_die;
+  uint32_t Logical_Address_Partitioning_Unit::channel_count;
+  uint32_t Logical_Address_Partitioning_Unit::chip_no_per_channel;
+  uint32_t Logical_Address_Partitioning_Unit::die_no_per_chip;
+  uint32_t Logical_Address_Partitioning_Unit::plane_no_per_die;
   LHA_type Logical_Address_Partitioning_Unit::total_pda_no = 0;
   LHA_type Logical_Address_Partitioning_Unit::total_lha_no = 0;
 
@@ -46,11 +46,11 @@ namespace Utils
     delete[] resource_list;
   }
 
-  void Logical_Address_Partitioning_Unit::Allocate_logical_address_for_flows(HostInterface_Types hostinterface_type, unsigned int concurrent_stream_no,
-    unsigned int channel_count, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die,
+  void Logical_Address_Partitioning_Unit::Allocate_logical_address_for_flows(HostInterface_Types hostinterface_type, uint32_t concurrent_stream_no,
+    uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
     std::vector<std::vector<flash_channel_ID_type>> stream_channel_ids, std::vector<std::vector<flash_chip_ID_type>> stream_chip_ids,
     std::vector<std::vector<flash_die_ID_type>> stream_die_ids, std::vector<std::vector<flash_plane_ID_type>> stream_plane_ids,
-    unsigned int block_no_per_plane, unsigned int page_no_per_block, unsigned int sector_no_per_page, double overprovisioning_ratio) 
+    uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t sector_no_per_page, double overprovisioning_ratio)
   {
     if (initialized)
       return;
@@ -79,7 +79,7 @@ namespace Utils
       }
     }
 
-    for (unsigned int stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
+    for (uint32_t stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
     {
       for (flash_channel_ID_type channel_id = 0; channel_id < stream_channel_ids[stream_id].size(); channel_id++)
         for (flash_chip_ID_type chip_id = 0; chip_id < stream_chip_ids[stream_id].size(); chip_id++)
@@ -102,7 +102,7 @@ namespace Utils
             }
     }
 
-    for (unsigned int stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
+    for (uint32_t stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
     {
       std::vector<flash_channel_ID_type> channel_ids;
       Logical_Address_Partitioning_Unit::stream_channel_ids.push_back(channel_ids);
@@ -126,7 +126,7 @@ namespace Utils
     }
 
     std::vector<LHA_type> lsa_count_per_stream;
-    for (unsigned int stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
+    for (uint32_t stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
     {
       LHA_type lsa_count = 0;
       for (flash_channel_ID_type channel_id = 0; channel_id < stream_channel_ids[stream_id].size(); channel_id++)
@@ -143,7 +143,7 @@ namespace Utils
     }
 
     total_lha_no = 0;
-    for (unsigned int stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
+    for (uint32_t stream_id = 0; stream_id < concurrent_stream_no; stream_id++)
     {
       start_lhas_per_flow.push_back(total_lha_no);
       end_lhas_per_flow.push_back(total_lha_no + lsa_count_per_stream[stream_id] - 1);

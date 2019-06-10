@@ -45,7 +45,7 @@ namespace SSD_Components
   {
   public:
     Input_Stream_Manager_NVMe(Host_Interface_Base* host_interface, uint16_t queue_fetch_szie);
-    unsigned int Queue_fetch_size;
+    uint32_t Queue_fetch_size;
     stream_id_type Create_new_stream(IO_Flow_Priority_Class priority_class, LHA_type start_logical_sector_address, LHA_type end_logical_sector_address,
       uint64_t submission_queue_base_address, uint16_t submission_queue_size,
       uint64_t completion_queue_base_address, uint16_t completion_queue_size);
@@ -70,8 +70,8 @@ namespace SSD_Components
     void Fetch_write_data(User_Request* request);
     void Send_read_data(User_Request* request);
     void Send_completion_queue_element(User_Request* request, uint16_t sq_head_value);
-    void Process_pcie_write_message(uint64_t, void *, unsigned int);
-    void Process_pcie_read_message(uint64_t, void *, unsigned int);
+    void Process_pcie_write_message(uint64_t, void *, uint32_t);
+    void Process_pcie_read_message(uint64_t, void *, uint32_t);
   private:
     uint16_t current_phase;
     uint32_t number_of_sent_cqe;
@@ -84,7 +84,7 @@ namespace SSD_Components
   public:
     Host_Interface_NVMe(const sim_object_id_type& id, LHA_type max_logical_sector_address,
       uint16_t submission_queue_depth, uint16_t completion_queue_depth,
-      unsigned int no_of_input_streams, uint16_t queue_fetch_size, unsigned int sectors_per_page, Data_Cache_Manager_Base* cache);
+      uint32_t no_of_input_streams, uint16_t queue_fetch_size, uint32_t sectors_per_page, Data_Cache_Manager_Base* cache);
     stream_id_type Create_new_stream(IO_Flow_Priority_Class priority_class, LHA_type start_logical_sector_address, LHA_type end_logical_sector_address,
       uint64_t submission_queue_base_address, uint64_t completion_queue_base_address);
     void Start_simulation();
@@ -95,7 +95,7 @@ namespace SSD_Components
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
   private:
     uint16_t submission_queue_depth, completion_queue_depth;
-    unsigned int no_of_input_streams;
+    uint32_t no_of_input_streams;
   };
 }
 

@@ -7,7 +7,7 @@ namespace Host_Components
 {
   IO_Flow_Trace_Based::IO_Flow_Trace_Based(const sim_object_id_type& name, uint16_t flow_id, LHA_type start_lsa_on_device, LHA_type end_lsa_on_device, uint16_t io_queue_id,
     uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, IO_Flow_Priority_Class priority_class, double initial_occupancy_ratio,
-    std::string trace_file_path, Trace_Time_Unit time_unit, unsigned int total_replay_count, unsigned int percentage_to_be_simulated,
+    std::string trace_file_path, Trace_Time_Unit time_unit, uint32_t total_replay_count, uint32_t percentage_to_be_simulated,
     HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
     bool enabled_logging, sim_time_type logging_period, std::string logging_file_path) :
     IO_Flow_Base(name, flow_id, start_lsa_on_device, end_lsa_on_device, io_queue_id, nvme_submission_queue_size, nvme_completion_queue_size, priority_class, 0, initial_occupancy_ratio, 0, SSD_device_type, pcie_root_complex, sata_hba, enabled_logging, logging_period, logging_file_path),
@@ -187,7 +187,7 @@ namespace Host_Components
       sim_time_type diff = (last_request_arrival_time - prev_time) / 1000;//The arrival rate histogram is stored in the microsecond unit
       sum_inter_arrival += last_request_arrival_time - prev_time;
 
-      unsigned int LBA_count = std::strtoul(line_splitted[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
+      uint32_t LBA_count = std::strtoul(line_splitted[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
       sum_request_size += LBA_count;
       LHA_type start_LBA = std::strtoull(line_splitted[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
       if (start_LBA <= (end_lsa_on_device - start_lsa_on_device))
@@ -265,12 +265,12 @@ namespace Host_Components
           stats.Read_arrival_time[MAX_ARRIVAL_TIME_HISTOGRAM]++;
         if (LBA_count < MAX_REQSIZE_HISTOGRAM_ITEMS)
           stats.Read_size_histogram[LBA_count]++;
-        else stats.Read_size_histogram[(unsigned int)MAX_REQSIZE_HISTOGRAM_ITEMS]++;
+        else stats.Read_size_histogram[(uint32_t)MAX_REQSIZE_HISTOGRAM_ITEMS]++;
       }
       stats.Total_generated_reqeusts++;
     }
     trace_file_temp.close();
-    stats.Average_request_size_sector = (unsigned int)(sum_request_size / stats.Total_generated_reqeusts);
+    stats.Average_request_size_sector = (uint32_t)(sum_request_size / stats.Total_generated_reqeusts);
     stats.Average_inter_arrival_time_nano_sec = sum_inter_arrival / stats.Total_generated_reqeusts;
 
     stats.Initial_occupancy_ratio = initial_occupancy_ratio;

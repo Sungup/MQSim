@@ -149,11 +149,11 @@ namespace SSD_Components
   {
     LHA_type lsa = user_request->Start_LBA;
     LHA_type lsa2 = user_request->Start_LBA;
-    unsigned int req_size = user_request->SizeInSectors;
+    uint32_t req_size = user_request->SizeInSectors;
 
     page_status_type access_status_bitmap = 0;
-    unsigned int hanled_sectors_count = 0;
-    unsigned int transaction_size = 0;
+    uint32_t hanled_sectors_count = 0;
+    uint32_t transaction_size = 0;
     while (hanled_sectors_count < req_size)
     {      
       //Check if LSA is in the correct range allocted to the stream
@@ -163,7 +163,7 @@ namespace SSD_Components
       LHA_type internal_lsa = lsa - ((Input_Stream_NVMe*)input_streams[user_request->Stream_id])->Start_logical_sector_address;//For each flow, all lsa's should be translated into a range starting from zero
       
 
-      transaction_size = host_interface->sectors_per_page - (unsigned int)(lsa % host_interface->sectors_per_page);
+      transaction_size = host_interface->sectors_per_page - (uint32_t)(lsa % host_interface->sectors_per_page);
       if (hanled_sectors_count + transaction_size >= req_size)
       {
         transaction_size = req_size - hanled_sectors_count;
@@ -196,7 +196,7 @@ namespace SSD_Components
   Request_Fetch_Unit_NVMe::Request_Fetch_Unit_NVMe(Host_Interface_Base* host_interface) :
     Request_Fetch_Unit_Base(host_interface), current_phase(0xffff), number_of_sent_cqe(0) {}
   
-  void Request_Fetch_Unit_NVMe::Process_pcie_write_message(uint64_t address, void * payload, unsigned int payload_size)
+  void Request_Fetch_Unit_NVMe::Process_pcie_write_message(uint64_t address, void * payload, uint32_t payload_size)
   {
     Host_Interface_NVMe* hi = (Host_Interface_NVMe*)host_interface;
     uint64_t val = (uint64_t)payload;
@@ -255,7 +255,7 @@ namespace SSD_Components
     }
   }
   
-  void Request_Fetch_Unit_NVMe::Process_pcie_read_message(uint64_t address, void * payload, unsigned int payload_size)
+  void Request_Fetch_Unit_NVMe::Process_pcie_read_message(uint64_t address, void * payload, uint32_t payload_size)
   {
     Host_Interface_NVMe* hi = (Host_Interface_NVMe*)host_interface;
     DMA_Req_Item* dma_req_item = dma_list.front();
@@ -352,7 +352,7 @@ namespace SSD_Components
 
   Host_Interface_NVMe::Host_Interface_NVMe(const sim_object_id_type& id,
     LHA_type max_logical_sector_address, uint16_t submission_queue_depth, uint16_t completion_queue_depth,
-    unsigned int no_of_input_streams, uint16_t queue_fetch_size, unsigned int sectors_per_page, Data_Cache_Manager_Base* cache) :
+    uint32_t no_of_input_streams, uint16_t queue_fetch_size, uint32_t sectors_per_page, Data_Cache_Manager_Base* cache) :
     Host_Interface_Base(id, HostInterface_Types::NVME, max_logical_sector_address, sectors_per_page, cache),
     submission_queue_depth(submission_queue_depth), completion_queue_depth(completion_queue_depth), no_of_input_streams(no_of_input_streams)
   {
@@ -400,7 +400,7 @@ namespace SSD_Components
     xmlwriter.Write_attribute_string(attr, val);
 
 
-    for (unsigned int stream_id = 0; stream_id < no_of_input_streams; stream_id++)
+    for (uint32_t stream_id = 0; stream_id < no_of_input_streams; stream_id++)
     {
       std::string tmp = name_prefix + ".IO_Stream";
       xmlwriter.Write_open_tag(tmp);

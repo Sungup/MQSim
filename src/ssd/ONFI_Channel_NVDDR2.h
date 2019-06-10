@@ -14,7 +14,7 @@ namespace SSD_Components
   class ONFI_Channel_NVDDR2 : public ONFI_Channel_Base
   {
   public:
-    ONFI_Channel_NVDDR2(flash_channel_ID_type channelID, unsigned int chipCount, NVM::FlashMemory::Flash_Chip** flashChips, unsigned int ChannelWidth,
+    ONFI_Channel_NVDDR2(flash_channel_ID_type channelID, uint32_t chipCount, NVM::FlashMemory::Flash_Chip** flashChips, uint32_t ChannelWidth,
       sim_time_type t_RC = 6, sim_time_type t_DSC = 6,
       sim_time_type t_DBSY = 500, sim_time_type t_CS = 20, sim_time_type t_RR = 20,
       sim_time_type t_WB = 100, sim_time_type t_WC = 25, sim_time_type t_ADL = 70, sim_time_type t_CALS = 15,
@@ -33,7 +33,7 @@ namespace SSD_Components
     sim_time_type EraseCommandTime[5];
     sim_time_type EraseSuspendCommandTime;
 
-    unsigned int ChannelWidth; //channel width in bytes
+    uint32_t ChannelWidth; //channel width in bytes
   private:
     //Data input/ouput timing parameters related to bus frequency
     sim_time_type t_RC; //Average RE cycle time, e.g. 6ns

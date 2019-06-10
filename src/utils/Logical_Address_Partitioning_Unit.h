@@ -16,11 +16,11 @@ namespace Utils
   {
   public:
     static void Reset();
-    static void Allocate_logical_address_for_flows(HostInterface_Types hostinterface_type, unsigned int concurrent_stream_no,
-      unsigned int channel_count, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die,
+    static void Allocate_logical_address_for_flows(HostInterface_Types hostinterface_type, uint32_t concurrent_stream_no,
+      uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
       std::vector<std::vector<flash_channel_ID_type>> stream_channel_ids, std::vector<std::vector<flash_chip_ID_type>> stream_chip_ids,
       std::vector<std::vector<flash_die_ID_type>> stream_die_ids, std::vector<std::vector<flash_plane_ID_type>> stream_plane_ids,
-      unsigned int block_no_per_plane, unsigned int page_no_per_block, unsigned int sector_no_per_page, double overprovisioning_ratio);
+      uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t sector_no_per_page, double overprovisioning_ratio);
     static LHA_type Start_lha_available_to_flow(stream_id_type stream_id);
     static LHA_type End_lha_available_to_flow(stream_id_type stream_id);
     static LHA_type LHA_count_allocate_to_flow_from_host_view(stream_id_type stream_id);
@@ -41,10 +41,10 @@ namespace Utils
     static std::vector<LHA_type> end_lhas_per_flow;
     static LHA_type total_pda_no;
     static LHA_type total_lha_no;
-    static unsigned int channel_count;
-    static unsigned int chip_no_per_channel;
-    static unsigned int die_no_per_chip;
-    static unsigned int plane_no_per_die;
+    static uint32_t channel_count;
+    static uint32_t chip_no_per_channel;
+    static uint32_t die_no_per_chip;
+    static uint32_t plane_no_per_die;
   };
 }
 #endif // !LOGICAL_ADDRESS_PARTITIONING_UNIT_H

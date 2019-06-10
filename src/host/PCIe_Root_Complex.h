@@ -25,7 +25,7 @@ namespace Host_Components
       switch (messages->Type)
       {
       case PCIe_Message_Type::READ_REQ:
-        Read_from_memory(messages->Address, (unsigned int)(intptr_t)messages->Payload);
+        Read_from_memory(messages->Address, (uint32_t)(intptr_t)messages->Payload);
         break;
       case PCIe_Message_Type::WRITE_REQ:
         Write_to_memory(messages->Address, messages->Payload);
@@ -44,7 +44,7 @@ namespace Host_Components
     std::vector<Host_Components::IO_Flow_Base*>* IO_flows;
     
     void Write_to_memory(const uint64_t address, const void* payload);
-    void Read_from_memory(const uint64_t address, const unsigned int size);
+    void Read_from_memory(const uint64_t address, const uint32_t size);
   };
 }
 

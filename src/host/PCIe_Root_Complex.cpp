@@ -18,7 +18,7 @@ namespace Host_Components
       {
       case HostInterface_Types::NVME:
       {
-        unsigned int flow_id = QUEUE_ID_TO_FLOW_ID(((Completion_Queue_Entry*)payload)->SQ_ID);
+        uint32_t flow_id = QUEUE_ID_TO_FLOW_ID(((Completion_Queue_Entry*)payload)->SQ_ID);
         ((*IO_flows)[flow_id])->NVMe_consume_io_request((Completion_Queue_Entry*)payload);
         break;
       }
@@ -42,7 +42,7 @@ namespace Host_Components
     pcie_link->Deliver(pcie_message);
   }
 
-  void PCIe_Root_Complex::Read_from_memory(const uint64_t address, const unsigned int read_size)
+  void PCIe_Root_Complex::Read_from_memory(const uint64_t address, const uint32_t read_size)
   {
     PCIe_Message* new_pcie_message = new Host_Components::PCIe_Message;
     new_pcie_message->Type = PCIe_Message_Type::READ_COMP;

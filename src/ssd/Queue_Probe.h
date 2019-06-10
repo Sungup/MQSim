@@ -30,7 +30,7 @@ namespace SSD_Components
     unsigned long NDepartures();
     int QueueLength();
     std::vector<StateStatistics> States();
-    unsigned int MaxQueueLength();
+    uint32_t MaxQueueLength();
     double AvgQueueLength();
     double STDevQueueLength();
     double AvgQueueLengthEpoch();
@@ -39,7 +39,7 @@ namespace SSD_Components
     sim_time_type AvgWaitingTimeEpoch();
     sim_time_type TotalWaitingTime();
   private:
-    unsigned int count = 0;
+    uint32_t count = 0;
     unsigned long nRequests = 0;
     unsigned long nDepartures = 0;
     sim_time_type totalWaitingTime = 0;
@@ -52,7 +52,7 @@ namespace SSD_Components
     std::vector<StateStatistics> states;
     std::vector<StateStatistics> statesEpoch;
     std::unordered_map<NVM_Transaction*, sim_time_type> currentObjectsInQueue;
-    unsigned int maxQueueLength = 0;
+    uint32_t maxQueueLength = 0;
     sim_time_type maxWaitingTime = 0;
     void setCount(int val);
   };

@@ -3,7 +3,7 @@
 
 
 double Host_Parameter_Set::PCIe_Lane_Bandwidth = 0.4;//uint is GB/s
-unsigned int Host_Parameter_Set::PCIe_Lane_Count = 4;
+uint32_t Host_Parameter_Set::PCIe_Lane_Count = 4;
 sim_time_type Host_Parameter_Set::SATA_Processing_Delay;//The overall hardware and software processing delay to send/receive a SATA message in nanoseconds
 bool Host_Parameter_Set::Enable_ResponseTime_Logging = false;
 sim_time_type Host_Parameter_Set::ResponseTime_Logging_Period_Length = 400000;//nanoseconds

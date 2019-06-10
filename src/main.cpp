@@ -263,7 +263,7 @@ void collect_results(SSD_Device& ssd, Host_System& host, const char* output_file
   xmlwriter.Write_close_tag();
 
   std::vector<Host_Components::IO_Flow_Base*> IO_flows = host.Get_io_flows();
-  for (unsigned int stream_id = 0; stream_id < IO_flows.size(); stream_id++)
+  for (uint32_t stream_id = 0; stream_id < IO_flows.size(); stream_id++)
   {
     cout << "Flow " << IO_flows[stream_id]->ID() << " - total requests generated: " << IO_flows[stream_id]->Get_generated_request_count()
       << " total requests serviced:" << IO_flows[stream_id]->Get_serviced_request_count() << endl;

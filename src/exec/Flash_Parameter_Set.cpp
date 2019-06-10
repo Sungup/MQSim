@@ -12,15 +12,15 @@ sim_time_type Flash_Parameter_Set::Page_Program_Latency_LSB = 750000;
 sim_time_type Flash_Parameter_Set::Page_Program_Latency_CSB = 750000;
 sim_time_type Flash_Parameter_Set::Page_Program_Latency_MSB = 750000;
 sim_time_type Flash_Parameter_Set::Block_Erase_Latency = 3800000;//Block erase latency in nano-seconds
-unsigned int Flash_Parameter_Set::Block_PE_Cycles_Limit = 10000;
+uint32_t Flash_Parameter_Set::Block_PE_Cycles_Limit = 10000;
 sim_time_type Flash_Parameter_Set::Suspend_Erase_Time = 700000;//in nano-seconds
 sim_time_type Flash_Parameter_Set::Suspend_Program_Time = 100000;//in nano-seconds
-unsigned int Flash_Parameter_Set::Die_No_Per_Chip = 2;
-unsigned int Flash_Parameter_Set::Plane_No_Per_Die = 2;
-unsigned int Flash_Parameter_Set::Block_No_Per_Plane = 2048;
-unsigned int Flash_Parameter_Set::Page_No_Per_Block = 256;//Page no per block
-unsigned int Flash_Parameter_Set::Page_Capacity = 8192;//Flash page capacity in bytes
-unsigned int Flash_Parameter_Set::Page_Metadat_Capacity = 1872;//Flash page capacity in bytes
+uint32_t Flash_Parameter_Set::Die_No_Per_Chip = 2;
+uint32_t Flash_Parameter_Set::Plane_No_Per_Die = 2;
+uint32_t Flash_Parameter_Set::Block_No_Per_Plane = 2048;
+uint32_t Flash_Parameter_Set::Page_No_Per_Block = 256;//Page no per block
+uint32_t Flash_Parameter_Set::Page_Capacity = 8192;//Flash page capacity in bytes
+uint32_t Flash_Parameter_Set::Page_Metadat_Capacity = 1872;//Flash page capacity in bytes
 
 
 void Flash_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)

@@ -13,10 +13,10 @@ namespace NVM
     class Plane
     {
     public:
-      Plane(unsigned int BlocksNoPerPlane, unsigned int PagesNoPerBlock);
+      Plane(uint32_t BlocksNoPerPlane, uint32_t PagesNoPerBlock);
       ~Plane();
       Block** Blocks;
-      unsigned int Healthy_block_no;
+      uint32_t Healthy_block_no;
       unsigned long Read_count;                     //how many read count in the process of workload
       unsigned long Progam_count;
       unsigned long Erase_count;

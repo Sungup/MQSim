@@ -9,10 +9,10 @@ namespace Host_Components
     LHA_type start_lsa_on_device, LHA_type end_lsa_on_device, double working_set_ratio, uint16_t io_queue_id,
     uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, IO_Flow_Priority_Class priority_class,
     double read_ratio, Utils::Address_Distribution_Type address_distribution, double hot_region_ratio,
-    Utils::Request_Size_Distribution_Type request_size_distribution, unsigned int average_request_size, unsigned int variance_request_size,
-    Utils::Request_Generator_Type generator_type, sim_time_type Average_inter_arrival_time_nano_sec, unsigned int average_number_of_enqueued_requests,
-    bool generate_aligned_addresses, unsigned int alignment_value,
-    int seed, sim_time_type stop_time, double initial_occupancy_ratio, unsigned int total_req_count, HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
+    Utils::Request_Size_Distribution_Type request_size_distribution, uint32_t average_request_size, uint32_t variance_request_size,
+    Utils::Request_Generator_Type generator_type, sim_time_type Average_inter_arrival_time_nano_sec, uint32_t average_number_of_enqueued_requests,
+    bool generate_aligned_addresses, uint32_t alignment_value,
+    int seed, sim_time_type stop_time, double initial_occupancy_ratio, uint32_t total_req_count, HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
     bool enabled_logging, sim_time_type logging_period, std::string logging_file_path) :
     IO_Flow_Base(name, flow_id, start_lsa_on_device, LHA_type(start_lsa_on_device + (end_lsa_on_device - start_lsa_on_device) * working_set_ratio), io_queue_id, nvme_submission_queue_size, nvme_completion_queue_size, priority_class, stop_time, initial_occupancy_ratio, total_req_count, SSD_device_type, pcie_root_complex, sata_hba, enabled_logging, logging_period, logging_file_path),
     read_ratio(read_ratio), address_distribution(address_distribution),
@@ -101,7 +101,7 @@ namespace Host_Components
     case Utils::Request_Size_Distribution_Type::NORMAL:
     {
       double temp_request_size = random_request_size_generator->Normal(average_request_size, variance_request_size);
-      request->LBA_count = (unsigned int)(ceil(temp_request_size));
+      request->LBA_count = (uint32_t)(ceil(temp_request_size));
       if (request->LBA_count <= 0)
         request->LBA_count = 1;
       break;
@@ -216,7 +216,7 @@ namespace Host_Components
         Simulator->Register_sim_event(Simulator->Time() + (sim_time_type)random_time_interval_generator->Exponential((double)Average_inter_arrival_time_nano_sec), this, 0, 0);
       }
     }
-    else for (unsigned int i = 0; i < average_number_of_enqueued_requests; i++)
+    else for (uint32_t i = 0; i < average_number_of_enqueued_requests; i++)
       Submit_io_request(Generate_next_request());
   }
 

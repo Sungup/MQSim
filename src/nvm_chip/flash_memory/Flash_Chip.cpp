@@ -9,7 +9,7 @@ namespace NVM
   {
     Flash_Chip::Flash_Chip(const sim_object_id_type& id, flash_channel_ID_type channelID, flash_chip_ID_type localChipID,
       Flash_Technology_Type flash_technology, 
-      unsigned int dieNo, unsigned int PlaneNoPerDie, unsigned int Block_no_per_plane, unsigned int Page_no_per_block,
+      uint32_t dieNo, uint32_t PlaneNoPerDie, uint32_t Block_no_per_plane, uint32_t Page_no_per_block,
       sim_time_type* readLatency, sim_time_type* programLatency, sim_time_type eraseLatency,
       sim_time_type suspendProgramLatency, sim_time_type suspendEraseLatency,
       sim_time_type commProtocolDelayRead, sim_time_type commProtocolDelayWrite, sim_time_type commProtocolDelayErase)
@@ -34,13 +34,13 @@ namespace NVM
       _suspendEraseLatency = suspendEraseLatency;
       idleDieNo = dieNo;
       Dies = new Die*[dieNo];
-      for (unsigned int dieID = 0; dieID < dieNo; dieID++)
+      for (uint32_t dieID = 0; dieID < dieNo; dieID++)
         Dies[dieID] = new Die(PlaneNoPerDie, Block_no_per_plane, Page_no_per_block);
     }
 
     Flash_Chip::~Flash_Chip()
     {
-      for (unsigned int dieID = 0; dieID < die_no; dieID++)
+      for (uint32_t dieID = 0; dieID < die_no; dieID++)
         delete Dies[dieID];
       delete[] Dies;
       delete[] _readLatency;
@@ -58,7 +58,7 @@ namespace NVM
     {
       if (Dies == NULL || die_no == 0)
         PRINT_ERROR("Flash chip " << ID() << ": has no dies!")
-      for (unsigned int i = 0; i < die_no; i++)
+      for (uint32_t i = 0; i < die_no; i++)
       {
         if (Dies[i]->Planes == NULL)
           PRINT_ERROR("Flash chip" << ID() << ": die (" + ID() + ") has no planes!")
@@ -146,7 +146,7 @@ namespace NVM
       case CMD_READ_PAGE_COPYBACK:
       case CMD_READ_PAGE_COPYBACK_MULTIPLANE:
         DEBUG("Channel " << this->ChannelID << " Chip " << this->ChipID << "- Finished executing read command")
-        for (unsigned int planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
+        for (uint32_t planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
         {
           STAT_readCount++;
           targetDie->Planes[command->Address[planeCntr].PlaneID]->Read_count++;
@@ -158,7 +158,7 @@ namespace NVM
       case CMD_PROGRAM_PAGE_COPYBACK:
       case CMD_PROGRAM_PAGE_COPYBACK_MULTIPLANE:
         DEBUG("Channel " << this->ChannelID << " Chip " << this->ChipID << "- Finished executing program command")
-        for (unsigned int planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
+        for (uint32_t planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
         {
           STAT_progamCount++;
           targetDie->Planes[command->Address[planeCntr].PlaneID]->Progam_count++;
@@ -168,12 +168,12 @@ namespace NVM
       case CMD_ERASE_BLOCK:
       case CMD_ERASE_BLOCK_MULTIPLANE:
       {
-        for (unsigned int planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
+        for (uint32_t planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
         {
           STAT_eraseCount++;
           targetDie->Planes[command->Address[planeCntr].PlaneID]->Erase_count++;
           Block* targetBlock = targetDie->Planes[command->Address[planeCntr].PlaneID]->Blocks[command->Address[planeCntr].BlockID];
-          for (unsigned int i = 0; i < page_no_per_block; i++)
+          for (uint32_t i = 0; i < page_no_per_block; i++)
           {
             //targetBlock->Pages[i].Metadata.SourceStreamID = NO_STREAM;
             //targetBlock->Pages[i].Metadata.Status = FREE_PAGE;

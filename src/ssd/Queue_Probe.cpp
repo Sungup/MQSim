@@ -66,7 +66,7 @@ namespace SSD_Components
     totalWaitingTimeEpoch = 0;
     epochStartTime = Simulator->Time();
 
-    for(unsigned int i = 0; i < statesEpoch.size(); i++)
+    for(uint32_t i = 0; i < statesEpoch.size(); i++)
     {
       statesEpoch[i].totalTime = 0;
       statesEpoch[i].nEnterances = 0;
@@ -81,7 +81,7 @@ namespace SSD_Components
     writer.Write_attribute_string("AvgWaitingTime", std::to_string(AvgWaitingTime()));
     writer.Write_attribute_string("NRequests", std::to_string(NRequests()));
     writer.Write_attribute_string("NDepartures", std::to_string(NDepartures()));
-    for (unsigned int i = 0; i < states.size(); i++)
+    for (uint32_t i = 0; i < states.size(); i++)
     {
       writer.Write_start_element_tag(id + "_Distribution");
       sim_time_type now = Simulator->Time();
@@ -113,25 +113,25 @@ namespace SSD_Components
   {
     return states;
   }
-  unsigned int Queue_Probe::MaxQueueLength()
+  uint32_t Queue_Probe::MaxQueueLength()
   {
     return maxQueueLength;
   }
   double Queue_Probe::AvgQueueLength()
   {
     sim_time_type sum = 0;
-    for (unsigned int len = 0; len < states.size(); len++)
+    for (uint32_t len = 0; len < states.size(); len++)
       sum += states[len].totalTime * len;
     return (double)sum / (double)Simulator->Time();
   }
   double Queue_Probe::STDevQueueLength()
   {
     sim_time_type sum = 0;
-    for (unsigned int len = 0; len < states.size(); len++)
+    for (uint32_t len = 0; len < states.size(); len++)
       sum += states[len].totalTime * len;
     double mean = (double)sum / (double)Simulator->Time();
     double stdev = 0.0;
-    for (unsigned int len = 0; len < states.size(); len++)
+    for (uint32_t len = 0; len < states.size(); len++)
       stdev += std::pow((double)states[len].totalTime * len / (double)Simulator->Time() - mean, 2);
     return std::sqrt(stdev);
   }
@@ -139,7 +139,7 @@ namespace SSD_Components
   {
     sim_time_type sum = 0;
     sim_time_type sumTime = 0;
-    for (unsigned int len = 0; len < states.size(); len++)
+    for (uint32_t len = 0; len < states.size(); len++)
     {
       sum += statesEpoch[len].totalTime * len;
       sumTime += statesEpoch[len].totalTime;

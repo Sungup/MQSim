@@ -24,8 +24,8 @@ namespace SSD_Components
     friend class Data_Cache_Manager_Flash_Simple;
   public:
     Data_Cache_Manager_Base(const sim_object_id_type& id, Host_Interface_Base* host_interface, NVM_Firmware* nvm_firmware,
-      unsigned int dram_row_size, unsigned int dram_data_rate, unsigned int dram_busrt_size, sim_time_type dram_tRCD, sim_time_type dram_tCL, sim_time_type dram_tRP,
-      Caching_Mode* caching_mode_per_input_stream, Cache_Sharing_Mode sharing_mode, unsigned int stream_count);
+      uint32_t dram_row_size, uint32_t dram_data_rate, uint32_t dram_busrt_size, sim_time_type dram_tRCD, sim_time_type dram_tCL, sim_time_type dram_tRP,
+      Caching_Mode* caching_mode_per_input_stream, Cache_Sharing_Mode sharing_mode, uint32_t stream_count);
     virtual ~Data_Cache_Manager_Base();
     void Setup_triggers();
     void Start_simulation();
@@ -41,14 +41,14 @@ namespace SSD_Components
     static Data_Cache_Manager_Base* _my_instance;
     Host_Interface_Base* host_interface;
     NVM_Firmware* nvm_firmware;
-    unsigned int dram_row_size;//The size of the DRAM rows in bytes
-    unsigned int dram_data_rate;//in MT/s
-    unsigned int dram_busrt_size;
+    uint32_t dram_row_size;//The size of the DRAM rows in bytes
+    uint32_t dram_data_rate;//in MT/s
+    uint32_t dram_busrt_size;
     double dram_burst_transfer_time_ddr;//The transfer time of two bursts, changed from sim_time_type to double to increase precision
     sim_time_type dram_tRCD, dram_tCL, dram_tRP;//DRAM access parameters in nano-seconds
     Cache_Sharing_Mode sharing_mode;
     static Caching_Mode* caching_mode_per_input_stream;
-    unsigned int stream_count;
+    uint32_t stream_count;
 
     std::vector<UserRequestServicedSignalHanderType> connected_user_request_serviced_signal_handlers;
     void broadcast_user_request_serviced_signal(User_Request* user_request);
@@ -63,8 +63,8 @@ namespace SSD_Components
   };
 
 
-  inline sim_time_type estimate_dram_access_time(const unsigned int memory_access_size_in_byte,
-    const unsigned int dram_row_size, const unsigned int dram_burst_size_in_bytes, const double dram_burst_transfer_time_ddr,
+  inline sim_time_type estimate_dram_access_time(const uint32_t memory_access_size_in_byte,
+    const uint32_t dram_row_size, const uint32_t dram_burst_size_in_bytes, const double dram_burst_transfer_time_ddr,
     const sim_time_type tRCD, const sim_time_type tCL, const sim_time_type tRP)
   {
     if (memory_access_size_in_byte <= dram_row_size)

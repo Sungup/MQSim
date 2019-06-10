@@ -29,8 +29,8 @@ namespace Utils
     Utils::Workload_Type Type;
     stream_id_type Stream_id;
     double Initial_occupancy_ratio;//Ratio of the logical storage space that is fill with data in steady-state
-    unsigned int Replay_no;
-    unsigned int Total_generated_reqeusts;
+    uint32_t Replay_no;
+    uint32_t Total_generated_reqeusts;
 
     int random_request_type_generator_seed;
     double Read_ratio;
@@ -38,7 +38,7 @@ namespace Utils
 
     Utils::Address_Distribution_Type Address_distribution_type;
     double Working_set_ratio;
-    unsigned int Total_accessed_lbas;
+    uint32_t Total_accessed_lbas;
     /*Rosenblum hot/cold model: 
     - M. Rosenblum and J. K. Ousterhout, "The design and implementation of a log-structured file system", ACM CSUR, 1992.
     A fraction f of the complete address space corresponds to hot data and the remaining fraction to cold data. The fraction
@@ -54,18 +54,18 @@ namespace Utils
     LHA_type hot_region_end_lsa;
     LHA_type streaming_next_address;
     bool generate_aligned_addresses;
-    unsigned int alignment_value;;
+    uint32_t alignment_value;;
 
     Utils::Request_Generator_Type generator_type;
-    unsigned int Request_queue_depth;
+    uint32_t Request_queue_depth;
     int random_time_interval_generator_seed;
     sim_time_type Average_inter_arrival_time_nano_sec;
 
     Utils::Request_Size_Distribution_Type Request_size_distribution_type;
     int random_request_size_generator_seed;
-    unsigned int Average_request_size_sector;
-    unsigned int STDEV_reuqest_size;
-    std::vector<unsigned int> Write_size_histogram, Read_size_histogram;//Histogram with 1 sector resolution
+    uint32_t Average_request_size_sector;
+    uint32_t STDEV_reuqest_size;
+    std::vector<uint32_t> Write_size_histogram, Read_size_histogram;//Histogram with 1 sector resolution
   };
 }
 #endif// !WORKLOAD_STATISTICS_H

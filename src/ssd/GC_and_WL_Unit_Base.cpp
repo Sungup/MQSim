@@ -7,9 +7,9 @@ namespace SSD_Components
   GC_and_WL_Unit_Base::GC_and_WL_Unit_Base(const sim_object_id_type& id,
     Address_Mapping_Unit_Base* address_mapping_unit, Flash_Block_Manager_Base* block_manager, TSU_Base* tsu, NVM_PHY_ONFI* flash_controller,
     GC_Block_Selection_Policy_Type block_selection_policy, double gc_threshold, bool preemptible_gc_enabled, double gc_hard_threshold,
-    unsigned int channel_count, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die,
-    unsigned int block_no_per_plane, unsigned int page_no_per_block, unsigned int sector_no_per_page, 
-    bool use_copyback, double rho, unsigned int max_ongoing_gc_reqs_per_plane, bool dynamic_wearleveling_enabled, bool static_wearleveling_enabled, unsigned int static_wearleveling_threshold, int seed) :
+    uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
+    uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t sector_no_per_page,
+    bool use_copyback, double rho, uint32_t max_ongoing_gc_reqs_per_plane, bool dynamic_wearleveling_enabled, bool static_wearleveling_enabled, uint32_t static_wearleveling_threshold, int seed) :
     Sim_Object(id), address_mapping_unit(address_mapping_unit), block_manager(block_manager), tsu(tsu), flash_controller(flash_controller), force_gc(false),
     block_selection_policy(block_selection_policy), gc_threshold(gc_threshold),  use_copyback(use_copyback), 
     preemptible_gc_enabled(preemptible_gc_enabled), gc_hard_threshold(gc_hard_threshold),
@@ -19,13 +19,13 @@ namespace SSD_Components
     dynamic_wearleveling_enabled(dynamic_wearleveling_enabled), static_wearleveling_enabled(static_wearleveling_enabled), static_wearleveling_threshold(static_wearleveling_threshold)
   {
     _my_instance = this;
-    block_pool_gc_threshold = (unsigned int)(gc_threshold * (double)block_no_per_plane);
+    block_pool_gc_threshold = (uint32_t)(gc_threshold * (double)block_no_per_plane);
     if (block_pool_gc_threshold < 1)
       block_pool_gc_threshold = 1;
-    block_pool_gc_hard_threshold = (unsigned int)(gc_hard_threshold * (double)block_no_per_plane);
+    block_pool_gc_hard_threshold = (uint32_t)(gc_hard_threshold * (double)block_no_per_plane);
     if (block_pool_gc_hard_threshold < 1)
       block_pool_gc_hard_threshold = 1;
-    random_pp_threshold = (unsigned int)(rho * pages_no_per_block);
+    random_pp_threshold = (uint32_t)(rho * pages_no_per_block);
     if (block_pool_gc_threshold < max_ongoing_gc_reqs_per_plane)
       block_pool_gc_threshold = max_ongoing_gc_reqs_per_plane;
   }
@@ -181,7 +181,7 @@ namespace SSD_Components
     return block_selection_policy;
   }
 
-  unsigned int GC_and_WL_Unit_Base::Get_GC_policy_specific_parameter()
+  uint32_t GC_and_WL_Unit_Base::Get_GC_policy_specific_parameter()
   {
     switch (block_selection_policy)
     {
@@ -193,7 +193,7 @@ namespace SSD_Components
     return 0;
   }
 
-  unsigned int GC_and_WL_Unit_Base::Get_minimum_number_of_free_pages_before_GC()
+  uint32_t GC_and_WL_Unit_Base::Get_minimum_number_of_free_pages_before_GC()
   {
     return block_pool_gc_threshold;
     /*if (preemptible_gc_enabled)
@@ -220,7 +220,7 @@ namespace SSD_Components
   bool GC_and_WL_Unit_Base::is_safe_gc_wl_candidate(const PlaneBookKeepingType* plane_record, const flash_block_ID_type gc_wl_candidate_block_id)
   {
     //The block shouldn't be a current write frontier
-    for (unsigned int stream_id = 0; stream_id < address_mapping_unit->Get_no_of_input_streams(); stream_id++)
+    for (uint32_t stream_id = 0; stream_id < address_mapping_unit->Get_no_of_input_streams(); stream_id++)
       if ((&plane_record->Blocks[gc_wl_candidate_block_id]) == plane_record->Data_wf[stream_id]
         || (&plane_record->Blocks[gc_wl_candidate_block_id]) == plane_record->Translation_wf[stream_id]
         || (&plane_record->Blocks[gc_wl_candidate_block_id]) == plane_record->GC_wf[stream_id])

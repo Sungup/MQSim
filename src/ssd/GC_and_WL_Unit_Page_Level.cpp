@@ -11,14 +11,14 @@ namespace SSD_Components
   GC_and_WL_Unit_Page_Level::GC_and_WL_Unit_Page_Level(const sim_object_id_type& id,
     Address_Mapping_Unit_Base* address_mapping_unit, Flash_Block_Manager_Base* block_manager, TSU_Base* tsu, NVM_PHY_ONFI* flash_controller, 
     GC_Block_Selection_Policy_Type block_selection_policy, double gc_threshold, bool preemptible_gc_enabled, double gc_hard_threshold,
-    unsigned int ChannelCount, unsigned int chip_no_per_channel, unsigned int die_no_per_chip, unsigned int plane_no_per_die,
-    unsigned int block_no_per_plane, unsigned int Page_no_per_block, unsigned int sectors_per_page, 
-    bool use_copyback, double rho, unsigned int max_ongoing_gc_reqs_per_plane, bool dynamic_wearleveling_enabled, bool static_wearleveling_enabled, unsigned int static_wearleveling_threshold, int seed)
+    uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
+    uint32_t block_no_per_plane, uint32_t Page_no_per_block, uint32_t sectors_per_page,
+    bool use_copyback, double rho, uint32_t max_ongoing_gc_reqs_per_plane, bool dynamic_wearleveling_enabled, bool static_wearleveling_enabled, uint32_t static_wearleveling_threshold, int seed)
     : GC_and_WL_Unit_Base(id, address_mapping_unit, block_manager, tsu, flash_controller, block_selection_policy, gc_threshold, preemptible_gc_enabled, gc_hard_threshold,
     ChannelCount, chip_no_per_channel, die_no_per_chip, plane_no_per_die, block_no_per_plane, Page_no_per_block, sectors_per_page, use_copyback, rho, max_ongoing_gc_reqs_per_plane, 
       dynamic_wearleveling_enabled, static_wearleveling_enabled, static_wearleveling_threshold, seed)
   {
-    rga_set_size = (unsigned int)log2(block_no_per_plane);
+    rga_set_size = (uint32_t)log2(block_no_per_plane);
   }
   
   bool GC_and_WL_Unit_Page_Level::GC_is_in_urgent_mode(const NVM::FlashMemory::Flash_Chip* chip)
@@ -28,8 +28,8 @@ namespace SSD_Components
 
     NVM::FlashMemory::Physical_Page_Address addr;
     addr.ChannelID = chip->ChannelID; addr.ChipID = chip->ChipID;
-    for (unsigned int die_id = 0; die_id < die_no_per_chip; die_id++)
-      for (unsigned int plane_id = 0; plane_id < plane_no_per_die; plane_id++)
+    for (uint32_t die_id = 0; die_id < die_no_per_chip; die_id++)
+      for (uint32_t plane_id = 0; plane_id < plane_no_per_die; plane_id++)
       {
         addr.DieID = die_id; addr.PlaneID = plane_id;
         if (block_manager->Get_pool_size(addr) < block_pool_gc_hard_threshold)
@@ -38,7 +38,7 @@ namespace SSD_Components
     return false;
   }
 
-  void GC_and_WL_Unit_Page_Level::Check_gc_required(const unsigned int free_block_pool_size, const NVM::FlashMemory::Physical_Page_Address& plane_address)
+  void GC_and_WL_Unit_Page_Level::Check_gc_required(const uint32_t free_block_pool_size, const NVM::FlashMemory::Physical_Page_Address& plane_address)
   {
     if (free_block_pool_size < block_pool_gc_threshold)
     {
@@ -84,7 +84,7 @@ namespace SSD_Components
       case SSD_Components::GC_Block_Selection_Policy_Type::RANDOM:
       {
         gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
-        unsigned int repeat = 0;
+        uint32_t repeat = 0;
         while (!is_safe_gc_wl_candidate(pbke, gc_candidate_block_id) && repeat++ < block_no_per_plane)//A write frontier block should not be selected for garbage collection
           gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
         break;
@@ -92,7 +92,7 @@ namespace SSD_Components
       case SSD_Components::GC_Block_Selection_Policy_Type::RANDOM_P:
       {
         gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
-        unsigned int repeat = 0;
+        uint32_t repeat = 0;
 
         //A write frontier block or a block with free pages should not be selected for garbage collection
         while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block || !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
@@ -103,7 +103,7 @@ namespace SSD_Components
       case SSD_Components::GC_Block_Selection_Policy_Type::RANDOM_PP:
       {
         gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
-        unsigned int repeat = 0;
+        uint32_t repeat = 0;
 
         //The selected gc block should have a minimum number of invalid pages
         while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block 

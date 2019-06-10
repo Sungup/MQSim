@@ -17,15 +17,15 @@ public:
   static sim_time_type Page_Program_Latency_CSB;
   static sim_time_type Page_Program_Latency_MSB;
   static sim_time_type Block_Erase_Latency;//Block erase latency in nano-seconds
-  static unsigned int Block_PE_Cycles_Limit;
+  static uint32_t Block_PE_Cycles_Limit;
   static sim_time_type Suspend_Erase_Time;//in nano-seconds
   static sim_time_type Suspend_Program_Time;//in nano-seconds
-  static unsigned int Die_No_Per_Chip;
-  static unsigned int Plane_No_Per_Die;
-  static unsigned int Block_No_Per_Plane;
-  static unsigned int Page_No_Per_Block;//Page no per block
-  static unsigned int Page_Capacity;//Flash page capacity in bytes
-  static unsigned int Page_Metadat_Capacity;//Flash page metadata capacity in bytes
+  static uint32_t Die_No_Per_Chip;
+  static uint32_t Plane_No_Per_Die;
+  static uint32_t Block_No_Per_Plane;
+  static uint32_t Page_No_Per_Block;//Page no per block
+  static uint32_t Page_Capacity;//Flash page capacity in bytes
+  static uint32_t Page_Metadat_Capacity;//Flash page metadata capacity in bytes
   void XML_serialize(Utils::XmlWriter& xmlwriter);
   void XML_deserialize(rapidxml::xml_node<> *node);
 };

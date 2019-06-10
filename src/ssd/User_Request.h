@@ -23,17 +23,17 @@ namespace SSD_Components
     sim_time_type STAT_InitiationTime;
     sim_time_type STAT_ResponseTime;
     std::list<NVM_Transaction*> Transaction_list;
-    unsigned int Sectors_serviced_from_cache;
+    uint32_t Sectors_serviced_from_cache;
 
-    unsigned int Size_in_byte;
-    unsigned int SizeInSectors;
+    uint32_t Size_in_byte;
+    uint32_t SizeInSectors;
     UserRequestType Type;
     stream_id_type Stream_id;
     bool ToBeIgnored;
     void* IO_command_info;//used to store host I/O command info
     void* Data;
   private:
-    static unsigned int lastId;
+    static uint32_t lastId;
   };
 }
 

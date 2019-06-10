@@ -22,8 +22,8 @@ namespace SSD_Components
   class TSU_OutOfOrder : public TSU_Base
   {
   public:
-    TSU_OutOfOrder(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, unsigned int Channel_no, unsigned int chip_no_per_channel,
-      unsigned int DieNoPerChip, unsigned int PlaneNoPerDie,
+    TSU_OutOfOrder(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, uint32_t Channel_no, uint32_t chip_no_per_channel,
+      uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
       sim_time_type WriteReasonableSuspensionTimeForRead,
       sim_time_type EraseReasonableSuspensionTimeForRead,
       sim_time_type EraseReasonableSuspensionTimeForWrite,

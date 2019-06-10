@@ -8,9 +8,9 @@
 namespace SSD_Components
 {
   Data_Cache_Manager_Flash_Simple::Data_Cache_Manager_Flash_Simple(const sim_object_id_type& id, Host_Interface_Base* host_interface, NVM_Firmware* firmware, NVM_PHY_ONFI* flash_controller,
-    unsigned int total_capacity_in_bytes,
-    unsigned int dram_row_size, unsigned int dram_data_rate, unsigned int dram_busrt_size, sim_time_type dram_tRCD, sim_time_type dram_tCL, sim_time_type dram_tRP,
-    Caching_Mode* caching_mode_per_input_stream, unsigned int stream_count, unsigned int sector_no_per_page, unsigned int back_pressure_buffer_max_depth)
+    uint32_t total_capacity_in_bytes,
+    uint32_t dram_row_size, uint32_t dram_data_rate, uint32_t dram_busrt_size, sim_time_type dram_tRCD, sim_time_type dram_tCL, sim_time_type dram_tRP,
+    Caching_Mode* caching_mode_per_input_stream, uint32_t stream_count, uint32_t sector_no_per_page, uint32_t back_pressure_buffer_max_depth)
     : Data_Cache_Manager_Base(id, host_interface, firmware, dram_row_size, dram_data_rate, dram_busrt_size, dram_tRCD, dram_tCL, dram_tRP, caching_mode_per_input_stream, Cache_Sharing_Mode::SHARED, stream_count),
     flash_controller(flash_controller), capacity_in_bytes(total_capacity_in_bytes), sector_no_per_page(sector_no_per_page),  request_queue_turn(0), back_pressure_buffer_max_depth(back_pressure_buffer_max_depth)
   {
@@ -24,7 +24,7 @@ namespace SSD_Components
 
   Data_Cache_Manager_Flash_Simple::~Data_Cache_Manager_Flash_Simple()
   {
-    for (unsigned int i = 0; i < stream_count; i++)
+    for (uint32_t i = 0; i < stream_count; i++)
     {
       while (dram_execution_queue[i].size())
       {
@@ -129,9 +129,9 @@ namespace SSD_Components
   void Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(User_Request* user_request)
   {
     //To eliminate race condition, MQSim assumes the management information and user data are stored in separate DRAM modules
-    unsigned int cache_eviction_read_size_in_sectors = 0;//The size of data evicted from cache
-    unsigned int flash_written_back_write_size_in_sectors = 0;//The size of data that is both written back to flash and written to DRAM
-    unsigned int dram_write_size_in_sectors = 0;//The size of data written to DRAM (must be >= flash_written_back_write_size_in_sectors)
+    uint32_t cache_eviction_read_size_in_sectors = 0;//The size of data evicted from cache
+    uint32_t flash_written_back_write_size_in_sectors = 0;//The size of data that is both written back to flash and written to DRAM
+    uint32_t dram_write_size_in_sectors = 0;//The size of data written to DRAM (must be >= flash_written_back_write_size_in_sectors)
     std::list<NVM_Transaction*>* evicted_cache_slots = new std::list<NVM_Transaction*>;
     std::list<NVM_Transaction*> writeback_transactions;
     auto it = user_request->Transaction_list.begin();
@@ -270,7 +270,7 @@ namespace SSD_Components
         }
 
 
-        for (unsigned int i = 0; i < _my_instance->stream_count; i++)
+        for (uint32_t i = 0; i < _my_instance->stream_count; i++)
         {
           ((Data_Cache_Manager_Flash_Simple*)_my_instance)->request_queue_turn++;
           ((Data_Cache_Manager_Flash_Simple*)_my_instance)->request_queue_turn %= ((Data_Cache_Manager_Flash_Simple*)_my_instance)->stream_count;

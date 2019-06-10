@@ -23,7 +23,7 @@ namespace NVM
     public:
       Flash_Chip(const sim_object_id_type&, flash_channel_ID_type channelID, flash_chip_ID_type localChipID,
         Flash_Technology_Type flash_technology, 
-        unsigned int dieNo, unsigned int PlaneNoPerDie, unsigned int Block_no_per_plane, unsigned int Page_no_per_block,
+        uint32_t dieNo, uint32_t PlaneNoPerDie, uint32_t Block_no_per_plane, uint32_t Page_no_per_block,
         sim_time_type *readLatency, sim_time_type *programLatency, sim_time_type eraseLatency,
         sim_time_type suspendProgramLatency, sim_time_type suspendEraseLatency,
         sim_time_type commProtocolDelayRead = 20, sim_time_type commProtocolDelayWrite = 0, sim_time_type commProtocolDelayErase = 0);
@@ -122,12 +122,12 @@ namespace NVM
     private:
       Flash_Technology_Type flash_technology;
       Internal_Status status;
-      unsigned int idleDieNo;
+      uint32_t idleDieNo;
       Die** Dies;
-      unsigned int die_no;
-      unsigned int plane_no_in_die;                  //indicate how many planes in a die
-      unsigned int block_no_in_plane;                //indicate how many blocks in a plane
-      unsigned int page_no_per_block;                 //indicate how many pages in a block
+      uint32_t die_no;
+      uint32_t plane_no_in_die;                  //indicate how many planes in a die
+      uint32_t block_no_in_plane;                //indicate how many blocks in a plane
+      uint32_t page_no_per_block;                 //indicate how many pages in a block
       sim_time_type *_readLatency, *_programLatency, _eraseLatency;
       sim_time_type _suspendProgramLatency, _suspendEraseLatency;
       sim_time_type _RBSignalDelayRead, _RBSignalDelayWrite, _RBSignalDelayErase;
