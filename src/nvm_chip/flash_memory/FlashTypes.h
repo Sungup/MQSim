@@ -7,10 +7,10 @@
 
 namespace NVM
 {
-	namespace FlashMemory
-	{
-		enum class Command_Suspension_Mode { NONE, PROGRAM, PROGRAM_ERASE, ERASE };
-	}
+  namespace FlashMemory
+  {
+    enum class Command_Suspension_Mode { NONE, PROGRAM, PROGRAM_ERASE, ERASE };
+  }
 }
 
 typedef uint64_t page_status_type;

@@ -29,15 +29,15 @@
 
 namespace NVM
 {
-	namespace FlashMemory
-	{
-		class Flash_Command
-		{
-		public:
-			command_code_type CommandCode;
-			std::vector<Physical_Page_Address> Address;
-			std::vector<PageMetadata> Meta_data;
-		};
-	}
+  namespace FlashMemory
+  {
+    class Flash_Command
+    {
+    public:
+      command_code_type CommandCode;
+      std::vector<Physical_Page_Address> Address;
+      std::vector<PageMetadata> Meta_data;
+    };
+  }
 }
 #endif // !FLASH_COMMAND
