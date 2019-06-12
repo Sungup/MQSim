@@ -10,8 +10,6 @@
 #include "Data_Cache_Flash.h"
 #include "NVM_Transaction_Flash.h"
 
-// TODO Remove static features
-
 namespace SSD_Components
 {
   /*

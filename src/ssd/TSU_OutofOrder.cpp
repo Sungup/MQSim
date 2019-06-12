@@ -179,62 +179,51 @@ namespace SSD_Components
 
     for (flash_channel_ID_type channelID = 0; channelID < channel_count; channelID++)
     {
-      if (_NVMController->Get_channel_status(channelID) == BusChannelStatus::IDLE)
-      {
-        for (uint32_t i = 0; i < chip_no_per_channel; i++) {
-          NVM::FlashMemory::Flash_Chip* chip = _NVMController->Get_chip(channelID, Round_robin_turn_of_channel[channelID]);
-          //The TSU does not check if the chip is idle or not since it is possible to suspend a busy chip and issue a new command
-          if (!service_read_transaction(chip))
-            if (!service_write_transaction(chip))
-              service_erase_transaction(chip);
-          Round_robin_turn_of_channel[channelID] = (flash_chip_ID_type)(Round_robin_turn_of_channel[channelID] + 1) % chip_no_per_channel;
-          if (_NVMController->Get_channel_status(chip->ChannelID) != BusChannelStatus::IDLE)
-            break;
-        }
-      }
+      if (_is_idle_channel(channelID))
+        _handle_idle_channel(channelID);
     }
   }
   
-  bool TSU_OutOfOrder::service_read_transaction(NVM::FlashMemory::Flash_Chip* chip)
+  bool TSU_OutOfOrder::service_read_transaction(const NVM::FlashMemory::Flash_Chip& chip)
   {
     Flash_Transaction_Queue *sourceQueue1 = NULL, *sourceQueue2 = NULL;
 
-    if (MappingReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)//Flash transactions that are related to FTL mapping data have the highest priority
+    if (MappingReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)//Flash transactions that are related to FTL mapping data have the highest priority
     {
-      sourceQueue1 = &MappingReadTRQueue[chip->ChannelID][chip->ChipID];
-      if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(chip) && GCReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-        sourceQueue2 = &GCReadTRQueue[chip->ChannelID][chip->ChipID];
-      else if (UserReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-        sourceQueue2 = &UserReadTRQueue[chip->ChannelID][chip->ChipID];
+      sourceQueue1 = &MappingReadTRQueue[chip.ChannelID][chip.ChipID];
+      if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip) && GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+        sourceQueue2 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
+      else if (UserReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+        sourceQueue2 = &UserReadTRQueue[chip.ChannelID][chip.ChipID];
     }
-    else if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
+    else if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
     {
-      if (GCReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      if (GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {
-        sourceQueue1 = &GCReadTRQueue[chip->ChannelID][chip->ChipID];
-        if (UserReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-          sourceQueue2 = &UserReadTRQueue[chip->ChannelID][chip->ChipID];
+        sourceQueue1 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
+        if (UserReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+          sourceQueue2 = &UserReadTRQueue[chip.ChannelID][chip.ChipID];
       }
-      else if (GCWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      else if (GCWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         return false;
-      else if (GCEraseTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      else if (GCEraseTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         return false;
-      else if (UserReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-        sourceQueue1 = &UserReadTRQueue[chip->ChannelID][chip->ChipID];
+      else if (UserReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+        sourceQueue1 = &UserReadTRQueue[chip.ChannelID][chip.ChipID];
       else return false;
     } 
     else //If GC is currently executed in the preemptive mode, then user IO transaction queues are checked first
     {
-      if (UserReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      if (UserReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {
-        sourceQueue1 = &UserReadTRQueue[chip->ChannelID][chip->ChipID];
-        if (GCReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-          sourceQueue2 = &GCReadTRQueue[chip->ChannelID][chip->ChipID];
+        sourceQueue1 = &UserReadTRQueue[chip.ChannelID][chip.ChipID];
+        if (GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+          sourceQueue2 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
       }
-      else if (UserWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      else if (UserWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
           return false;
-      else if (GCReadTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-        sourceQueue1 = &GCReadTRQueue[chip->ChannelID][chip->ChipID];
+      else if (GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+        sourceQueue1 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
       else return false;
     }
 
@@ -310,34 +299,34 @@ namespace SSD_Components
     return true;
   }
 
-  bool TSU_OutOfOrder::service_write_transaction(NVM::FlashMemory::Flash_Chip* chip)
+  bool TSU_OutOfOrder::service_write_transaction(const NVM::FlashMemory::Flash_Chip& chip)
   {
     Flash_Transaction_Queue *sourceQueue1 = NULL, *sourceQueue2 = NULL;
 
-    if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
+    if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
     {
-      if (GCWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      if (GCWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {
-        sourceQueue1 = &GCWriteTRQueue[chip->ChannelID][chip->ChipID];
-        if (UserWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-          sourceQueue2 = &UserWriteTRQueue[chip->ChannelID][chip->ChipID];
+        sourceQueue1 = &GCWriteTRQueue[chip.ChannelID][chip.ChipID];
+        if (UserWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+          sourceQueue2 = &UserWriteTRQueue[chip.ChannelID][chip.ChipID];
       }
-      else if (GCEraseTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      else if (GCEraseTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         return false;
-      else if (UserWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-        sourceQueue1 = &UserWriteTRQueue[chip->ChannelID][chip->ChipID];
+      else if (UserWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+        sourceQueue1 = &UserWriteTRQueue[chip.ChannelID][chip.ChipID];
       else return false;
     }
     else //If GC is currently executed in the preemptive mode, then user IO transaction queues are checked first
     {
-      if (UserWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
+      if (UserWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {
-        sourceQueue1 = &UserWriteTRQueue[chip->ChannelID][chip->ChipID];
-        if (GCWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-          sourceQueue2 = &GCWriteTRQueue[chip->ChannelID][chip->ChipID];
+        sourceQueue1 = &UserWriteTRQueue[chip.ChannelID][chip.ChipID];
+        if (GCWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+          sourceQueue2 = &GCWriteTRQueue[chip.ChannelID][chip.ChipID];
       }
-      else if (GCWriteTRQueue[chip->ChannelID][chip->ChipID].size() > 0)
-        sourceQueue1 = &GCWriteTRQueue[chip->ChannelID][chip->ChipID];
+      else if (GCWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+        sourceQueue1 = &GCWriteTRQueue[chip.ChannelID][chip.ChipID];
       else return false;
     }
 
@@ -407,12 +396,12 @@ namespace SSD_Components
     return true;
   }
 
-  bool TSU_OutOfOrder::service_erase_transaction(NVM::FlashMemory::Flash_Chip* chip)
+  bool TSU_OutOfOrder::service_erase_transaction(const NVM::FlashMemory::Flash_Chip& chip)
   {
     if (_NVMController->GetChipStatus(chip) != ChipStatus::IDLE)
       return false;
 
-    Flash_Transaction_Queue* source_queue = &GCEraseTRQueue[chip->ChannelID][chip->ChipID];
+    Flash_Transaction_Queue* source_queue = &GCEraseTRQueue[chip.ChannelID][chip.ChipID];
     if (source_queue->size() == 0)
       return false;
 

@@ -91,7 +91,7 @@ namespace SSD_Components
     std::list<DMA_Req_Item*> dma_list;
   };
 
-  class Host_Interface_Base : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
+  class Host_Interface_Base : public MQSimEngine::Sim_Object
   {
     friend class Input_Stream_Manager_Base;
     friend class Input_Stream_Manager_NVMe;

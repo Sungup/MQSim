@@ -12,8 +12,6 @@
 #include "NVM_Transaction_Flash_RD.h"
 #include "NVM_Transaction_Flash_WR.h"
 
-// TODO Remove static attributes
-
 namespace SSD_Components
 {
 #define MAKE_TABLE_INDEX(LPN,STREAM)

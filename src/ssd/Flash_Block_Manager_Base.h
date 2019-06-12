@@ -11,7 +11,7 @@
 #include "../nvm_chip/flash_memory/FlashTypes.h"
 
 
-// TODO Remove static features
+// TODO Remove static features if possible
 
 namespace SSD_Components
 {

@@ -11,6 +11,7 @@
 #include "NVM_PHY_Base.h"
 #include "ONFI_Channel_Base.h"
 
+#include "phy/PhyHandler.h"
 
 namespace SSD_Components
 {
@@ -28,9 +29,9 @@ namespace SSD_Components
     virtual BusChannelStatus Get_channel_status(flash_channel_ID_type) = 0;
     virtual NVM::FlashMemory::Flash_Chip* Get_chip(flash_channel_ID_type channel_id, flash_chip_ID_type chip_id) = 0;
     virtual LPA_type Get_metadata(flash_channel_ID_type channe_id, flash_chip_ID_type chip_id, flash_die_ID_type die_id, flash_plane_ID_type plane_id, flash_block_ID_type block_id, flash_page_ID_type page_id) = 0;//A simplification to decrease the complexity of GC execution! The GC unit may need to know the metadata of a page to decide if a page is valid or invalid. 
-    virtual bool HasSuspendedCommand(NVM::FlashMemory::Flash_Chip* chip) = 0;
-    virtual ChipStatus GetChipStatus(NVM::FlashMemory::Flash_Chip* chip) = 0;
-    virtual sim_time_type Expected_finish_time(NVM::FlashMemory::Flash_Chip* chip) = 0;
+    virtual bool HasSuspendedCommand(const NVM::FlashMemory::Flash_Chip& chip) = 0;
+    virtual ChipStatus GetChipStatus(const NVM::FlashMemory::Flash_Chip& chip) = 0;
+    virtual sim_time_type Expected_finish_time(const NVM::FlashMemory::Flash_Chip& chip) = 0;
     /// Provides communication between controller and NVM chips for a simple read/write/erase command.
     virtual void Send_command_to_chip(std::list<NVM_Transaction_Flash*>& transactionList) = 0;
     virtual void Change_flash_page_status_for_preconditioning(const NVM::FlashMemory::Physical_Page_Address& page_address, const LPA_type lpa) = 0;
@@ -46,13 +47,46 @@ namespace SSD_Components
     uint32_t chip_no_per_channel;
     uint32_t die_no_per_chip;
     uint32_t plane_no_per_die;
+
     std::vector<TransactionServicedHandlerType> connectedTransactionServicedHandlers;
     void broadcastTransactionServicedSignal(NVM_Transaction_Flash* transaction);
     std::vector<ChannelIdleHandlerType> connectedChannelIdleHandlers;
     void broadcastChannelIdleSignal(flash_channel_ID_type);
     std::vector<ChipIdleHandlerType> connectedChipIdleHandlers;
     void broadcastChipIdleSignal(NVM::FlashMemory::Flash_Chip* chip);
+
+  public:
+    // ============================
+    // Handler connecting functions
+    // ============================
+    void connect_to_transaction_service_signal(TransactionServiceHandlerBase& handler);
+    void connect_to_channel_idle_signal(ChannelIdleSignalHandlerBase& handler);
+    void connect_to_chip_idle_signal(ChipIdleSignalHandlerBase& handler);
+
+  private:
+    TransactionServiceHandlerList __transaction_service_handlers;
+    ChannelIdleSignalHandlerList  __channel_idle_signal_handlers;
+    ChipIdleSignalHandlerList     __chip_idle_signal_handlers;
   };
+
+  force_inline void
+  NVM_PHY_ONFI::connect_to_transaction_service_signal(TransactionServiceHandlerBase& handler)
+  {
+    __transaction_service_handlers.emplace_back(&handler);
+  }
+
+  force_inline void
+  NVM_PHY_ONFI::connect_to_channel_idle_signal(ChannelIdleSignalHandlerBase &handler)
+  {
+    __channel_idle_signal_handlers.emplace_back(&handler);
+  }
+
+  force_inline void
+  NVM_PHY_ONFI::connect_to_chip_idle_signal(SSD_Components::ChipIdleSignalHandlerBase &handler)
+  {
+    __chip_idle_signal_handlers.emplace_back(&handler);
+  }
+
 }
 
 

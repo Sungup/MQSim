@@ -372,6 +372,8 @@ namespace SSD_Components
   void Address_Mapping_Unit_Page_Level::Setup_triggers()
   {
     Sim_Object::Setup_triggers();
+
+    // TODO Prepare removing _myInstance
     flash_controller->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
   }
   void Address_Mapping_Unit_Page_Level::Start_simulation()

@@ -43,6 +43,8 @@ namespace SSD_Components
   void Data_Cache_Manager_Flash_Simple::Setup_triggers()
   {
     Data_Cache_Manager_Base::Setup_triggers();
+
+    // TODO Prepare removing _myInstance;
     flash_controller->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
   }
 

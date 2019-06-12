@@ -33,6 +33,8 @@ namespace SSD_Components
   void GC_and_WL_Unit_Base::Setup_triggers()
   {
     Sim_Object::Setup_triggers();
+
+    // TODO Prepare removing _myInstance;
     flash_controller->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
   }
 

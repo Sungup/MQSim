@@ -76,7 +76,7 @@ set(MQSIM_SIM_SOURCES
     sim/Sim_Defs.h
     sim/Sim_Event.h
     sim/Sim_Object.h
-    sim/Sim_Reporter.h)
+    sim/Sim_Reporter.h sim/Sim_Reporter.cpp)
 
 set(MQSIM_SSD_SOURCES
     ssd/Address_Mapping_Unit_Base.cpp
@@ -143,12 +143,10 @@ set(MQSIM_SSD_SOURCES
     ssd/Stats.h
     ssd/TSU_Base.cpp
     ssd/TSU_Base.h
-    ssd/TSU_FLIN.cpp
-    ssd/TSU_FLIN.h
     ssd/TSU_OutofOrder.cpp
     ssd/TSU_OutofOrder.h
     ssd/User_Request.cpp
-    ssd/User_Request.h)
+    ssd/User_Request.h ssd/TSU_Defs.h ssd/phy/PhyHandler.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/CMRRandomGenerator.cpp

@@ -68,24 +68,26 @@ namespace SSD_Components {
     return channels[channe_id]->Chips[chip_id]->Get_metadata(die_id, plane_id, block_id, page_id);
   }
 
-  inline bool NVM_PHY_ONFI_NVDDR2::HasSuspendedCommand(NVM::FlashMemory::Flash_Chip* chip)
+  inline bool NVM_PHY_ONFI_NVDDR2::HasSuspendedCommand(const NVM::FlashMemory::Flash_Chip& chip)
   {
-    return bookKeepingTable[chip->ChannelID][chip->ChipID].HasSuspend;
+    return bookKeepingTable[chip.ChannelID][chip.ChipID].HasSuspend;
   }
 
-  inline ChipStatus NVM_PHY_ONFI_NVDDR2::GetChipStatus(NVM::FlashMemory::Flash_Chip* chip)
+  inline ChipStatus NVM_PHY_ONFI_NVDDR2::GetChipStatus(const NVM::FlashMemory::Flash_Chip& chip)
   {
-    return bookKeepingTable[chip->ChannelID][chip->ChipID].Status;
+    return bookKeepingTable[chip.ChannelID][chip.ChipID].Status;
   }
   
-  inline sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_finish_time(NVM::FlashMemory::Flash_Chip* chip)
+  inline sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_finish_time(const NVM::FlashMemory::Flash_Chip& chip)
   {
-    return bookKeepingTable[chip->ChannelID][chip->ChipID].Expected_command_exec_finish_time;
+    return bookKeepingTable[chip.ChannelID][chip.ChipID].Expected_command_exec_finish_time;
   }
 
   sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_finish_time(NVM_Transaction_Flash* transaction)
   {
-    return Expected_finish_time(channels[transaction->Address.ChannelID]->Chips[transaction->Address.ChipID]);
+    auto& channel = channels[transaction->Address.ChannelID];
+
+    return Expected_finish_time(*(channel->Chips[transaction->Address.ChipID]));
   }
 
 

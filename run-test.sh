@@ -35,7 +35,7 @@ mkdir ${PROJECT_BUILD_HOME};
 cd ${PROJECT_BUILD_HOME};
 
 # Build
-cmake -DCMAKE_BUILD_TYPE=Release ${PROJECT_HOME};
+cmake -DCMAKE_BUILD_TYPE=Release -DFORCE_INLINE=ON ${PROJECT_HOME};
 make -j ${__N_CORES};
 
 # Return to project home

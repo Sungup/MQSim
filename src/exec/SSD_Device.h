@@ -28,7 +28,7 @@
 
 // TODO Remove static features
 
-class SSD_Device : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
+class SSD_Device : public MQSimEngine::Sim_Object
 {
 public:
   SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Parameter_Set*>* io_flows);

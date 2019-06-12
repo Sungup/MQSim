@@ -9,7 +9,6 @@
 #include "TSU_Base.h"
 #include "NVM_PHY_ONFI.h"
 
-// TODO Remove static features.
 namespace SSD_Components
 {
   enum class GC_Block_Selection_Policy_Type {
