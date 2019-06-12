@@ -10,6 +10,8 @@ In fact, two different storage traces may access the same logical address, but t
 should not be assumed to be identical when the traces are executed together.
 */
 
+// TODO Remove static features
+
 namespace Utils
 {
   class Logical_Address_Partitioning_Unit

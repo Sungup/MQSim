@@ -10,6 +10,7 @@
 #include "NVM_PHY_ONFI_NVDDR2.h"
 #include "Flash_Transaction_Queue.h"
 
+// TODO Remove static attribute.
 namespace SSD_Components
 {
   enum class Flash_Scheduling_Type {OUT_OF_ORDER, FLIN};

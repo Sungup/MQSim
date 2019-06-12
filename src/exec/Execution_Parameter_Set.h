@@ -7,6 +7,8 @@
 #include "IO_Flow_Parameter_Set.h"
 #include "Host_Parameter_Set.h"
 
+// TODO Remove static features
+
 class Execution_Parameter_Set : public Parameter_Set_Base
 {
 public:

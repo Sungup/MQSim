@@ -7,6 +7,8 @@
 #include "EventTree.h"
 #include "Sim_Object.h"
 
+// Remove static features if possible
+
 namespace MQSimEngine {
   class Engine
   {

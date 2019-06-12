@@ -10,6 +10,9 @@
 #include "GC_and_WL_Unit_Base.h"
 #include "../nvm_chip/flash_memory/FlashTypes.h"
 
+
+// TODO Remove static features
+
 namespace SSD_Components
 {
 #define All_VALID_PAGE 0x0000000000000000ULL

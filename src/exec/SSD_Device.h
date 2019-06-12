@@ -26,6 +26,8 @@
 *
 *********************************************************************************************************/
 
+// TODO Remove static features
+
 class SSD_Device : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
 {
 public:

@@ -17,10 +17,79 @@ namespace Utils
 #define HOT_REGION_METRIC 2.5
 #define STATISTICALLY_SUFFICIENT_WRITES_FOR_PRECONDITIONING 10000
 
+  // ==================================================
+  // Proxy class for LHA to LPA for Workload Statistics
+  // ==================================================
+  class LHAtoLPAConverterBase {
+  public:
+    virtual ~LHAtoLPAConverterBase() = default;
+
+    virtual LPA_type operator()(LHA_type lha) const = 0;
+  };
+
+  typedef const LHAtoLPAConverterBase& LHAtoLPAConverterRef;
+
+  template<typename T>
+  class LHAtoLPAConverter : public LHAtoLPAConverterBase {
+    typedef LPA_type (T::*Handler)(LHA_type lha) const;
+
+  private:
+    const T* __callee;
+    Handler __handler;
+
+  public:
+    LHAtoLPAConverter(T* callee, Handler handler)
+      : __callee(callee),
+        __handler(handler)
+    { }
+
+    ~LHAtoLPAConverter() final = default;
+
+    LPA_type operator()(LHA_type lha) const final
+    { return (__callee->*__handler)(lha); }
+  };
+
+  // =========================================
+  // Proxy class for NVM SubUnit Access BitMap
+  // =========================================
+  class NVMSubUnitAccessBitMapBase {
+  public:
+    virtual ~NVMSubUnitAccessBitMapBase() = default;
+    virtual page_status_type operator()(LHA_type lha) const = 0;
+  };
+
+  typedef const NVMSubUnitAccessBitMapBase& NVMSubUnitAccessBitMapRef;
+
+  template<typename T>
+  class NVMSubUnitAccessBitMap : public NVMSubUnitAccessBitMapBase {
+    typedef page_status_type (T::*Handler)(LHA_type lha) const;
+
+  private:
+    const T* __callee;
+    Handler __handler;
+
+  public:
+    NVMSubUnitAccessBitMap(T* callee, Handler handler)
+      : __callee(callee),
+        __handler(handler)
+    { }
+
+    ~NVMSubUnitAccessBitMap() final = default;
+
+    page_status_type operator()(LHA_type lha) const final
+    { return (__callee->*__handler)(lha); }
+  };
+
+  // ===========================
+  // Workload Statistics classes
+  // ===========================
   struct Address_Histogram_Unit
   {
     int Access_count;
     uint64_t Accessed_sub_units;
+
+    force_inline
+    Address_Histogram_Unit() : Access_count(0), Accessed_sub_units(0) { }
   };
 
   //Parameters defined in: B. Van Houdt, "On the necessity of hot and cold data identification to reduce the write amplification in flash-based SSDs", Perf. Eval., 2014.
@@ -67,5 +136,8 @@ namespace Utils
     uint32_t STDEV_reuqest_size;
     std::vector<uint32_t> Write_size_histogram, Read_size_histogram;//Histogram with 1 sector resolution
   };
+
+  typedef std::shared_ptr<Workload_Statistics> WorkloadStatsPtr;
+  typedef std::vector<WorkloadStatsPtr>        WorkloadStatsList;
 }
 #endif// !WORKLOAD_STATISTICS_H

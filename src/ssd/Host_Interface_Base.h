@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include <cstring>
 
+// TODO Remove static features
+
 namespace Host_Components
 {
   class PCIe_Switch;

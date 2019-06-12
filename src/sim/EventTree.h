@@ -4,6 +4,8 @@
 #include "Sim_Defs.h"
 #include "Sim_Event.h"
 
+// TODO Remove static features if possible
+
 namespace MQSimEngine
 {
   class EventTreeNode

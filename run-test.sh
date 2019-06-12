@@ -8,6 +8,8 @@ PROJECT_BUILD_HOME=${PROJECT_HOME}/build
 SAMPLE_HOME=${PROJECT_HOME}/samples
 SAMPLE_RESULT_HOME=${SAMPLE_HOME}/result
 SAMPLE_CONFIG_HOME=${SAMPLE_HOME}/config
+SAMPLE_BASELINE_HOME=${SAMPLE_HOME}/baseline
+SAMPLE_DIFFERENTIAL=${SAMPLE_HOME}/differential.diff
 
 # Get number of threads for compile
 if [[ "Darwin" == $(uname) ]]; then
@@ -24,9 +26,11 @@ fi
 export CC=clang
 export CXX=clang++
 
-if [[ ! -d ${PROJECT_BUILD_HOME} ]]; then
-  mkdir build;
+if [[ -d ${PROJECT_BUILD_HOME} ]]; then
+  rm -Rf ${PROJECT_BUILD_HOME};
 fi
+
+mkdir ${PROJECT_BUILD_HOME};
 
 cd ${PROJECT_BUILD_HOME};
 
@@ -68,3 +72,5 @@ for __DIR in ${SAMPLE_CONFIG_HOME}/*; do
                "${SAMPLE_CONFIG_HOME}" \
                "${SAMPLE_RESULT_HOME}";
 done
+
+diff -urN ${SAMPLE_BASELINE_HOME} ${SAMPLE_RESULT_HOME} > ${SAMPLE_DIFFERENTIAL};

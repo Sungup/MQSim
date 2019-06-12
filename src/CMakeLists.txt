@@ -167,7 +167,7 @@ set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp
     utils/rapidxml/rapidxml_iterators.hpp
     utils/rapidxml/rapidxml_print.hpp
-    utils/rapidxml/rapidxml_utils.hpp)
+    utils/rapidxml/rapidxml_utils.hpp utils/InlineTools.h utils/Exception.h utils/ServiceHandler.h)
 
 add_executable(MQSim
                main.cpp

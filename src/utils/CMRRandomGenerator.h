@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+// TODO Remove static features
+
 namespace Utils
 {
   class CMRRandomGenerator

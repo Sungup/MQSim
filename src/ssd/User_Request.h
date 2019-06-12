@@ -8,6 +8,8 @@
 #include "Host_Interface_Defs.h"
 #include "NVM_Transaction.h"
 
+// TODO Remove static features if possible.
+
 namespace SSD_Components
 {
   enum class UserRequestType { READ, WRITE };

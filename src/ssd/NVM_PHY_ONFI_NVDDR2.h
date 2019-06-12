@@ -10,6 +10,8 @@
 #include "ONFI_Channel_NVDDR2.h"
 #include "Flash_Transaction_Queue.h"
 
+// TODO Remove static features
+
 namespace SSD_Components
 {
   enum class NVDDR2_SimEventType

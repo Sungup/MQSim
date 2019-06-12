@@ -5,6 +5,8 @@
 #include "../nvm_chip/flash_memory/FlashTypes.h"
 #include "Parameter_Set_Base.h"
 
+// TODO Remove static features
+
 class Flash_Parameter_Set : Parameter_Set_Base
 {
 public:

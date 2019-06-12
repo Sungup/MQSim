@@ -13,6 +13,8 @@
 #include "Parameter_Set_Base.h"
 #include "Flash_Parameter_Set.h"
 
+// TODO Remove static features
+
 class Device_Parameter_Set : public Parameter_Set_Base
 {
 public:

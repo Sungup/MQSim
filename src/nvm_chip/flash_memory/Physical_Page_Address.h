@@ -4,6 +4,8 @@
 #include "../NVM_Memory_Address.h"
 #include "FlashTypes.h"
 
+// TODO Remove static features??
+
 namespace NVM
 {
   namespace FlashMemory
