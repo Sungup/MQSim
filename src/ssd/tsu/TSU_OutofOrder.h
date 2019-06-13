@@ -3,9 +3,9 @@
 
 #include <list>
 #include "TSU_Base.h"
-#include "NVM_Transaction_Flash.h"
-#include "NVM_PHY_ONFI_NVDDR2.h"
-#include "FTL.h"
+#include "../NVM_Transaction_Flash.h"
+#include "../NVM_PHY_ONFI_NVDDR2.h"
+#include "../FTL.h"
 
 namespace SSD_Components
 {

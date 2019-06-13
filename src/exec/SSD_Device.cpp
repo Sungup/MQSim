@@ -10,7 +10,7 @@
 #include "../ssd/Address_Mapping_Unit_Page_Level.h"
 #include "../ssd/Address_Mapping_Unit_Hybrid.h"
 #include "../ssd/GC_and_WL_Unit_Page_Level.h"
-#include "../ssd/TSU_OutofOrder.h"
+#include "../ssd/tsu/TSU_OutofOrder.h"
 #include "../ssd/ONFI_Channel_NVDDR2.h"
 #include "../ssd/NVM_PHY_ONFI_NVDDR2.h"
 #include "../utils/Logical_Address_Partitioning_Unit.h"

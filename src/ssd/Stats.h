@@ -3,7 +3,7 @@
 
 #include "SSD_Defs.h"
 
-// TODO Remove Stats
+// TODO Remove Stats static keyword and rename it
 
 namespace SSD_Components
 {

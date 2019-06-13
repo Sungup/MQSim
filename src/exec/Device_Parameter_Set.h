@@ -6,7 +6,7 @@
 #include "../ssd/Host_Interface_Base.h"
 #include "../ssd/Data_Cache_Manager_Base.h"
 #include "../ssd/Address_Mapping_Unit_Base.h"
-#include "../ssd/TSU_Base.h"
+#include "../ssd/tsu/TSU_Base.h"
 #include "../ssd/ONFI_Channel_Base.h"
 #include "../ssd/GC_and_WL_Unit_Page_Level.h"
 #include "../nvm_chip/NVM_Types.h"

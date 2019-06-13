@@ -132,6 +132,40 @@ namespace SSD_Components
   class Address_Mapping_Unit_Page_Level : public Address_Mapping_Unit_Base
   {
     friend class GC_and_WL_Unit_Page_Level;
+
+  private:
+    static Address_Mapping_Unit_Page_Level* _my_instance;
+    uint32_t cmt_capacity;
+    AddressMappingDomain** domains;
+    uint32_t CMT_entry_size, GTD_entry_size;//In CMT MQSim stores (lpn, ppn, page status bits) but in GTD it only stores (ppn, page status bits)
+
+    std::set<NVM_Transaction_Flash_WR*>**** Write_transactions_for_overfull_planes;
+    uint32_t no_of_translation_entries_per_page;
+
+  private:
+    // --------------------------
+    // Internal private functions
+    // --------------------------
+    void allocate_plane_for_user_write(NVM_Transaction_Flash_WR* transaction);
+    void allocate_page_in_plane_for_user_write(NVM_Transaction_Flash_WR* transaction, bool is_for_gc);
+    void allocate_plane_for_translation_write(NVM_Transaction_Flash* transaction);
+    void allocate_page_in_plane_for_translation_write(NVM_Transaction_Flash* transaction, MVPN_type mvpn, bool is_for_gc);
+    void allocate_plane_for_preconditioning(stream_id_type stream_id, LPA_type lpn, NVM::FlashMemory::Physical_Page_Address& targetAddress);
+    bool request_mapping_entry(const stream_id_type streamID, const LPA_type lpn);
+    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
+    bool translate_lpa_to_ppa(stream_id_type streamID, NVM_Transaction_Flash* transaction);
+
+    void generate_flash_read_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
+    void generate_flash_writeback_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
+
+    MVPN_type get_MVPN(const LPA_type lpn, stream_id_type stream_id);
+    LPA_type get_start_LPN_in_MVP(const MVPN_type);
+    LPA_type get_end_LPN_in_MVP(const MVPN_type);
+
+    std::set<NVM_Transaction_Flash_WR*>& __wr_transaction_for_overfull_plane(const NVM::FlashMemory::Physical_Page_Address& address);
+
+    void mange_unsuccessful_translation(NVM_Transaction_Flash* transaction);
+
   public:
     Address_Mapping_Unit_Page_Level(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
       bool ideal_mapping_table, uint32_t cmt_capacity_in_byte, Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
@@ -141,63 +175,82 @@ namespace SSD_Components
       std::vector<std::vector<flash_die_ID_type>> stream_die_ids, std::vector<std::vector<flash_plane_ID_type>> stream_plane_ids,
       uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
       double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED, bool fold_large_addresses = true);
-    ~Address_Mapping_Unit_Page_Level();
-    void Setup_triggers();
-    void Start_simulation();
-    void Validate_simulation_config();
-    void Execute_simulator_event(MQSimEngine::Sim_Event*);
+    ~Address_Mapping_Unit_Page_Level() final;
 
-    void Allocate_address_for_preconditioning(const stream_id_type stream_id, std::map<LPA_type, page_status_type>& lpa_list, std::vector<double>& steady_state_distribution);
-    int Bring_to_CMT_for_preconditioning(stream_id_type stream_id, LPA_type lpa);
-    uint32_t Get_cmt_capacity();
-    uint32_t Get_current_cmt_occupancy_for_stream(stream_id_type stream_id);
-    void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactionList);
-    void Get_data_mapping_info_for_gc(const stream_id_type stream_id, const LPA_type lpa, PPA_type& ppa, page_status_type& page_state);
-    void Get_translation_mapping_info_for_gc(const stream_id_type stream_id, const MVPN_type mvpn, MPPN_type& mppa, sim_time_type& timestamp);
-    void Allocate_new_page_for_gc(NVM_Transaction_Flash_WR* transaction, bool is_translation_page);
+    // --------------------------
+    // Over-ridden from SimObject
+    // --------------------------
+    void Start_simulation() final;
+    void Setup_triggers() final;
 
-    void Store_mapping_table_on_flash_at_start();
-    LPA_type Get_logical_pages_count(stream_id_type stream_id);
-    NVM::FlashMemory::Physical_Page_Address Convert_ppa_to_address(const PPA_type ppa);
-    void Convert_ppa_to_address(const PPA_type ppn, NVM::FlashMemory::Physical_Page_Address& address);
-    PPA_type Convert_address_to_ppa(const NVM::FlashMemory::Physical_Page_Address& pageAddress);
+    // ------------------------------------------
+    // Over-ridden from Address_Mapping_Unit_Base
+    // ------------------------------------------
+    void Allocate_address_for_preconditioning(stream_id_type stream_id,
+                                              std::map<LPA_type, page_status_type>& lpa_list,
+                                              std::vector<double>& steady_state_distribution) final;
 
-    void Set_barrier_for_accessing_physical_block(const NVM::FlashMemory::Physical_Page_Address& block_address);
-    void Set_barrier_for_accessing_lpa(stream_id_type stream_id, LPA_type lpa);
-    void Set_barrier_for_accessing_mvpn(stream_id_type stream_id, MVPN_type mpvn);
-    void Remove_barrier_for_accessing_lpa(stream_id_type stream_id, LPA_type lpa);
-    void Remove_barrier_for_accessing_mvpn(stream_id_type stream_id, MVPN_type mpvn);
-    void Start_servicing_writes_for_overfull_plane(const NVM::FlashMemory::Physical_Page_Address plane_address);
-  private:
-    static Address_Mapping_Unit_Page_Level* _my_instance;
-    uint32_t cmt_capacity;
-    AddressMappingDomain** domains;
-    uint32_t CMT_entry_size, GTD_entry_size;//In CMT MQSim stores (lpn, ppn, page status bits) but in GTD it only stores (ppn, page status bits)
-    void allocate_plane_for_user_write(NVM_Transaction_Flash_WR* transaction);
-    void allocate_page_in_plane_for_user_write(NVM_Transaction_Flash_WR* transaction, bool is_for_gc);
-    void allocate_plane_for_translation_write(NVM_Transaction_Flash* transaction);
-    void allocate_page_in_plane_for_translation_write(NVM_Transaction_Flash* transaction, MVPN_type mvpn, bool is_for_gc);
-    void allocate_plane_for_preconditioning(stream_id_type stream_id, LPA_type lpn, NVM::FlashMemory::Physical_Page_Address& targetAddress);
-    bool request_mapping_entry(const stream_id_type streamID, const LPA_type lpn);
-    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
-    bool translate_lpa_to_ppa(stream_id_type streamID, NVM_Transaction_Flash* transaction);
-    std::set<NVM_Transaction_Flash_WR*>**** Write_transactions_for_overfull_planes;
+    int Bring_to_CMT_for_preconditioning(stream_id_type stream_id,
+                                         LPA_type lpa) final;
 
-    void generate_flash_read_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
-    void generate_flash_writeback_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
+    void Store_mapping_table_on_flash_at_start() final;
 
-    uint32_t no_of_translation_entries_per_page;
-    MVPN_type get_MVPN(const LPA_type lpn, stream_id_type stream_id);
-    LPA_type get_start_LPN_in_MVP(const MVPN_type);
-    LPA_type get_end_LPN_in_MVP(const MVPN_type);
+    uint32_t Get_cmt_capacity() final;
 
-    bool query_cmt(NVM_Transaction_Flash* transaction);
-    PPA_type online_create_entry_for_reads(LPA_type lpa, const stream_id_type stream_id, NVM::FlashMemory::Physical_Page_Address& read_address, uint64_t read_sectors_bitmap);
-    void mange_unsuccessful_translation(NVM_Transaction_Flash* transaction);
-    void manage_user_transaction_facing_barrier(NVM_Transaction_Flash* transaction);
-    void manage_mapping_transaction_facing_barrier(stream_id_type stream_id, MVPN_type mvpn, bool read);
-    bool is_lpa_locked_for_gc(stream_id_type stream_id, LPA_type lpa);
-    bool is_mvpn_locked_for_gc(stream_id_type stream_id, MVPN_type mvpn);
+    uint32_t Get_current_cmt_occupancy_for_stream(stream_id_type stream_id) final;
+
+    LPA_type Get_logical_pages_count(stream_id_type stream_id) final;
+
+    void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactionList) final;
+
+    void Get_data_mapping_info_for_gc(stream_id_type stream_id,
+                                      LPA_type lpa,
+                                      PPA_type& ppa,
+                                      page_status_type& page_state) final;
+
+    void Get_translation_mapping_info_for_gc(stream_id_type stream_id,
+                                             MVPN_type mvpn,
+                                             MPPN_type& mppa,
+                                             sim_time_type& timestamp) final;
+
+    void Allocate_new_page_for_gc(NVM_Transaction_Flash_WR* transaction,
+                                  bool is_translation_page) final;
+
+    NVM::FlashMemory::Physical_Page_Address Convert_ppa_to_address(PPA_type ppa) final;
+
+    void Convert_ppa_to_address(PPA_type ppn,
+                                NVM::FlashMemory::Physical_Page_Address& address) final;
+
+    PPA_type Convert_address_to_ppa(const NVM::FlashMemory::Physical_Page_Address& pageAddress) final;
+
+    // Barrier control functions
+    void Set_barrier_for_accessing_physical_block(const NVM::FlashMemory::Physical_Page_Address& block_address) final;
+    void Set_barrier_for_accessing_lpa(stream_id_type stream_id, LPA_type lpa) final;
+    void Set_barrier_for_accessing_mvpn(stream_id_type stream_id, MVPN_type mpvn) final;
+    void Remove_barrier_for_accessing_lpa(stream_id_type stream_id, LPA_type lpa) final;
+    void Remove_barrier_for_accessing_mvpn(stream_id_type stream_id, MVPN_type mpvn) final;
+    void Start_servicing_writes_for_overfull_plane(NVM::FlashMemory::Physical_Page_Address plane_address) final;
+
+  protected:
+    bool query_cmt(NVM_Transaction_Flash* transaction) final;
+
+    PPA_type online_create_entry_for_reads(LPA_type lpa,
+                                           stream_id_type stream_id,
+                                           NVM::FlashMemory::Physical_Page_Address& read_address,
+                                           uint64_t read_sectors_bitmap) final;
+
+    void manage_user_transaction_facing_barrier(NVM_Transaction_Flash* transaction) final;
+
+    void manage_mapping_transaction_facing_barrier(stream_id_type stream_id,
+                                                   MVPN_type mvpn,
+                                                   bool read) final;
+
+    bool is_lpa_locked_for_gc(stream_id_type stream_id,
+                              LPA_type lpa) final;
+
+    bool is_mvpn_locked_for_gc(stream_id_type stream_id,
+                               MVPN_type mvpn) final;
+
   };
 
 }

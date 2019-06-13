@@ -6,7 +6,7 @@
 #include "../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "Address_Mapping_Unit_Base.h"
 #include "Flash_Block_Manager_Base.h"
-#include "TSU_Base.h"
+#include "tsu/TSU_Base.h"
 #include "NVM_PHY_ONFI.h"
 
 namespace SSD_Components

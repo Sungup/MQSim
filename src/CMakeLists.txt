@@ -141,12 +141,12 @@ set(MQSIM_SSD_SOURCES
     ssd/SSD_Defs.h
     ssd/Stats.cpp
     ssd/Stats.h
-    ssd/TSU_Base.cpp
-    ssd/TSU_Base.h
-    ssd/TSU_OutofOrder.cpp
-    ssd/TSU_OutofOrder.h
+    ssd/tsu/TSU_Base.cpp
+    ssd/tsu/TSU_Base.h
+    ssd/tsu/TSU_OutofOrder.cpp
+    ssd/tsu/TSU_OutofOrder.h
     ssd/User_Request.cpp
-    ssd/User_Request.h ssd/TSU_Defs.h ssd/phy/PhyHandler.h)
+    ssd/User_Request.h ssd/tsu/TSU_Defs.h ssd/phy/PhyHandler.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/CMRRandomGenerator.cpp
@@ -165,7 +165,7 @@ set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp
     utils/rapidxml/rapidxml_iterators.hpp
     utils/rapidxml/rapidxml_print.hpp
-    utils/rapidxml/rapidxml_utils.hpp utils/InlineTools.h utils/Exception.h utils/ServiceHandler.h)
+    utils/rapidxml/rapidxml_utils.hpp utils/InlineTools.h utils/Exception.h utils/ServiceHandler.h sim/Sim_Object.cpp ssd/mapping/AllocationScheme.cpp ssd/mapping/AllocationScheme.h)
 
 add_executable(MQSim
                main.cpp

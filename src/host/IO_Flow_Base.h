@@ -39,7 +39,7 @@ namespace Host_Components
               nvme_queue_pair.Submission_queue_tail = 0;
 
   class PCIe_Root_Complex;
-  class IO_Flow_Base : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
+  class IO_Flow_Base : public MQSimEngine::Sim_Object
   {
   public:
     IO_Flow_Base(const sim_object_id_type& name, uint16_t flow_id, LHA_type start_lsa_on_device, LHA_type end_lsa_address_on_device, uint16_t io_queue_id,

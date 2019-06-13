@@ -3,15 +3,15 @@
 
 #include <list>
 #include <memory>
-#include "../sim/Sim_Defs.h"
-#include "../sim/Sim_Object.h"
-#include "../nvm_chip/flash_memory/Flash_Chip.h"
-#include "../sim/Sim_Reporter.h"
-#include "FTL.h"
-#include "NVM_PHY_ONFI_NVDDR2.h"
-#include "Flash_Transaction_Queue.h"
+#include "../../sim/Sim_Defs.h"
+#include "../../sim/Sim_Object.h"
+#include "../../nvm_chip/flash_memory/Flash_Chip.h"
+#include "../../sim/Sim_Reporter.h"
+#include "../FTL.h"
+#include "../NVM_PHY_ONFI_NVDDR2.h"
+#include "../Flash_Transaction_Queue.h"
 
-#include "phy/PhyHandler.h"
+#include "../phy/PhyHandler.h"
 #include "TSU_Defs.h"
 
 namespace SSD_Components
