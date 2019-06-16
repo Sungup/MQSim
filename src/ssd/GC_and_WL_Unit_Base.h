@@ -4,7 +4,7 @@
 #include "../sim/Sim_Object.h"
 #include "../nvm_chip/flash_memory/Flash_Chip.h"
 #include "../nvm_chip/flash_memory/Physical_Page_Address.h"
-#include "Address_Mapping_Unit_Base.h"
+#include "mapping/Address_Mapping_Unit_Base.h"
 #include "Flash_Block_Manager_Base.h"
 #include "tsu/TSU_Base.h"
 #include "NVM_PHY_ONFI.h"

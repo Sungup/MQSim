@@ -10,6 +10,7 @@
 #include "../utils/Helper_Functions.h"
 #include "FTL.h"
 #include "Stats.h"
+#include "mapping/AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {

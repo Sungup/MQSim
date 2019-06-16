@@ -76,15 +76,22 @@ set(MQSIM_SIM_SOURCES
     sim/Sim_Defs.h
     sim/Sim_Event.h
     sim/Sim_Object.h
-    sim/Sim_Reporter.h sim/Sim_Reporter.cpp)
+    sim/Sim_Object.cpp
+    sim/Sim_Reporter.h
+    sim/Sim_Reporter.cpp)
 
 set(MQSIM_SSD_SOURCES
-    ssd/Address_Mapping_Unit_Base.cpp
-    ssd/Address_Mapping_Unit_Base.h
-    ssd/Address_Mapping_Unit_Hybrid.cpp
-    ssd/Address_Mapping_Unit_Hybrid.h
-    ssd/Address_Mapping_Unit_Page_Level.cpp
-    ssd/Address_Mapping_Unit_Page_Level.h
+    ssd/mapping/AddressMappingUnitDefs.h
+    ssd/mapping/Address_Mapping_Unit_Base.cpp
+    ssd/mapping/Address_Mapping_Unit_Base.h
+    ssd/mapping/Address_Mapping_Unit_Hybrid.cpp
+    ssd/mapping/Address_Mapping_Unit_Hybrid.h
+    ssd/mapping/Address_Mapping_Unit_Page_Level.cpp
+    ssd/mapping/Address_Mapping_Unit_Page_Level.h
+    ssd/mapping/AllocationScheme.cpp
+    ssd/mapping/AllocationScheme.h
+    ssd/phy/PhyHandler.h
+    ssd/tsu/TSU_Defs.h
     ssd/Controller.cpp
     ssd/Controller.h
     ssd/Data_Cache_Flash.cpp
@@ -146,26 +153,29 @@ set(MQSIM_SSD_SOURCES
     ssd/tsu/TSU_OutofOrder.cpp
     ssd/tsu/TSU_OutofOrder.h
     ssd/User_Request.cpp
-    ssd/User_Request.h ssd/tsu/TSU_Defs.h ssd/phy/PhyHandler.h)
+    ssd/User_Request.h)
 
 set(MQSIM_UTILS_SOURCES
+    utils/rapidxml/rapidxml.hpp
+    utils/rapidxml/rapidxml_iterators.hpp
+    utils/rapidxml/rapidxml_print.hpp
+    utils/rapidxml/rapidxml_utils.hpp
     utils/CMRRandomGenerator.cpp
     utils/CMRRandomGenerator.h
     utils/DistributionTypes.h
+    utils/Exception.h
     utils/Helper_Functions.cpp
     utils/Helper_Functions.h
+    utils/InlineTools.h
     utils/Logical_Address_Partitioning_Unit.cpp
     utils/Logical_Address_Partitioning_Unit.h
     utils/RandomGenerator.cpp
     utils/RandomGenerator.h
+    utils/ServiceHandler.h
     utils/StringTools.h
     utils/Workload_Statistics.h
     utils/XMLWriter.cpp
-    utils/XMLWriter.h
-    utils/rapidxml/rapidxml.hpp
-    utils/rapidxml/rapidxml_iterators.hpp
-    utils/rapidxml/rapidxml_print.hpp
-    utils/rapidxml/rapidxml_utils.hpp utils/InlineTools.h utils/Exception.h utils/ServiceHandler.h sim/Sim_Object.cpp ssd/mapping/AllocationScheme.cpp ssd/mapping/AllocationScheme.h)
+    utils/XMLWriter.h)
 
 add_executable(MQSim
                main.cpp

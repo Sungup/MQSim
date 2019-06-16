@@ -7,6 +7,9 @@
 class Parameter_Set_Base
 {
 public:
+  Parameter_Set_Base() = default;
+  virtual ~Parameter_Set_Base() = default;
+
   virtual void XML_serialize(Utils::XmlWriter& xmlwriter) = 0;
   virtual void XML_deserialize(rapidxml::xml_node<> *node) = 0;
 };

@@ -1,7 +1,8 @@
-#include "FTL.h"
+#include "../FTL.h"
 #include "Address_Mapping_Unit_Base.h"
-#include "NVM_PHY_ONFI_NVDDR2.h"
-#include "Flash_Block_Manager_Base.h"
+#include "../NVM_PHY_ONFI_NVDDR2.h"
+#include "../Flash_Block_Manager_Base.h"
+#include "AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {

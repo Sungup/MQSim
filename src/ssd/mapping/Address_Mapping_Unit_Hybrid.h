@@ -2,6 +2,7 @@
 #define ADDRESS_MAPPING_UNIT_HYBRID_H
 
 #include "Address_Mapping_Unit_Base.h"
+#include "AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {

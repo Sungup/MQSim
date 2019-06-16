@@ -9,173 +9,65 @@
 #ifndef __MQSim__AllocationScheme__
 #define __MQSim__AllocationScheme__
 
+#include <vector>
+
+#include "../../utils/InlineTools.h"
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
 #include "../../nvm_chip/flash_memory/Physical_Page_Address.h"
-#include "../Address_Mapping_Unit_Page_Level.h"
+
+#include "AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {
-  force_inline void
-  allocate_addr(NVM::FlashMemory::Physical_Page_Address& target,
-                const AddressMappingDomain& domain,
-                uint32_t channel_idx,
-                uint32_t chip_idx,
-                uint32_t die_idx,
-                uint32_t plane_idx)
-  {
-    target.ChannelID = domain.Channel_ids[channel_idx];
-    target.ChipID    = domain.Chip_ids[chip_idx];
-    target.DieID     = domain.Die_ids[die_idx];
-    target.PlaneID   = domain.Plane_ids[plane_idx];
-  }
+  // =======================
+  // Plane Allocator Functor
+  // =======================
+  class PlaneAllocator {
+  public:
+    struct AddressInfo {
+      uint16_t channel;
+      uint16_t chip;
+      uint16_t die;
+      uint16_t plane;
+    };
 
-  force_inline uint32_t
-  idx(LPA_type lpn, uint32_t div, uint32_t mod)
-  {
-    return (lpn / div) % mod;
-  }
+  typedef AddressInfo (*AllocScheme)(LPA_type lpn, const AddressInfo& in);
 
-  // =============
-  // Channel First
-  // =============
-  force_inline void
-  CWDP_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
+  private:
+    std::vector<flash_channel_ID_type> __channel_ids;
+    std::vector<flash_chip_ID_type>    __chip_ids;
+    std::vector<flash_die_ID_type>     __die_ids;
+    std::vector<flash_plane_ID_type>   __plane_ids;
 
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, 1,                                           dom.Channel_no),
-      idx(lpn, dom.Channel_no,                              dom.Chip_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no,                dom.Die_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no * dom.Die_no,   dom.Plane_no)
-    );
-  }
+    const AddressInfo __structure;
+    AllocScheme __alloc;
 
-  force_inline void
-  CWPD_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
+  public:
+    PlaneAllocator(flash_channel_ID_type* channel_ids,
+                   flash_chip_ID_type*    chip_ids,
+                   flash_die_ID_type*     die_ids,
+                   flash_plane_ID_type*   plane_ids,
+                   uint16_t channel_no,
+                   uint16_t chip_no,
+                   uint16_t die_no,
+                   uint16_t plane_no,
+                   Flash_Plane_Allocation_Scheme_Type scheme);
 
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, 1,                                           dom.Channel_no),
-      idx(lpn, dom.Channel_no,                              dom.Chip_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no * dom.Plane_no, dom.Die_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no,                dom.Plane_no)
-    );
-  }
+    void operator()(NVM::FlashMemory::Physical_Page_Address& target,
+                    LPA_type lpn);
+  };
 
   force_inline void
-  CDWP_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
+  PlaneAllocator::operator()(NVM::FlashMemory::Physical_Page_Address& target,
+                             LPA_type lpn)
   {
+    AddressInfo idx = __alloc(lpn, __structure);
 
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, 1,                                           dom.Channel_no),
-      idx(lpn, dom.Channel_no * dom.Die_no,                 dom.Chip_no),
-      idx(lpn, dom.Channel_no,                              dom.Die_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no * dom.Die_no,   dom.Plane_no)
-    );
+    target.ChannelID = __channel_ids[idx.channel];
+    target.ChipID    = __chip_ids[idx.chip];
+    target.DieID     = __die_ids[idx.die];
+    target.PlaneID   = __plane_ids[idx.plane];
   }
-
-  force_inline void
-  CDPW_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
-
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, 1,                                           dom.Channel_no),
-      idx(lpn, dom.Channel_no * dom.Die_no * dom.Plane_no,  dom.Chip_no),
-      idx(lpn, dom.Channel_no,                              dom.Die_no),
-      idx(lpn, dom.Channel_no * dom.Die_no,                 dom.Plane_no)
-    );
-  }
-
-  force_inline void
-  CPWD_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
-
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, 1,                                           dom.Channel_no),
-      idx(lpn, dom.Channel_no * dom.Plane_no,               dom.Chip_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no * dom.Plane_no, dom.Die_no),
-      idx(lpn, dom.Channel_no,                              dom.Plane_no)
-    );
-  }
-
-  force_inline void
-  CPDW_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
-
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, 1,                                           dom.Channel_no),
-      idx(lpn, dom.Channel_no * dom.Die_no * dom.Plane_no,  dom.Chip_no),
-      idx(lpn, dom.Channel_no * dom.Plane_no,               dom.Die_no),
-      idx(lpn, dom.Channel_no,                              dom.Plane_no)
-    );
-  }
-
-  // =========
-  // Way First
-  // =========
-  force_inline void
-  WCDP_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
-
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, dom.Chip_no,                                 dom.Channel_no),
-      idx(lpn, 1,                                           dom.Chip_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no,                dom.Die_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no * dom.Die_no,   dom.Plane_no)
-    );
-  }
-
-  force_inline void
-  WCPD_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
-
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, dom.Chip_no,                                 dom.Channel_no),
-      idx(lpn, 1,                                           dom.Chip_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no * dom.Plane_no, dom.Die_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no,                dom.Plane_no)
-    );
-  }
-
-  force_inline void
-  WDCP_allocation(NVM::FlashMemory::Physical_Page_Address& target,
-                  const AddressMappingDomain& dom, LPA_type lpn)
-  {
-
-    allocate_addr(
-      target,
-      dom,
-      idx(lpn, dom.Chip_no * dom.Die_no,                    dom.Channel_no),
-      idx(lpn, 1,                                           dom.Chip_no),
-      idx(lpn, dom.Chip_no,                                 dom.Die_no),
-      idx(lpn, dom.Channel_no * dom.Chip_no * dom.Die_no,   dom.Plane_no)
-    );
-  }
-
 }
 
 #endif /* Predefined include guard __MQSim__AllocationScheme__ */

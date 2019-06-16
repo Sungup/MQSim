@@ -1,4 +1,5 @@
 #include "GC_and_WL_Unit_Base.h"
+#include "mapping/AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {

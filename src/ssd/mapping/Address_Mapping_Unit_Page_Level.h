@@ -7,10 +7,13 @@
 #include <set>
 #include <list>
 #include "Address_Mapping_Unit_Base.h"
-#include "Flash_Block_Manager_Base.h"
-#include "SSD_Defs.h"
-#include "NVM_Transaction_Flash_RD.h"
-#include "NVM_Transaction_Flash_WR.h"
+#include "../Flash_Block_Manager_Base.h"
+#include "../SSD_Defs.h"
+#include "../NVM_Transaction_Flash_RD.h"
+#include "../NVM_Transaction_Flash_WR.h"
+
+#include "AddressMappingUnitDefs.h"
+#include "AllocationScheme.h"
 
 namespace SSD_Components
 {
@@ -68,15 +71,26 @@ namespace SSD_Components
   * However, CMT is shared among concurrent streams in two ways: 1) each address mapping domain
   * shares the whole CMT space with other domains, and 2) each address mapping domain has
   * its own share of CMT (equal partitioning of CMT space among concurrent streams).*/
+  typedef std::multimap<LPA_type, NVM_Transaction_Flash*> FlashTransactionLpaMap;
   class AddressMappingDomain
   {
   public:
-    AddressMappingDomain(uint32_t cmt_capacity, uint32_t cmt_entry_size, uint32_t no_of_translation_entries_per_page,
-      Cached_Mapping_Table* CMT,
-      Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
-      flash_channel_ID_type* channel_ids, uint32_t channel_no, flash_chip_ID_type* chip_ids, uint32_t chip_no,
-      flash_die_ID_type* die_ids, uint32_t die_no, flash_plane_ID_type* plane_ids, uint32_t plane_no,
-      PPA_type total_physical_sectors_no, LHA_type total_logical_sectors_no, uint32_t sectors_no_per_page);
+    AddressMappingDomain(uint32_t cmt_capacity,
+                         uint32_t cmt_entry_size,
+                         uint32_t no_of_translation_entries_per_page,
+                         Cached_Mapping_Table* CMT,
+                         Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
+                         flash_channel_ID_type* channel_ids,
+                         uint32_t channel_no,
+                         flash_chip_ID_type* chip_ids,
+                         uint32_t chip_no,
+                         flash_die_ID_type* die_ids,
+                         uint32_t die_no,
+                         flash_plane_ID_type* plane_ids,
+                         uint32_t plane_no,
+                         PPA_type total_physical_sectors_no,
+                         LHA_type total_logical_sectors_no,
+                         uint32_t sectors_no_per_page);
     ~AddressMappingDomain();
 
 
@@ -101,18 +115,19 @@ namespace SSD_Components
     PPA_type Get_ppa_for_preconditioning(const stream_id_type stream_id, const LPA_type lpa);
     bool Mapping_entry_accessible(const bool ideal_mapping, const stream_id_type stream_id, const LPA_type lpa);
 
-    
-    std::multimap<LPA_type, NVM_Transaction_Flash*> Waiting_unmapped_read_transactions;
-    std::multimap<LPA_type, NVM_Transaction_Flash*> Waiting_unmapped_program_transactions;
+
+    FlashTransactionLpaMap Waiting_unmapped_read_transactions;
+    FlashTransactionLpaMap Waiting_unmapped_program_transactions;
     std::multimap<MVPN_type, LPA_type> ArrivingMappingEntries;
     std::set<MVPN_type> DepartingMappingEntries;
     std::set<LPA_type> Locked_LPAs;//Used to manage race conditions, i.e. a user request accesses and LPA while GC is moving that LPA 
     std::set<MVPN_type> Locked_MVPNs;//Used to manage race conditions
-    std::multimap<LPA_type, NVM_Transaction_Flash*> Read_transactions_behind_LPA_barrier;
-    std::multimap<LPA_type, NVM_Transaction_Flash*> Write_transactions_behind_LPA_barrier;
+    FlashTransactionLpaMap Read_transactions_behind_LPA_barrier;
+    FlashTransactionLpaMap Write_transactions_behind_LPA_barrier;
     std::set<MVPN_type> MVPN_read_transactions_waiting_behind_barrier;
     std::set<MVPN_type> MVPN_write_transaction_waiting_behind_barrier;
 
+    PlaneAllocator plane_allocate;
     Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme;
     flash_channel_ID_type* Channel_ids;
     uint32_t Channel_no;
@@ -135,6 +150,9 @@ namespace SSD_Components
 
   private:
     static Address_Mapping_Unit_Page_Level* _my_instance;
+
+    TransactionServiceHandler<Address_Mapping_Unit_Page_Level> __transaction_service_handler;
+
     uint32_t cmt_capacity;
     AddressMappingDomain** domains;
     uint32_t CMT_entry_size, GTD_entry_size;//In CMT MQSim stores (lpn, ppn, page status bits) but in GTD it only stores (ppn, page status bits)
@@ -151,20 +169,31 @@ namespace SSD_Components
     void allocate_plane_for_translation_write(NVM_Transaction_Flash* transaction);
     void allocate_page_in_plane_for_translation_write(NVM_Transaction_Flash* transaction, MVPN_type mvpn, bool is_for_gc);
     void allocate_plane_for_preconditioning(stream_id_type stream_id, LPA_type lpn, NVM::FlashMemory::Physical_Page_Address& targetAddress);
-    bool request_mapping_entry(const stream_id_type streamID, const LPA_type lpn);
-    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
+    bool request_mapping_entry(stream_id_type streamID, LPA_type lpn);
     bool translate_lpa_to_ppa(stream_id_type streamID, NVM_Transaction_Flash* transaction);
 
-    void generate_flash_read_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
-    void generate_flash_writeback_request_for_mapping_data(const stream_id_type streamID, const LPA_type lpn);
+    void generate_flash_read_request_for_mapping_data(stream_id_type streamID, LPA_type lpn);
+    void generate_flash_writeback_request_for_mapping_data(stream_id_type streamID, LPA_type lpn);
 
-    MVPN_type get_MVPN(const LPA_type lpn, stream_id_type stream_id);
-    LPA_type get_start_LPN_in_MVP(const MVPN_type);
-    LPA_type get_end_LPN_in_MVP(const MVPN_type);
+    MVPN_type get_MVPN(LPA_type lpn, stream_id_type stream_id) const;
+    LPA_type get_start_LPN_in_MVP(MVPN_type mvpn) const;
+    LPA_type get_end_LPN_in_MVP(MVPN_type mvpn) const;
 
     std::set<NVM_Transaction_Flash_WR*>& __wr_transaction_for_overfull_plane(const NVM::FlashMemory::Physical_Page_Address& address);
 
-    void mange_unsuccessful_translation(NVM_Transaction_Flash* transaction);
+    void manage_unsuccessful_translation(NVM_Transaction_Flash *transaction);
+
+    template <typename function>
+    void __processing_unmapped_transactions(FlashTransactionLpaMap& unmapped_ios,
+                                            LPA_type lpa, uint32_t stream_id,
+                                            function lambda);
+
+    void __handle_transaction_service_signal(NVM_Transaction_Flash& transaction);
+
+    void __ppa_to_address(PPA_type ppn,
+                          NVM::FlashMemory::Physical_Page_Address& address);
+
+    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
 
   public:
     Address_Mapping_Unit_Page_Level(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
@@ -201,7 +230,7 @@ namespace SSD_Components
 
     LPA_type Get_logical_pages_count(stream_id_type stream_id) final;
 
-    void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactionList) final;
+    void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactions) final;
 
     void Get_data_mapping_info_for_gc(stream_id_type stream_id,
                                       LPA_type lpa,

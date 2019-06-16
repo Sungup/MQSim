@@ -14,6 +14,9 @@ enum class Flow_Type { SYNTHETIC, TRACE };
 class IO_Flow_Parameter_Set : public Parameter_Set_Base
 {
 public:
+  explicit IO_Flow_Parameter_Set(Flow_Type type);
+  ~IO_Flow_Parameter_Set() override = default;
+
   SSD_Components::Caching_Mode Device_Level_Data_Caching_Mode;
   Flow_Type Type;
   IO_Flow_Priority_Class Priority_Class;//The priority class is only considered when the SSD device uses NVMe host interface
@@ -31,7 +34,7 @@ private:
 class IO_Flow_Parameter_Set_Synthetic : public IO_Flow_Parameter_Set
 {
 public:
-  IO_Flow_Parameter_Set_Synthetic() { this->Type = Flow_Type::SYNTHETIC; }
+  IO_Flow_Parameter_Set_Synthetic();
   uint32_t Working_Set_Percentage;//Percentage of available storage space that is accessed
   Utils::Request_Generator_Type Synthetic_Generator_Type;
   char Read_Percentage;
@@ -57,7 +60,7 @@ public:
 class IO_Flow_Parameter_Set_Trace_Based : public IO_Flow_Parameter_Set
 {
 public:
-  IO_Flow_Parameter_Set_Trace_Based() { this->Type = Flow_Type::TRACE; }
+  IO_Flow_Parameter_Set_Trace_Based();
   std::string File_Path;
   int Percentage_To_Be_Executed;
   int Relay_Count; 

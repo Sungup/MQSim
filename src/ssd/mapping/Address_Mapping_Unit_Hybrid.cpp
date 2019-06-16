@@ -1,4 +1,5 @@
 #include "Address_Mapping_Unit_Hybrid.h"
+#include "AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {

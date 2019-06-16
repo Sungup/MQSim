@@ -5,7 +5,7 @@
 #include "../utils/RandomGenerator.h"
 #include "NVM_Firmware.h"
 #include "tsu/TSU_Base.h"
-#include "Address_Mapping_Unit_Base.h"
+#include "mapping/Address_Mapping_Unit_Base.h"
 #include "Flash_Block_Manager_Base.h"
 #include "GC_and_WL_Unit_Base.h"
 #include "NVM_PHY_ONFI.h"

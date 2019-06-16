@@ -4,7 +4,13 @@
 #include <cstring>
 #include <algorithm>
 
-//All serialization and deserialization functions should be replaced by a C++ reflection implementation
+IO_Flow_Parameter_Set::IO_Flow_Parameter_Set(Flow_Type type)
+  : Parameter_Set_Base(),
+    Type(type)
+{ }
+
+// All serialization and deserialization functions should be replaced by a C++
+// reflection implementation
 void IO_Flow_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)
 {
   std::string attr = "Type";
@@ -251,6 +257,15 @@ void IO_Flow_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
   }
 }
 
+
+// -----------------------------------------------
+// Constructor for IO_Flow_Parameter_Set_Synthetic
+// -----------------------------------------------
+IO_Flow_Parameter_Set_Synthetic::IO_Flow_Parameter_Set_Synthetic()
+  : IO_Flow_Parameter_Set(Flow_Type::SYNTHETIC),
+    Bandwidth(0)
+{ }
+
 void IO_Flow_Parameter_Set_Synthetic::XML_serialize(Utils::XmlWriter& xmlwriter)
 {
   std::string tmp;
@@ -463,6 +478,13 @@ void IO_Flow_Parameter_Set_Synthetic::XML_deserialize(rapidxml::xml_node<> *node
     PRINT_ERROR("Error in IO_Flow_Parameter_Set_Synthetic!")
   }
 }
+
+// -------------------------------------------------
+// Constructor for IO_Flow_Parameter_Set_Trace_Based
+// -------------------------------------------------
+IO_Flow_Parameter_Set_Trace_Based::IO_Flow_Parameter_Set_Trace_Based()
+  : IO_Flow_Parameter_Set(Flow_Type::TRACE)
+{ }
 
 void IO_Flow_Parameter_Set_Trace_Based::XML_serialize(Utils::XmlWriter& xmlwriter)
 {

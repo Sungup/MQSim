@@ -1,4 +1,5 @@
 #include "Device_Parameter_Set.h"
+#include "../ssd/mapping/AddressMappingUnitDefs.h"
 #include <algorithm>
 
 
