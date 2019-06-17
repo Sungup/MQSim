@@ -1,10 +1,11 @@
 #ifndef WORKLOAD_STATISTICS_H
 #define WORKLOAD_STATISTICS_H
 
-#include <map>
-#include <vector>
-#include <set>
 #include <cstdint>
+#include <map>
+#include <memory>
+#include <set>
+#include <vector>
 #include "../sim/Sim_Defs.h"
 #include "../ssd/SSD_Defs.h"
 #include "../utils/DistributionTypes.h"

@@ -1,6 +1,7 @@
 #ifndef HELPER_FUNCTIONS_H
 #define HELPER_FUNCTIONS_H
 
+#include <cstdint>
 #include <vector>
 
 #include "InlineTools.h"

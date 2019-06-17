@@ -1,6 +1,7 @@
 #ifndef LOGICAL_ADDRESS_PARTITIONING_UNIT_H
 #define LOGICAL_ADDRESS_PARTITIONING_UNIT_H
 
+#include <cstdint>
 #include <vector>
 #include "../ssd/SSD_Defs.h"
 #include "../ssd/Host_Interface_Defs.h"

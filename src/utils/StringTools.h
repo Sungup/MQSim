@@ -1,9 +1,10 @@
 #ifndef STRING_TOOLS_H
 #define STRING_TOOLS_H
 
+#include <algorithm>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
 
 namespace Utils
 {
