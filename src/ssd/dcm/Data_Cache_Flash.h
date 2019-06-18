@@ -4,10 +4,10 @@
 #include <list>
 #include <queue>
 #include <unordered_map>
-#include "../nvm_chip/flash_memory/FlashTypes.h"
-#include "SSD_Defs.h"
+#include "../../nvm_chip/flash_memory/FlashTypes.h"
+#include "../SSD_Defs.h"
 #include "Data_Cache_Manager_Base.h"
-#include "NVM_Transaction_Flash.h"
+#include "../NVM_Transaction_Flash.h"
 
 namespace SSD_Components
 {

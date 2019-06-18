@@ -7,9 +7,11 @@
 #include "../host/PCIe_Switch.h"
 #include "../host/PCIe_Message.h"
 #include "User_Request.h"
-#include "Data_Cache_Manager_Base.h"
+#include "dcm/Data_Cache_Manager_Base.h"
 #include <stdint.h>
 #include <cstring>
+
+#include "interface/HostInterfaceHandler.h"
 
 // TODO Remove static features
 
@@ -99,6 +101,7 @@ namespace SSD_Components
     friend class Request_Fetch_Unit_Base;
     friend class Request_Fetch_Unit_NVMe;
     friend class Request_Fetch_Unit_SATA;
+
   public:
     Host_Interface_Base(const sim_object_id_type& id, HostInterface_Types type, LHA_type max_logical_sector_address, 
       uint32_t sectors_per_page, Data_Cache_Manager_Base* cache);
@@ -111,6 +114,8 @@ namespace SSD_Components
     {
       connected_user_request_arrived_signal_handlers.push_back(function);
     }
+
+    void connect_to_user_request_signal(UserRequestServiceHandlerBase& handler);
 
     void Consume_pcie_message(Host_Components::PCIe_Message* message)
     {
@@ -135,6 +140,9 @@ namespace SSD_Components
     Input_Stream_Manager_Base* input_stream_manager;
     Request_Fetch_Unit_Base* request_fetch_unit;
     Data_Cache_Manager_Base* cache;
+
+    UserRequestServiceHandlerList __connected_user_req_signal_handlers;
+
     std::vector<UserRequestArrivedSignalHandlerType> connected_user_request_arrived_signal_handlers;
 
     void broadcast_user_request_arrival_signal(User_Request* user_request)
@@ -156,5 +164,11 @@ namespace SSD_Components
   private:
     Host_Components::PCIe_Switch* pcie_switch;
   };
+
+  force_inline void
+  Host_Interface_Base::connect_to_user_request_signal(UserRequestServiceHandlerBase& handler)
+  {
+    __connected_user_req_signal_handlers.emplace_back(&handler);
+  }
 }
 #endif //HOST_INTERFACE_BASE_H

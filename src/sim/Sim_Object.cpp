@@ -11,6 +11,10 @@
 using namespace MQSimEngine;
 
 void
+Sim_Object::Start_simulation()
+{ /* Default dont' do anything */ }
+
+void
 Sim_Object::Validate_simulation_config()
 { /* Default don't do anything */ }
 

@@ -5,7 +5,7 @@
 #include "../sim/Sim_Object.h"
 #include "../utils/Workload_Statistics.h"
 #include "NVM_Transaction.h"
-#include "Data_Cache_Manager_Base.h"
+#include "dcm/Data_Cache_Manager_Base.h"
 
 namespace SSD_Components
 {

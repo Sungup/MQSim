@@ -3,6 +3,7 @@
 
 #include <string>
 #include "../nvm_chip/flash_memory/FlashTypes.h"
+#include "../ssd/dcm/DataCacheDefs.h"
 #include "../ssd/Host_Interface_Defs.h"
 #include "../host/IO_Flow_Synthetic.h"
 #include "../host/IO_Flow_Trace_Based.h"

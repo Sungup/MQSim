@@ -1,13 +1,19 @@
 #include "Host_Interface_Base.h"
-#include "Data_Cache_Manager_Base.h"
+#include "dcm/Data_Cache_Manager_Base.h"
 
 namespace SSD_Components
 {
-  Input_Stream_Base::Input_Stream_Base() :
-    STAT_number_of_read_requests(0), STAT_number_of_write_requests(0), 
-    STAT_number_of_read_transactions(0), STAT_number_of_write_transactions(0),
-    STAT_sum_of_read_transactions_execution_time(0), STAT_sum_of_read_transactions_transfer_time(0), STAT_sum_of_read_transactions_waiting_time(0),
-    STAT_sum_of_write_transactions_execution_time(0), STAT_sum_of_write_transactions_transfer_time(0), STAT_sum_of_write_transactions_waiting_time(0)
+  Input_Stream_Base::Input_Stream_Base()
+    : STAT_number_of_read_requests(0),
+      STAT_number_of_write_requests(0),
+      STAT_number_of_read_transactions(0),
+      STAT_number_of_write_transactions(0),
+      STAT_sum_of_read_transactions_execution_time(0),
+      STAT_sum_of_read_transactions_transfer_time(0),
+      STAT_sum_of_read_transactions_waiting_time(0),
+      STAT_sum_of_write_transactions_execution_time(0),
+      STAT_sum_of_write_transactions_transfer_time(0),
+      STAT_sum_of_write_transactions_waiting_time(0)
   {}
   
   Input_Stream_Manager_Base::~Input_Stream_Manager_Base()
@@ -26,10 +32,17 @@ namespace SSD_Components
 
   Host_Interface_Base* Host_Interface_Base::_my_instance = NULL;
 
-  Host_Interface_Base::Host_Interface_Base(const sim_object_id_type& id, HostInterface_Types type, LHA_type max_logical_sector_address, uint32_t sectors_per_page,
-    Data_Cache_Manager_Base* cache)
-    : MQSimEngine::Sim_Object(id), type(type), max_logical_sector_address(max_logical_sector_address), 
-    sectors_per_page(sectors_per_page), cache(cache)
+  Host_Interface_Base::Host_Interface_Base(const sim_object_id_type& id,
+                                           HostInterface_Types type,
+                                           LHA_type max_logical_sector_address,
+                                           uint32_t sectors_per_page,
+                                           Data_Cache_Manager_Base* cache)
+    : MQSimEngine::Sim_Object(id),
+      type(type),
+      max_logical_sector_address(max_logical_sector_address),
+      sectors_per_page(sectors_per_page),
+      cache(cache),
+      __connected_user_req_signal_handlers()
   {
     _my_instance = this;
   }
@@ -82,9 +95,10 @@ namespace SSD_Components
   }
 
 
-  Input_Stream_Manager_Base::Input_Stream_Manager_Base(Host_Interface_Base* host_interface) :
-    host_interface(host_interface)
+  Input_Stream_Manager_Base::Input_Stream_Manager_Base(Host_Interface_Base* host_interface)
+    : host_interface(host_interface)
   {}
+
   void Input_Stream_Manager_Base::Update_transaction_statistics(NVM_Transaction* transaction)
   {
     switch (transaction->Type)

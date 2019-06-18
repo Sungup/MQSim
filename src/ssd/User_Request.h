@@ -12,7 +12,11 @@
 
 namespace SSD_Components
 {
-  enum class UserRequestType { READ, WRITE };
+  enum class UserRequestType {
+    READ,
+    WRITE
+  };
+
   class NVM_Transaction;
   class User_Request
   {
@@ -34,9 +38,18 @@ namespace SSD_Components
     bool ToBeIgnored;
     void* IO_command_info;//used to store host I/O command info
     void* Data;
+
+    bool is_finished() const;
+
   private:
     static uint32_t lastId;
   };
+
+  force_inline bool
+  User_Request::is_finished() const
+  {
+    return (Transaction_list.empty()) && (Sectors_serviced_from_cache == 0);
+  }
 }
 
 #endif // !USER_REQUEST_H

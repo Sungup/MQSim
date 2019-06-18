@@ -94,14 +94,14 @@ set(MQSIM_SSD_SOURCES
     ssd/tsu/TSU_Defs.h
     ssd/Controller.cpp
     ssd/Controller.h
-    ssd/Data_Cache_Flash.cpp
-    ssd/Data_Cache_Flash.h
-    ssd/Data_Cache_Manager_Base.cpp
-    ssd/Data_Cache_Manager_Base.h
-    ssd/Data_Cache_Manager_Flash_Advanced.cpp
-    ssd/Data_Cache_Manager_Flash_Advanced.h
-    ssd/Data_Cache_Manager_Flash_Simple.cpp
-    ssd/Data_Cache_Manager_Flash_Simple.h
+    ssd/dcm/Data_Cache_Flash.cpp
+    ssd/dcm/Data_Cache_Flash.h
+    ssd/dcm/Data_Cache_Manager_Base.cpp
+    ssd/dcm/Data_Cache_Manager_Base.h
+    ssd/dcm/Data_Cache_Manager_Flash_Advanced.cpp
+    ssd/dcm/Data_Cache_Manager_Flash_Advanced.h
+    ssd/dcm/Data_Cache_Manager_Flash_Simple.cpp
+    ssd/dcm/Data_Cache_Manager_Flash_Simple.h
     ssd/Flash_Block_Manager.cpp
     ssd/Flash_Block_Manager.h
     ssd/Flash_Block_Manager_Base.cpp
@@ -153,7 +153,7 @@ set(MQSIM_SSD_SOURCES
     ssd/tsu/TSU_OutofOrder.cpp
     ssd/tsu/TSU_OutofOrder.h
     ssd/User_Request.cpp
-    ssd/User_Request.h)
+    ssd/User_Request.h ssd/interface/HostInterfaceHandler.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp
@@ -175,7 +175,7 @@ set(MQSIM_UTILS_SOURCES
     utils/StringTools.h
     utils/Workload_Statistics.h
     utils/XMLWriter.cpp
-    utils/XMLWriter.h)
+    utils/XMLWriter.h ssd/dcm/DataCacheDefs.h)
 
 add_executable(MQSim
                main.cpp

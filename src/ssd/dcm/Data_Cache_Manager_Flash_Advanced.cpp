@@ -1,9 +1,9 @@
 #include <stdexcept>
-#include "../nvm_chip/NVM_Types.h"
+#include "../../nvm_chip/NVM_Types.h"
 #include "Data_Cache_Manager_Flash_Advanced.h"
-#include "NVM_Transaction_Flash_RD.h"
-#include "NVM_Transaction_Flash_WR.h"
-#include "FTL.h"
+#include "../NVM_Transaction_Flash_RD.h"
+#include "../NVM_Transaction_Flash_WR.h"
+#include "../FTL.h"
 
 namespace SSD_Components
 {
