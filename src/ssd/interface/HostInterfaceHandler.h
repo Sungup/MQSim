@@ -11,19 +11,15 @@
 
 #include "../../utils/ServiceHandler.h"
 #include "../User_Request.h"
+#include "../NVM_Transaction_Flash.h"
 
 namespace SSD_Components {
-  typedef Utils::ServiceHandlerBase<User_Request*>    UserRequestServiceHandlerBase;
-  typedef Utils::ServiceHandlerBase<NVM_Transaction*> UserTransactionServiceHandlerBase;
+  typedef Utils::ServiceHandlerBase<User_Request&> UserRequestServiceHandlerBase;
 
   template <typename T>
-  using UserRequestServiceHandler = Utils::ServiceHandler<T, User_Request*>;
+  using UserRequestServiceHandler = Utils::ServiceHandler<T, User_Request&>;
 
-  template <typename T>
-  using UserTransactionServiceHandler = Utils::ServiceHandler<T, NVM_Transaction*>;
-
-  typedef std::vector<UserRequestServiceHandlerBase*>     UserRequestServiceHandlerList;
-  typedef std::vector<UserTransactionServiceHandlerBase*> UserTransactionServiceHandlerList;
+  typedef std::vector<UserRequestServiceHandlerBase*> UserRequestServiceHandlerList;
 }
 
 #endif /* Predefined include guard __MQSim__HostInterfaceHandler__ */
