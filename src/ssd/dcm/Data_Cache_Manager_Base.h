@@ -4,7 +4,7 @@
 #include <vector>
 #include "../../sim/Sim_Object.h"
 #include "../Host_Interface_Base.h"
-#include "../User_Request.h"
+#include "../request/User_Request.h"
 #include "../NVM_Firmware.h"
 #include "../NVM_PHY_ONFI.h"
 #include "../../utils/Workload_Statistics.h"

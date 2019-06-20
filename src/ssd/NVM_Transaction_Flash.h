@@ -11,7 +11,7 @@
 #include "../nvm_chip/flash_memory/Flash_Chip.h"
 #include "../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "NVM_Transaction.h"
-#include "User_Request.h"
+#include "request/User_Request.h"
 
 namespace SSD_Components
 {

@@ -7,11 +7,8 @@
 #include <set>
 #include "../nvm_chip/flash_memory/FlashTypes.h"
 #include "../nvm_chip/flash_memory/Physical_Page_Address.h"
-#include "GC_and_WL_Unit_Base.h"
+#include "gc_and_wl/GC_and_WL_Unit_Base.h"
 #include "../nvm_chip/flash_memory/FlashTypes.h"
-
-
-// TODO Remove static features if possible
 
 namespace SSD_Components
 {
@@ -36,6 +33,8 @@ namespace SSD_Components
     Block_Service_Status Current_status;
     uint32_t Invalid_page_count;
     uint32_t Erase_count;
+
+    // TODO Check this value should be "public static"???
     static uint32_t Page_vector_size;
     uint64_t* Invalid_page_bitmap;//A bit sequence that keeps track of valid/invalid status of pages in the block. A "0" means valid, and a "1" means invalid.
     stream_id_type Stream_id = NO_STREAM;

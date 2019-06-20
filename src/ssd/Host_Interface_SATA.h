@@ -3,7 +3,7 @@
 
 #include "Host_Interface_Base.h"
 #include "Host_Interface_Defs.h"
-#include "User_Request.h"
+#include "request/User_Request.h"
 
 namespace SSD_Components
 {

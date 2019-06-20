@@ -2,8 +2,8 @@
 #define GC_AND_WL_UNIT_PAGE_LEVEL_H
 
 #include "GC_and_WL_Unit_Base.h"
-#include "NVM_PHY_ONFI.h"
-#include "../utils/RandomGenerator.h"
+#include "../NVM_PHY_ONFI.h"
+#include "../../utils/RandomGenerator.h"
 #include <queue>
 
 

@@ -110,10 +110,10 @@ set(MQSIM_SSD_SOURCES
     ssd/Flash_Transaction_Queue.h
     ssd/FTL.cpp
     ssd/FTL.h
-    ssd/GC_and_WL_Unit_Base.cpp
-    ssd/GC_and_WL_Unit_Base.h
-    ssd/GC_and_WL_Unit_Page_Level.cpp
-    ssd/GC_and_WL_Unit_Page_Level.h
+    ssd/gc_and_wl/GC_and_WL_Unit_Base.cpp
+    ssd/gc_and_wl/GC_and_WL_Unit_Base.h
+    ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.cpp
+    ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.h
     ssd/Host_Interface_Base.cpp
     ssd/Host_Interface_Base.h
     ssd/Host_Interface_Defs.h
@@ -152,8 +152,8 @@ set(MQSIM_SSD_SOURCES
     ssd/tsu/TSU_Base.h
     ssd/tsu/TSU_OutofOrder.cpp
     ssd/tsu/TSU_OutofOrder.h
-    ssd/User_Request.cpp
-    ssd/User_Request.h ssd/interface/HostInterfaceHandler.h)
+    ssd/request/User_Request.cpp
+    ssd/request/User_Request.h ssd/interface/HostInterfaceHandler.h ssd/gc_and_wl/GCandWLUnitDefs.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp

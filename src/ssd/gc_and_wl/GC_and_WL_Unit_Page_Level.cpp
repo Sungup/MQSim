@@ -2,8 +2,8 @@
 #include <vector>
 #include <set>
 #include "GC_and_WL_Unit_Page_Level.h"
-#include "Flash_Block_Manager.h"
-#include "FTL.h"
+#include "../Flash_Block_Manager.h"
+#include "../FTL.h"
 
 namespace SSD_Components
 {

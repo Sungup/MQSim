@@ -10,7 +10,7 @@
 #define __MQSim__HostInterfaceHandler__
 
 #include "../../utils/ServiceHandler.h"
-#include "../User_Request.h"
+#include "../request/User_Request.h"
 #include "../NVM_Transaction_Flash.h"
 
 namespace SSD_Components {

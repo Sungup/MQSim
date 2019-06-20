@@ -9,7 +9,7 @@
 #include "../ssd/mapping/Address_Mapping_Unit_Base.h"
 #include "../ssd/tsu/TSU_Base.h"
 #include "../ssd/ONFI_Channel_Base.h"
-#include "../ssd/GC_and_WL_Unit_Page_Level.h"
+#include "../ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.h"
 #include "../ssd/mapping/AddressMappingUnitDefs.h"
 #include "../nvm_chip/NVM_Types.h"
 #include "Parameter_Set_Base.h"

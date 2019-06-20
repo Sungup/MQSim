@@ -3,12 +3,10 @@
 
 #include <string>
 #include <list>
-#include "SSD_Defs.h"
-#include "../sim/Sim_Defs.h"
-#include "Host_Interface_Defs.h"
-#include "NVM_Transaction.h"
-
-// TODO Remove static features if possible.
+#include "../SSD_Defs.h"
+#include "../../sim/Sim_Defs.h"
+#include "../Host_Interface_Defs.h"
+#include "../NVM_Transaction.h"
 
 namespace SSD_Components
 {
@@ -20,14 +18,18 @@ namespace SSD_Components
   class NVM_Transaction;
   class User_Request
   {
+  private:
+    // TODO Change static id generator to global id generator
+    static uint32_t lastId;
+
   public:
-    User_Request();
     IO_Flow_Priority_Class Priority_class;
-    io_request_id_type ID;
+    const io_request_id_type ID;
     LHA_type Start_LBA;
 
     sim_time_type STAT_InitiationTime;
     sim_time_type STAT_ResponseTime;
+
     std::list<NVM_Transaction*> Transaction_list;
     uint32_t Sectors_serviced_from_cache;
 
@@ -39,11 +41,17 @@ namespace SSD_Components
     void* IO_command_info;//used to store host I/O command info
     void* Data;
 
+    User_Request();
     bool is_finished() const;
 
-  private:
-    static uint32_t lastId;
   };
+
+  force_inline
+  User_Request::User_Request()
+    : ID(std::to_string(lastId++)),
+      Sectors_serviced_from_cache(0),
+      ToBeIgnored(false)
+  { }
 
   force_inline bool
   User_Request::is_finished() const

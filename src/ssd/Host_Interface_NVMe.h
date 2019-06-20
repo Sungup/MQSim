@@ -6,7 +6,7 @@
 #include <map>
 #include "../sim/Sim_Event.h"
 #include "Host_Interface_Base.h"
-#include "User_Request.h"
+#include "request/User_Request.h"
 #include "Host_Interface_Defs.h"
 
 namespace SSD_Components

@@ -6,7 +6,7 @@
 #include "../sim/Sim_Reporter.h"
 #include "../host/PCIe_Switch.h"
 #include "../host/PCIe_Message.h"
-#include "User_Request.h"
+#include "request/User_Request.h"
 #include "dcm/Data_Cache_Manager_Base.h"
 #include <stdint.h>
 #include <cstring>
