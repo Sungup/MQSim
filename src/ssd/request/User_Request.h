@@ -5,8 +5,10 @@
 #include <list>
 #include "../SSD_Defs.h"
 #include "../../sim/Sim_Defs.h"
-#include "../Host_Interface_Defs.h"
+#include "../interface/Host_Interface_Defs.h"
 #include "../NVM_Transaction.h"
+
+#include "../../utils/Exception.h"
 
 namespace SSD_Components
 {
@@ -43,6 +45,7 @@ namespace SSD_Components
 
     User_Request();
     bool is_finished() const;
+    void assign_data(void* payload, size_t payload_size);
 
   };
 
@@ -58,6 +61,27 @@ namespace SSD_Components
   {
     return (Transaction_list.empty()) && (Sectors_serviced_from_cache == 0);
   }
+
+  force_inline void
+  User_Request::assign_data(void* payload, size_t payload_size)
+  {
+    Data = MQSimEngine::copy_data(payload, payload_size);
+  }
+
+  // TODO Check following sequence can move to the request's destructor;
+  force_inline void
+  delete_request_nvme(User_Request* request) {
+    delete (Submission_Queue_Entry*)request->IO_command_info;
+
+    if (Simulator->Is_integrated_execution_mode() && request->Data)
+      delete[] (char*)request->Data;
+
+    if (!request->Transaction_list.empty())
+      throw mqsim_error("Deleting an unhandled user requests in the host interface! MQSim thinks something is going wrong!");
+
+    delete request;
+  }
+
 }
 
 #endif // !USER_REQUEST_H

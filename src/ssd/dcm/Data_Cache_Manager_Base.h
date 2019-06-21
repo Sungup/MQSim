@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "../../sim/Sim_Object.h"
-#include "../Host_Interface_Base.h"
+#include "../interface/Host_Interface_Base.h"
 #include "../request/User_Request.h"
 #include "../NVM_Firmware.h"
 #include "../NVM_PHY_ONFI.h"
@@ -30,9 +30,9 @@ namespace SSD_Components
     UserRequestServiceHandler<Data_Cache_Manager_Base> __user_request_handler;
 
     UserRequestServiceHandlerList __user_req_svc_handler;
-    TransactionServiceHandlerList __user_mem_tr_svc_handler;
+    NvmTransactionHandlerList __user_mem_tr_svc_handler;
 
-    void __handle_user_request(User_Request& request);
+    void __handle_user_request(User_Request* request);
 
   protected:
     static Data_Cache_Manager_Base* _my_instance;
@@ -60,11 +60,11 @@ namespace SSD_Components
     std::vector<UserRequestServicedSignalHanderType> connected_user_request_serviced_signal_handlers;
     std::vector<MemoryTransactionServicedSignalHanderType> connected_user_memory_transaction_serviced_signal_handlers;
 
-    void broadcast_user_request_serviced_signal(User_Request& user_request);
-    void broadcast_user_memory_transaction_serviced_signal(NVM_Transaction& transaction);
+    void broadcast_user_request_serviced_signal(User_Request* user_request);
+    void broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction);
 
     static void handle_user_request_arrived_signal(User_Request* user_request);
-    virtual void process_new_user_request(User_Request& user_request) = 0;
+    virtual void process_new_user_request(User_Request* user_request) = 0;
 
   public:
     Data_Cache_Manager_Base(const sim_object_id_type& id,
@@ -88,7 +88,7 @@ namespace SSD_Components
     void Connect_to_user_memory_transaction_serviced_signal(MemoryTransactionServicedSignalHanderType);
 
     void connect_to_user_request_service_handler(UserRequestServiceHandlerBase& handler);
-    void connect_to_user_transaction_service_handler(TransactionServiceHandlerBase& handler);
+    void connect_to_user_transaction_service_handler(NvmTransactionHandlerBase& handler);
     void Set_host_interface(Host_Interface_Base* interface);
 
     virtual void Do_warmup(const std::vector<Utils::Workload_Statistics*>& workload_stats);
@@ -101,7 +101,7 @@ namespace SSD_Components
   }
 
   force_inline void
-  Data_Cache_Manager_Base::connect_to_user_transaction_service_handler(TransactionServiceHandlerBase& handler)
+  Data_Cache_Manager_Base::connect_to_user_transaction_service_handler(NvmTransactionHandlerBase& handler)
   {
     __user_mem_tr_svc_handler.emplace_back(&handler);
   }

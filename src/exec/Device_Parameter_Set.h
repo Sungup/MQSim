@@ -2,8 +2,8 @@
 #define DEVICE_PARAMETER_SET_H
 
 #include "../ssd/SSD_Defs.h"
-#include "../ssd/Host_Interface_Defs.h"
-#include "../ssd/Host_Interface_Base.h"
+#include "../ssd/interface/Host_Interface_Defs.h"
+#include "../ssd/interface/Host_Interface_Base.h"
 #include "../ssd/dcm/Data_Cache_Manager_Base.h"
 #include "../ssd/dcm/DataCacheDefs.h"
 #include "../ssd/mapping/Address_Mapping_Unit_Base.h"

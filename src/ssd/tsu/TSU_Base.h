@@ -52,11 +52,11 @@ namespace SSD_Components
     virtual void Schedule() = 0;
 
   private:
-    TransactionServiceHandler<TSU_Base> __transaction_service_handler;
+    FlashTransactionHandler<TSU_Base> __transaction_service_handler;
     ChannelIdleSignalHandler<TSU_Base>  __channel_idle_signal_handler;
     ChipIdleSignalHandler<TSU_Base>     __chip_idle_signal_handler;
 
-    void __handle_transaction_serviced_signal(NVM_Transaction_Flash& transaction);
+    void __handle_transaction_serviced_signal(NVM_Transaction_Flash* transaction);
     void __handle_channel_idle_signal(flash_channel_ID_type channelID);
     void __handle_chip_idle_signal(const NVM::FlashMemory::Flash_Chip& chip);
 

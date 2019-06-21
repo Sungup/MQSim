@@ -154,31 +154,31 @@ GC_and_WL_Unit_Base::run_static_wearleveling(const NVM::FlashMemory::Physical_Pa
 }
 
 void
-GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash& transaction)
+GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash* transaction)
 {
-  PlaneBookKeepingType* pbke = &(block_manager->plane_manager[transaction.Address.ChannelID][transaction.Address.ChipID][transaction.Address.DieID][transaction.Address.PlaneID]);
+  PlaneBookKeepingType* pbke = &(block_manager->plane_manager[transaction->Address.ChannelID][transaction->Address.ChipID][transaction->Address.DieID][transaction->Address.PlaneID]);
 
-  switch (transaction.Source)
+  switch (transaction->Source)
   {
   case Transaction_Source_Type::USERIO:
   case Transaction_Source_Type::MAPPING:
   case Transaction_Source_Type::CACHE:
-    switch (transaction.Type)
+    switch (transaction->Type)
     {
     case Transaction_Type::READ:
-      block_manager->Read_transaction_serviced(transaction.Address);
+      block_manager->Read_transaction_serviced(transaction->Address);
       break;
     case Transaction_Type::WRITE:
-      block_manager->Program_transaction_serviced(transaction.Address);
+      block_manager->Program_transaction_serviced(transaction->Address);
       break;
     default:
       PRINT_ERROR("Unexpected situation in the GC_and_WL_Unit_Base function!")
     }
-    if (block_manager->Block_has_ongoing_gc_wl(transaction.Address))
-      if (block_manager->Can_execute_gc_wl(transaction.Address))
+    if (block_manager->Block_has_ongoing_gc_wl(transaction->Address))
+      if (block_manager->Can_execute_gc_wl(transaction->Address))
       {
-        NVM::FlashMemory::Physical_Page_Address gc_wl_candidate_address(transaction.Address);
-        Block_Pool_Slot_Type* block = &pbke->Blocks[transaction.Address.BlockID];
+        NVM::FlashMemory::Physical_Page_Address gc_wl_candidate_address(transaction->Address);
+        Block_Pool_Slot_Type* block = &pbke->Blocks[transaction->Address.BlockID];
         Stats::Total_gc_executions++;
         tsu->Prepare_for_transaction_submit();
         auto gc_wl_erase_tr = new NVM_Transaction_Flash_ER(Transaction_Source_Type::GC_WL, block->Stream_id, gc_wl_candidate_address);
@@ -218,26 +218,29 @@ GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash& transac
         tsu->Schedule();
       }
     return;
+
+  default:
+    break;
   }
 
-  switch (transaction.Type)
+  switch (transaction->Type)
   {
   case Transaction_Type::READ:
   {
     PPA_type ppa;
     MPPN_type mppa;
     page_status_type page_status_bitmap;
-    if (pbke->Blocks[transaction.Address.BlockID].Holds_mapping_data)
+    if (pbke->Blocks[transaction->Address.BlockID].Holds_mapping_data)
     {
-      address_mapping_unit->Get_translation_mapping_info_for_gc(transaction.Stream_id, (MVPN_type)transaction.LPA, mppa, page_status_bitmap);
-      if (mppa == transaction.PPA)//There has been no write on the page since GC start, and it is still valid
+      address_mapping_unit->Get_translation_mapping_info_for_gc(transaction->Stream_id, (MVPN_type)transaction->LPA, mppa, page_status_bitmap);
+      if (mppa == transaction->PPA)//There has been no write on the page since GC start, and it is still valid
       {
         tsu->Prepare_for_transaction_submit();
-        ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->write_sectors_bitmap = FULL_PROGRAMMED_PAGE;
-        ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->LPA = transaction.LPA;
-        ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->RelatedRead = nullptr;
-        address_mapping_unit->Allocate_new_page_for_gc(((NVM_Transaction_Flash_RD&)transaction).RelatedWrite, pbke->Blocks[transaction.Address.BlockID].Holds_mapping_data);
-        tsu->Submit_transaction(((NVM_Transaction_Flash_RD&)transaction).RelatedWrite);
+        ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->write_sectors_bitmap = FULL_PROGRAMMED_PAGE;
+        ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->LPA = transaction->LPA;
+        ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->RelatedRead = nullptr;
+        address_mapping_unit->Allocate_new_page_for_gc(((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite, pbke->Blocks[transaction->Address.BlockID].Holds_mapping_data);
+        tsu->Submit_transaction(((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite);
         tsu->Schedule();
       }
       else
@@ -245,15 +248,15 @@ GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash& transac
     }
     else
     {
-      address_mapping_unit->Get_data_mapping_info_for_gc(transaction.Stream_id, transaction.LPA, ppa, page_status_bitmap);
-      if (ppa == transaction.PPA)//There has been no write on the page since GC start, and it is still valid
+      address_mapping_unit->Get_data_mapping_info_for_gc(transaction->Stream_id, transaction->LPA, ppa, page_status_bitmap);
+      if (ppa == transaction->PPA)//There has been no write on the page since GC start, and it is still valid
       {
         tsu->Prepare_for_transaction_submit();
-        ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->write_sectors_bitmap = page_status_bitmap;
-        ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->LPA = transaction.LPA;
-        ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->RelatedRead = nullptr;
-        address_mapping_unit->Allocate_new_page_for_gc(((NVM_Transaction_Flash_RD&)transaction).RelatedWrite, pbke->Blocks[transaction.Address.BlockID].Holds_mapping_data);
-        tsu->Submit_transaction(((NVM_Transaction_Flash_RD&)transaction).RelatedWrite);
+        ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->write_sectors_bitmap = page_status_bitmap;
+        ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->LPA = transaction->LPA;
+        ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->RelatedRead = nullptr;
+        address_mapping_unit->Allocate_new_page_for_gc(((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite, pbke->Blocks[transaction->Address.BlockID].Holds_mapping_data);
+        tsu->Submit_transaction(((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite);
         tsu->Schedule();
       }
       else
@@ -262,31 +265,34 @@ GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash& transac
     break;
   }
   case Transaction_Type::WRITE:
-    if (pbke->Blocks[((NVM_Transaction_Flash_WR&)transaction).RelatedErase->Address.BlockID].Holds_mapping_data)
+    if (pbke->Blocks[((NVM_Transaction_Flash_WR*)transaction)->RelatedErase->Address.BlockID].Holds_mapping_data)
     {
-      address_mapping_unit->Remove_barrier_for_accessing_mvpn(transaction.Stream_id, (MVPN_type)transaction.LPA);
-      DEBUG(Simulator->Time() << ": MVPN=" << (MVPN_type)transaction.LPA << " unlocked!!");
+      address_mapping_unit->Remove_barrier_for_accessing_mvpn(transaction->Stream_id, (MVPN_type)transaction->LPA);
+      DEBUG(Simulator->Time() << ": MVPN=" << (MVPN_type)transaction->LPA << " unlocked!!");
     }
     else
     {
-      address_mapping_unit->Remove_barrier_for_accessing_lpa(transaction.Stream_id, transaction.LPA);
-      DEBUG(Simulator->Time() << ": LPA=" << (MVPN_type)transaction.LPA << " unlocked!!");
+      address_mapping_unit->Remove_barrier_for_accessing_lpa(transaction->Stream_id, transaction->LPA);
+      DEBUG(Simulator->Time() << ": LPA=" << (MVPN_type)transaction->LPA << " unlocked!!");
     }
-    pbke->Blocks[((NVM_Transaction_Flash_WR&)transaction).RelatedErase->Address.BlockID].Erase_transaction->Page_movement_activities.remove(&(NVM_Transaction_Flash_WR&)transaction);
+    pbke->Blocks[((NVM_Transaction_Flash_WR*)transaction)->RelatedErase->Address.BlockID].Erase_transaction->Page_movement_activities.remove((NVM_Transaction_Flash_WR*)transaction);
     break;
   case Transaction_Type::ERASE:
-    pbke->Ongoing_erase_operations.erase(pbke->Ongoing_erase_operations.find(transaction.Address.BlockID));
-    block_manager->Add_erased_block_to_pool(transaction.Address);
-    block_manager->GC_WL_finished(transaction.Address);
-    if (check_static_wl_required(transaction.Address))
-      run_static_wearleveling(transaction.Address);
+    pbke->Ongoing_erase_operations.erase(pbke->Ongoing_erase_operations.find(transaction->Address.BlockID));
+    block_manager->Add_erased_block_to_pool(transaction->Address);
+    block_manager->GC_WL_finished(transaction->Address);
+    if (check_static_wl_required(transaction->Address))
+      run_static_wearleveling(transaction->Address);
 
     // Must be inovked after above statements since it may lead to flash page
     // consumption for waiting program transactions
-    address_mapping_unit->Start_servicing_writes_for_overfull_plane(transaction.Address);
+    address_mapping_unit->Start_servicing_writes_for_overfull_plane(transaction->Address);
 
-    if (Stop_servicing_writes(transaction.Address))
-      Check_gc_required(pbke->Get_free_block_pool_size(), transaction.Address);
+    if (Stop_servicing_writes(transaction->Address))
+      Check_gc_required(pbke->Get_free_block_pool_size(), transaction->Address);
+    break;
+
+  default:
     break;
   }
 }
@@ -294,7 +300,7 @@ GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash& transac
 void
 GC_and_WL_Unit_Base::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash *transaction)
 {
-  _my_instance->__handle_transaction_service(*transaction);
+  _my_instance->__handle_transaction_service(transaction);
 }
 
 void

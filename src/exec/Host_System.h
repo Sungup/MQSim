@@ -10,12 +10,12 @@
 #include "../host/PCIe_Message.h"
 #include "../host/IO_Flow_Base.h"
 #include "../host/Host_IO_Request.h"
-#include "../ssd/Host_Interface_Base.h"
+#include "../ssd/interface/Host_Interface_Base.h"
 #include "Host_Parameter_Set.h"
 #include "SSD_Device.h"
 #include "../utils/Workload_Statistics.h"
 
-class Host_System : public MQSimEngine::Sim_Object, public MQSimEngine::Sim_Reporter
+class Host_System : public MQSimEngine::Sim_Object
 {
 public:
   Host_System(Host_Parameter_Set* parameters, bool preconditioning_required, SSD_Components::Host_Interface_Base* ssd_host_interface);

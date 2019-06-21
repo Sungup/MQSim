@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include "../ssd/SSD_Defs.h"
-#include "../ssd/Host_Interface_Defs.h"
+#include "../ssd/interface/Host_Interface_Defs.h"
 
 /* MQSim requires the logical address space of the SSD device to be partitioned among the concurrent flows.
 In fact, two different storage traces may access the same logical address, but this logical address

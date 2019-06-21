@@ -114,25 +114,25 @@ Data_Cache_Manager_Flash_Advanced::~Data_Cache_Manager_Flash_Advanced()
 }
 
 void
-Data_Cache_Manager_Flash_Advanced::process_new_user_request(User_Request& user_request)
+Data_Cache_Manager_Flash_Advanced::process_new_user_request(User_Request* user_request)
 {
   //This condition shouldn't happen, but we check it
-  if (user_request.Transaction_list.empty())
+  if (user_request->Transaction_list.empty())
     return;
 
-  if (user_request.Type == UserRequestType::READ)
+  if (user_request->Type == UserRequestType::READ)
   {
-    switch (caching_mode_per_input_stream[user_request.Stream_id])
+    switch (caching_mode_per_input_stream[user_request->Stream_id])
     {
       case Caching_Mode::TURNED_OFF:
-        static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request.Transaction_list);
+        static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
         return;
       case Caching_Mode::WRITE_CACHE:
       case Caching_Mode::READ_CACHE:
       case Caching_Mode::WRITE_READ_CACHE:
       {
-        auto it = user_request.Transaction_list.begin();
-        while (it != user_request.Transaction_list.end())
+        auto it = user_request->Transaction_list.begin();
+        while (it != user_request->Transaction_list.end())
         {
           auto* tr = (NVM_Transaction_Flash_RD*)(*it);
           if (per_stream_cache[tr->Stream_id]->Exists(tr->Stream_id, tr->LPA))
@@ -140,12 +140,12 @@ Data_Cache_Manager_Flash_Advanced::process_new_user_request(User_Request& user_r
             page_status_type available_sectors_bitmap = per_stream_cache[tr->Stream_id]->Get_slot(tr->Stream_id, tr->LPA).State_bitmap_of_existing_sectors & tr->read_sectors_bitmap;
             if (available_sectors_bitmap == tr->read_sectors_bitmap)
             {
-              user_request.Sectors_serviced_from_cache += count_sector_no_from_status_bitmap(tr->read_sectors_bitmap);
-              user_request.Transaction_list.erase(it++);//the ++ operation should happen here, otherwise the iterator will be part of the list after erasing it from the list
+              user_request->Sectors_serviced_from_cache += count_sector_no_from_status_bitmap(tr->read_sectors_bitmap);
+              user_request->Transaction_list.erase(it++);//the ++ operation should happen here, otherwise the iterator will be part of the list after erasing it from the list
             }
             else if (available_sectors_bitmap != 0)
             {
-              user_request.Sectors_serviced_from_cache += count_sector_no_from_status_bitmap(available_sectors_bitmap);
+              user_request->Sectors_serviced_from_cache += count_sector_no_from_status_bitmap(available_sectors_bitmap);
               tr->read_sectors_bitmap = (tr->read_sectors_bitmap & ~available_sectors_bitmap);
               tr->Data_and_metadata_size_in_byte -= count_sector_no_from_status_bitmap(available_sectors_bitmap) * SECTOR_SIZE_IN_BYTE;
               it++;
@@ -154,17 +154,17 @@ Data_Cache_Manager_Flash_Advanced::process_new_user_request(User_Request& user_r
           }
           else it++;
         }
-        if (user_request.Sectors_serviced_from_cache > 0)
+        if (user_request->Sectors_serviced_from_cache > 0)
         {
           auto* transfer_info = new Memory_Transfer_Info;
-          transfer_info->Size_in_bytes = user_request.Sectors_serviced_from_cache * SECTOR_SIZE_IN_BYTE;
-          transfer_info->Related_request = &user_request;
+          transfer_info->Size_in_bytes = user_request->Sectors_serviced_from_cache * SECTOR_SIZE_IN_BYTE;
+          transfer_info->Related_request = user_request;
           transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED;
-          transfer_info->Stream_id = user_request.Stream_id;
+          transfer_info->Stream_id = user_request->Stream_id;
           service_dram_access_request(*transfer_info);
         }
-        if (!user_request.Transaction_list.empty())
-          static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request.Transaction_list);
+        if (!user_request->Transaction_list.empty())
+          static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
 
         return;
       }
@@ -172,22 +172,22 @@ Data_Cache_Manager_Flash_Advanced::process_new_user_request(User_Request& user_r
   }
   else//This is a write request
   {
-    switch (caching_mode_per_input_stream[user_request.Stream_id])
+    switch (caching_mode_per_input_stream[user_request->Stream_id])
     {
       case Caching_Mode::TURNED_OFF:
       case Caching_Mode::READ_CACHE:
-        static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request.Transaction_list);
+        static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
         return;
       case Caching_Mode::WRITE_CACHE://The data cache manger unit performs like a destage buffer
       case Caching_Mode::WRITE_READ_CACHE:
       {
-        write_to_destage_buffer(user_request);
+        write_to_destage_buffer(*user_request);
 
-        int queue_id = user_request.Stream_id;
+        int queue_id = user_request->Stream_id;
         if (shared_dram_request_queue)
           queue_id = 0;
-        if (!user_request.Transaction_list.empty())
-          waiting_user_requests_queue_for_dram_free_slot[queue_id].push_back(&user_request);
+        if (!user_request->Transaction_list.empty())
+          waiting_user_requests_queue_for_dram_free_slot[queue_id].push_back(user_request);
         return;
       }
     }
@@ -308,14 +308,14 @@ Data_Cache_Manager_Flash_Advanced::service_dram_access_request(Memory_Transfer_I
 }
 
 void
-Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_Flash& transaction)
+Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_Flash* transaction)
 {
   //First check if the transaction source is a user request or the cache itself
-  if (transaction.Source != Transaction_Source_Type::USERIO &&
-      transaction.Source != Transaction_Source_Type::CACHE)
+  if (transaction->Source != Transaction_Source_Type::USERIO &&
+      transaction->Source != Transaction_Source_Type::CACHE)
     return;
 
-  if (transaction.Source == Transaction_Source_Type::USERIO)
+  if (transaction->Source == Transaction_Source_Type::USERIO)
     broadcast_user_memory_transaction_serviced_signal(transaction);
 
   /*
@@ -324,111 +324,111 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
    * An update read transaction is issued in Address Mapping Unit, but is
    * consumed in data cache manager.
    */
-  if (transaction.Type == Transaction_Type::READ)
+  if (transaction->Type == Transaction_Type::READ)
   {
-    if (((NVM_Transaction_Flash_RD&)transaction).RelatedWrite != nullptr)
+    if (((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite != nullptr)
     {
-      ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->RelatedRead = nullptr;
+      ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->RelatedRead = nullptr;
       return;
     }
-    switch (Data_Cache_Manager_Flash_Advanced::caching_mode_per_input_stream[transaction.Stream_id])
+    switch (Data_Cache_Manager_Flash_Advanced::caching_mode_per_input_stream[transaction->Stream_id])
     {
       case Caching_Mode::TURNED_OFF:
       case Caching_Mode::WRITE_CACHE:
-        transaction.UserIORequest->Transaction_list.remove(&transaction);
-        if (transaction.UserIORequest->is_finished())
-          broadcast_user_request_serviced_signal(*transaction.UserIORequest);
+        transaction->UserIORequest->Transaction_list.remove(transaction);
+        if (transaction->UserIORequest->is_finished())
+          broadcast_user_request_serviced_signal(transaction->UserIORequest);
         break;
       case Caching_Mode::READ_CACHE:
       case Caching_Mode::WRITE_READ_CACHE:
       {
         auto* transfer_info = new Memory_Transfer_Info;
-        transfer_info->Size_in_bytes = count_sector_no_from_status_bitmap(((NVM_Transaction_Flash_RD&)transaction).read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE;
+        transfer_info->Size_in_bytes = count_sector_no_from_status_bitmap(((NVM_Transaction_Flash_RD*)transaction)->read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE;
         transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED;
-        transfer_info->Stream_id = transaction.Stream_id;
+        transfer_info->Stream_id = transaction->Stream_id;
         service_dram_access_request(*transfer_info);
 
-        if (per_stream_cache[transaction.Stream_id]->Exists(transaction.Stream_id, transaction.LPA))
+        if (per_stream_cache[transaction->Stream_id]->Exists(transaction->Stream_id, transaction->LPA))
         {
           /*MQSim should get rid of writting stale data to the cache.
           * This situation may result from out-of-order transaction execution*/
-          Data_Cache_Slot_Type slot = per_stream_cache[transaction.Stream_id]->Get_slot(transaction.Stream_id, transaction.LPA);
+          Data_Cache_Slot_Type slot = per_stream_cache[transaction->Stream_id]->Get_slot(transaction->Stream_id, transaction->LPA);
           sim_time_type timestamp = slot.Timestamp;
           NVM::memory_content_type content = slot.Content;
-          if (((NVM_Transaction_Flash_RD&)transaction).DataTimeStamp > timestamp)
+          if (((NVM_Transaction_Flash_RD*)transaction)->DataTimeStamp > timestamp)
           {
-            timestamp = ((NVM_Transaction_Flash_RD&)transaction).DataTimeStamp;
-            content = ((NVM_Transaction_Flash_RD&)transaction).Content;
+            timestamp = ((NVM_Transaction_Flash_RD*)transaction)->DataTimeStamp;
+            content = ((NVM_Transaction_Flash_RD*)transaction)->Content;
           }
 
-          per_stream_cache[transaction.Stream_id]->Update_data(transaction.Stream_id, transaction.LPA, content,
-                                                               timestamp, ((NVM_Transaction_Flash_RD&)transaction).read_sectors_bitmap | slot.State_bitmap_of_existing_sectors);
+          per_stream_cache[transaction->Stream_id]->Update_data(transaction->Stream_id, transaction->LPA, content,
+                                                               timestamp, ((NVM_Transaction_Flash_RD*)transaction)->read_sectors_bitmap | slot.State_bitmap_of_existing_sectors);
         }
         else
         {
-          if (!per_stream_cache[transaction.Stream_id]->Check_free_slot_availability())
+          if (!per_stream_cache[transaction->Stream_id]->Check_free_slot_availability())
           {
             auto evicted_cache_slots = new std::list<NVM_Transaction*>;
-            Data_Cache_Slot_Type evicted_slot = per_stream_cache[transaction.Stream_id]->Evict_one_slot_lru();
+            Data_Cache_Slot_Type evicted_slot = per_stream_cache[transaction->Stream_id]->Evict_one_slot_lru();
             if (evicted_slot.Status == Cache_Slot_Status::DIRTY_NO_FLASH_WRITEBACK)
             {
               auto tr_info = new Memory_Transfer_Info;
               tr_info->Size_in_bytes = count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE;
               evicted_cache_slots->push_back(new NVM_Transaction_Flash_WR(Transaction_Source_Type::USERIO,
-                                                                          transaction.Stream_id, transfer_info->Size_in_bytes, evicted_slot.LPA, nullptr, evicted_slot.Content,
+                                                                          transaction->Stream_id, transfer_info->Size_in_bytes, evicted_slot.LPA, nullptr, evicted_slot.Content,
                                                                           evicted_slot.State_bitmap_of_existing_sectors, evicted_slot.Timestamp));
               tr_info->Related_request = evicted_cache_slots;
               tr_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED;
-              tr_info->Stream_id = transaction.Stream_id;
+              tr_info->Stream_id = transaction->Stream_id;
               service_dram_access_request(*tr_info);
             }
           }
-          per_stream_cache[transaction.Stream_id]->Insert_write_data(transaction.Stream_id, transaction.LPA,
-                                                                     ((NVM_Transaction_Flash_RD&)transaction).Content,
-                                                                     ((NVM_Transaction_Flash_RD&)transaction).DataTimeStamp,
-                                                                     ((NVM_Transaction_Flash_RD&)transaction).read_sectors_bitmap);
+          per_stream_cache[transaction->Stream_id]->Insert_write_data(transaction->Stream_id, transaction->LPA,
+                                                                     ((NVM_Transaction_Flash_RD*)transaction)->Content,
+                                                                     ((NVM_Transaction_Flash_RD*)transaction)->DataTimeStamp,
+                                                                     ((NVM_Transaction_Flash_RD*)transaction)->read_sectors_bitmap);
 
           auto tr_info = new Memory_Transfer_Info;
-          tr_info->Size_in_bytes = count_sector_no_from_status_bitmap(((NVM_Transaction_Flash_RD&)transaction).read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE;
+          tr_info->Size_in_bytes = count_sector_no_from_status_bitmap(((NVM_Transaction_Flash_RD*)transaction)->read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE;
           tr_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED;
-          tr_info->Stream_id = transaction.Stream_id;
+          tr_info->Stream_id = transaction->Stream_id;
           service_dram_access_request(*tr_info);
         }
 
-        transaction.UserIORequest->Transaction_list.remove(&transaction);
-        if (transaction.UserIORequest->is_finished())
-          broadcast_user_request_serviced_signal(*transaction.UserIORequest);
+        transaction->UserIORequest->Transaction_list.remove(transaction);
+        if (transaction->UserIORequest->is_finished())
+          broadcast_user_request_serviced_signal(transaction->UserIORequest);
         break;
       }
     }
   }
   else//This is a write request
   {
-    switch (Data_Cache_Manager_Flash_Advanced::caching_mode_per_input_stream[transaction.Stream_id])
+    switch (Data_Cache_Manager_Flash_Advanced::caching_mode_per_input_stream[transaction->Stream_id])
     {
       case Caching_Mode::TURNED_OFF:
       case Caching_Mode::READ_CACHE:
-        transaction.UserIORequest->Transaction_list.remove(&transaction);
-        if (transaction.UserIORequest->is_finished())
-          broadcast_user_request_serviced_signal(*transaction.UserIORequest);
+        transaction->UserIORequest->Transaction_list.remove(transaction);
+        if (transaction->UserIORequest->is_finished())
+          broadcast_user_request_serviced_signal(transaction->UserIORequest);
         break;
       case Caching_Mode::WRITE_CACHE:
       case Caching_Mode::WRITE_READ_CACHE:
       {
-        int sharing_id = transaction.Stream_id;
+        int sharing_id = transaction->Stream_id;
         if (shared_dram_request_queue)
           sharing_id = 0;
-        back_pressure_buffer_depth[sharing_id] -= transaction.Data_and_metadata_size_in_byte / SECTOR_SIZE_IN_BYTE + (transaction.Data_and_metadata_size_in_byte % SECTOR_SIZE_IN_BYTE == 0 ? 0 : 1);
+        back_pressure_buffer_depth[sharing_id] -= transaction->Data_and_metadata_size_in_byte / SECTOR_SIZE_IN_BYTE + (transaction->Data_and_metadata_size_in_byte % SECTOR_SIZE_IN_BYTE == 0 ? 0 : 1);
 
 
-        if (per_stream_cache[transaction.Stream_id]->Exists(transaction.Stream_id, ((NVM_Transaction_Flash_WR&)transaction).LPA))
+        if (per_stream_cache[transaction->Stream_id]->Exists(transaction->Stream_id, ((NVM_Transaction_Flash_WR*)transaction)->LPA))
         {
-          Data_Cache_Slot_Type slot = per_stream_cache[transaction.Stream_id]->Get_slot(transaction.Stream_id, ((NVM_Transaction_Flash_WR&)transaction).LPA);
+          Data_Cache_Slot_Type slot = per_stream_cache[transaction->Stream_id]->Get_slot(transaction->Stream_id, ((NVM_Transaction_Flash_WR*)transaction)->LPA);
           sim_time_type timestamp = slot.Timestamp;
           // Add comment for unused variable line
           // NVM::memory_content_type content = slot.Content;
-          if (((NVM_Transaction_Flash_WR&)transaction).DataTimeStamp >= timestamp)
-            per_stream_cache[transaction.Stream_id]->Remove_slot(transaction.Stream_id, ((NVM_Transaction_Flash_WR&)transaction).LPA);
+          if (((NVM_Transaction_Flash_WR*)transaction)->DataTimeStamp >= timestamp)
+            per_stream_cache[transaction->Stream_id]->Remove_slot(transaction->Stream_id, ((NVM_Transaction_Flash_WR*)transaction)->LPA);
         }
 
         auto user_request = waiting_user_requests_queue_for_dram_free_slot[sharing_id].begin();
@@ -446,13 +446,13 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
         /*if (back_pressure_buffer_depth[sharing_id] < back_pressure_buffer_max_depth)//The traffic load on the backend is low and the waiting requests can be serviced
         {
           std::list<NVM_Transaction*>* evicted_cache_slots = new std::list<NVM_Transaction*>;
-          while (!per_stream_cache[transaction.Stream_id]->Empty())
+          while (!per_stream_cache[transaction->Stream_id]->Empty())
           {
-            DataCacheSlotType evicted_slot = per_stream_cache[transaction.Stream_id]->Evict_one_dirty_slot();
+            DataCacheSlotType evicted_slot = per_stream_cache[transaction->Stream_id]->Evict_one_dirty_slot();
             if (evicted_slot.Status != CacheSlotStatus::EMPTY)
             {
               evicted_cache_slots->push_back(new NVM_Transaction_Flash_WR(Transaction_Source_Type::CACHE,
-                transaction.Stream_id, count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE,
+                transaction->Stream_id, count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE,
                 evicted_slot.LPA, nullptr, evicted_slot.Content, evicted_slot.State_bitmap_of_existing_sectors, evicted_slot.Timestamp));
               back_pressure_buffer_depth[sharing_id] += count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors);
               cache_eviction_read_size_in_sectors += count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors);
@@ -468,7 +468,7 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
             read_transfer_info->Size_in_bytes = cache_eviction_read_size_in_sectors * SECTOR_SIZE_IN_BYTE;
             read_transfer_info->Related_request = evicted_cache_slots;
             read_transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED;
-            read_transfer_info->Stream_id = transaction.Stream_id;
+            read_transfer_info->Stream_id = transaction->Stream_id;
             service_dram_access_request(read_transfer_info);
           }
         }*/
@@ -483,7 +483,7 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
 void
 Data_Cache_Manager_Flash_Advanced::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction)
 {
-  ((Data_Cache_Manager_Flash_Advanced*)(_my_instance))->__handle_transaction_service(*transaction);
+  ((Data_Cache_Manager_Flash_Advanced*)(_my_instance))->__handle_transaction_service(transaction);
 }
 
 void
@@ -498,7 +498,7 @@ Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::Sim_Even
     case Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED:
       ((User_Request*)(transfer_info)->Related_request)->Sectors_serviced_from_cache -= transfer_info->Size_in_bytes / SECTOR_SIZE_IN_BYTE;
       if (((User_Request*)(transfer_info)->Related_request)->is_finished())
-        broadcast_user_request_serviced_signal(*((User_Request*)(transfer_info)->Related_request));
+        broadcast_user_request_serviced_signal(((User_Request*)(transfer_info)->Related_request));
       break;
     case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED://Reading data from DRAM and writing it back to the flash storage
       static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(*((std::list<NVM_Transaction*>*)(transfer_info->Related_request)));

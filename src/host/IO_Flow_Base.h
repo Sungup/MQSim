@@ -11,7 +11,7 @@
 #include "../sim/Sim_Object.h"
 #include "../sim/Sim_Reporter.h"
 #include "../ssd/SSD_Defs.h"
-#include "../ssd/Host_Interface_Defs.h"
+#include "../ssd/interface/Host_Interface_Defs.h"
 #include "Host_IO_Request.h"
 #include "PCIe_Root_Complex.h"
 #include "SATA_HBA.h"

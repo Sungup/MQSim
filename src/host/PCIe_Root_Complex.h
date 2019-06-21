@@ -1,7 +1,7 @@
 #ifndef PCIE_ROOT_COMPLEX_H
 #define PCIE_ROOT_COMPLEX_H
 
-#include "../ssd/Host_Interface_Defs.h"
+#include "../ssd/interface/Host_Interface_Defs.h"
 #include "Host_Defs.h"
 #include "PCIe_Message.h"
 #include "PCIe_Link.h"

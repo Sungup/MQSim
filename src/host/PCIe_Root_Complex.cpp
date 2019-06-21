@@ -33,27 +33,24 @@ namespace Host_Components
 
   void PCIe_Root_Complex::Write_to_device(uint64_t address, uint16_t write_value)
   {
-    PCIe_Message* pcie_message = new Host_Components::PCIe_Message;
-    pcie_message->Type = PCIe_Message_Type::WRITE_REQ;
-    pcie_message->Destination = Host_Components::PCIe_Destination_Type::DEVICE;
-    pcie_message->Address = address;
-    pcie_message->Payload = (void*)(intptr_t)write_value;
-    pcie_message->Payload_size = sizeof(write_value);
+    auto pcie_message = new PCIe_Message(PCIe_Message_Type::WRITE_REQ,
+                                         PCIe_Destination_Type::DEVICE,
+                                         address,
+                                         write_value);
+
     pcie_link->Deliver(pcie_message);
   }
 
   void PCIe_Root_Complex::Read_from_memory(const uint64_t address, const uint32_t read_size)
   {
-    PCIe_Message* new_pcie_message = new Host_Components::PCIe_Message;
-    new_pcie_message->Type = PCIe_Message_Type::READ_COMP;
-    new_pcie_message->Destination = Host_Components::PCIe_Destination_Type::DEVICE;
-    new_pcie_message->Address = address;
+    uint32_t payload_size;
+    void*    payload;
 
     if (address >= DATA_MEMORY_REGION)//this is a request to read the data of a write request
     {
       //nothing to do
-      new_pcie_message->Payload_size = read_size;
-      new_pcie_message->Payload = NULL;//No need to transfer data in the standalone mode of MQSim
+      payload_size = read_size;
+      payload = nullptr;//No need to transfer data in the standalone mode of MQSim
     }
     else
     {
@@ -62,16 +59,23 @@ namespace Host_Components
       case HostInterface_Types::NVME:
       {
         uint16_t flow_id = QUEUE_ID_TO_FLOW_ID(uint16_t(address >> NVME_COMP_Q_MEMORY_REGION));
-        new_pcie_message->Payload = (*IO_flows)[flow_id]->NVMe_read_sqe(address);
-        new_pcie_message->Payload_size = sizeof(Submission_Queue_Entry);
+        payload = (*IO_flows)[flow_id]->NVMe_read_sqe(address);
+        payload_size = sizeof(Submission_Queue_Entry);
         break;
       }
       case HostInterface_Types::SATA:
-        new_pcie_message->Payload = sata_hba->Read_ncq_entry(address);
-        new_pcie_message->Payload_size = sizeof(Submission_Queue_Entry);
+        payload = sata_hba->Read_ncq_entry(address);
+        payload_size = sizeof(Submission_Queue_Entry);
         break;
       }
     }
+
+    auto new_pcie_message = new PCIe_Message(PCIe_Message_Type::READ_COMP,
+                                             PCIe_Destination_Type::DEVICE,
+                                             address,
+                                             payload_size,
+                                             payload);
+
     pcie_link->Deliver(new_pcie_message);
   }
   

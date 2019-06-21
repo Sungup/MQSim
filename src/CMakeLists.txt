@@ -114,13 +114,13 @@ set(MQSIM_SSD_SOURCES
     ssd/gc_and_wl/GC_and_WL_Unit_Base.h
     ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.cpp
     ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.h
-    ssd/Host_Interface_Base.cpp
-    ssd/Host_Interface_Base.h
-    ssd/Host_Interface_Defs.h
-    ssd/Host_Interface_NVMe.cpp
-    ssd/Host_Interface_NVMe.h
-    ssd/Host_Interface_SATA.cpp
-    ssd/Host_Interface_SATA.h
+    ssd/interface/Host_Interface_Base.cpp
+    ssd/interface/Host_Interface_Base.h
+    ssd/interface/Host_Interface_Defs.h
+    ssd/interface/Host_Interface_NVMe.cpp
+    ssd/interface/Host_Interface_NVMe.h
+    ssd/interface/Host_Interface_SATA.cpp
+    ssd/interface/Host_Interface_SATA.h
     ssd/NVM_Channel_Base.h
     ssd/NVM_Firmware.cpp
     ssd/NVM_Firmware.h

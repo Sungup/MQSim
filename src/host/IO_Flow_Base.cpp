@@ -1,5 +1,5 @@
 #include "IO_Flow_Base.h"
-#include "../ssd/Host_Interface_Defs.h"
+#include "../ssd/interface/Host_Interface_Defs.h"
 #include "../sim/Engine.h"
 
 namespace Host_Components

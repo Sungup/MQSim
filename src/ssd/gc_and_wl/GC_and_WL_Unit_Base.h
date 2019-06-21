@@ -61,7 +61,7 @@ namespace SSD_Components
     uint32_t pages_no_per_block;
     uint32_t sector_no_per_page;
 
-    TransactionServiceHandler<GC_and_WL_Unit_Base> __transaction_service_handler;
+    FlashTransactionHandler<GC_and_WL_Unit_Base> __transaction_service_handler;
 
     // Checks if block_address is a safe candidate for gc execution, i.e., 1) it
     // is not a write frontier, and 2) there is no ongoing program operation
@@ -70,7 +70,7 @@ namespace SSD_Components
     bool check_static_wl_required(const NVM::FlashMemory::Physical_Page_Address& plane_address);
     void run_static_wearleveling(const NVM::FlashMemory::Physical_Page_Address& plane_address);
 
-    void __handle_transaction_service(NVM_Transaction_Flash& transaction);
+    void __handle_transaction_service(NVM_Transaction_Flash* transaction);
 
     static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
 

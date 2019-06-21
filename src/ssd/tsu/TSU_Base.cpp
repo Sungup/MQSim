@@ -49,7 +49,7 @@ void TSU_Base::Setup_triggers()
 }
 
 force_inline void
-TSU_Base::__handle_transaction_serviced_signal(NVM_Transaction_Flash& /* transaction */)
+TSU_Base::__handle_transaction_serviced_signal(NVM_Transaction_Flash* /* transaction */)
 { /* TSU does nothing. The generator of the transaction will handle it. */ }
 
 force_inline void
@@ -68,7 +68,7 @@ TSU_Base::__handle_chip_idle_signal(const NVM::FlashMemory::Flash_Chip& chip)
 void
 TSU_Base::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction)
 {
-  _my_instance->__handle_transaction_serviced_signal(*transaction);
+  _my_instance->__handle_transaction_serviced_signal(transaction);
 }
 
 void

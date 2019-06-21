@@ -7,8 +7,9 @@
 #include "EventTree.h"
 #include "Sim_Object.h"
 
-// Remove static features if possible
+#define Simulator MQSimEngine::Engine::Instance()
 
+// Remove static features if possible
 namespace MQSimEngine {
   class Engine
   {
@@ -40,7 +41,18 @@ namespace MQSimEngine {
     bool started;
     static Engine* _instance;
   };
+
+  force_inline void*
+  copy_data(void* src, size_t size) {
+    void* dest = src;
+
+    if (Simulator->Is_integrated_execution_mode()) {
+      dest = new char[size];
+      memcpy(dest, src, size);
+    }
+
+    return dest;
+  }
 }
 
-#define Simulator MQSimEngine::Engine::Instance()
 #endif // !ENGINE_H

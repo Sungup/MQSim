@@ -4,7 +4,7 @@
 #include <string>
 #include "../nvm_chip/flash_memory/FlashTypes.h"
 #include "../ssd/dcm/DataCacheDefs.h"
-#include "../ssd/Host_Interface_Defs.h"
+#include "../ssd/interface/Host_Interface_Defs.h"
 #include "../host/IO_Flow_Synthetic.h"
 #include "../host/IO_Flow_Trace_Based.h"
 #include "../utils/Workload_Statistics.h"
@@ -27,8 +27,8 @@ public:
   flash_plane_ID_type* Plane_IDs;//Resource partitioning: which plane ids are allocated to this flow
   uint32_t Initial_Occupancy_Percentage;//Percentage of the logical space that is written when preconditioning is performed
   int Channel_No, Chip_No, Die_No, Plane_No;
-  void XML_serialize(Utils::XmlWriter& xmlwrite);
-  void XML_deserialize(rapidxml::xml_node<> *node);
+  void XML_serialize(Utils::XmlWriter& xmlwrite) override;
+  void XML_deserialize(rapidxml::xml_node<> *node) override;
 private:
 };
 

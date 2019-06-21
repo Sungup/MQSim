@@ -3,7 +3,7 @@
 
 #include "Host_Interface_Base.h"
 #include "Host_Interface_Defs.h"
-#include "request/User_Request.h"
+#include "../request/User_Request.h"
 
 namespace SSD_Components
 {
@@ -16,7 +16,7 @@ namespace SSD_Components
       Start_logical_sector_address(start_logical_sector_address), End_logical_sector_address(end_logical_sector_address),
       Submission_queue_base_address(submission_queue_base_address), Completion_queue_base_address(completion_queue_base_address),
       Submission_head(0), Submission_head_informed_to_host(0), Submission_tail(0), Completion_head(0), Completion_tail(0), On_the_fly_requests(0) {}
-    ~Input_Stream_SATA();
+    ~Input_Stream_SATA() final;
     LHA_type Start_logical_sector_address;
     LHA_type End_logical_sector_address;
     uint64_t Submission_queue_base_address;

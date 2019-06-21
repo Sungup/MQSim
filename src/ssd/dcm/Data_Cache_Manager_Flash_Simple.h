@@ -33,9 +33,9 @@ namespace SSD_Components
     sim_time_type bloom_filter_reset_step = 1000000000;
     sim_time_type next_bloom_filter_reset_milestone = 0;
 
-    TransactionServiceHandler<Data_Cache_Manager_Flash_Simple> __user_transaction_handler;
+    FlashTransactionHandler<Data_Cache_Manager_Flash_Simple> __user_transaction_handler;
 
-    void process_new_user_request(User_Request& user_request) final;
+    void process_new_user_request(User_Request* user_request) final;
 
     // Used in the WRITE_CACHE and WRITE_READ_CACHE modes in which the DRAM
     // space is used as a destage buffer
@@ -43,7 +43,7 @@ namespace SSD_Components
 
     void service_dram_access_request(Memory_Transfer_Info& request_info);
 
-    void __handle_transaction_service(NVM_Transaction_Flash& nvm_transaction);
+    void __handle_transaction_service(NVM_Transaction_Flash* nvm_transaction);
     static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
 
   public:

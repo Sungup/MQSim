@@ -14,10 +14,10 @@
 #include "../NVM_Transaction_Flash.h"
 
 namespace SSD_Components {
-  typedef Utils::ServiceHandlerBase<User_Request&> UserRequestServiceHandlerBase;
+  typedef Utils::ServiceHandlerBase<User_Request*> UserRequestServiceHandlerBase;
 
   template <typename T>
-  using UserRequestServiceHandler = Utils::ServiceHandler<T, User_Request&>;
+  using UserRequestServiceHandler = Utils::ServiceHandler<T, User_Request*>;
 
   typedef std::vector<UserRequestServiceHandlerBase*> UserRequestServiceHandlerList;
 }

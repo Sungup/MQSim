@@ -11,5 +11,6 @@ cmake-build-*/
 
 # Test files
 *.diff
+samples/config/*/*_scenario_*.xml
 samples/result/
 temp/

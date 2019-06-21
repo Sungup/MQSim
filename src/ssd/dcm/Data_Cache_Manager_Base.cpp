@@ -50,18 +50,18 @@ Data_Cache_Manager_Base::~Data_Cache_Manager_Base()
 }
 
 void
-Data_Cache_Manager_Base::__handle_user_request(User_Request &request)
+Data_Cache_Manager_Base::__handle_user_request(User_Request* request)
 {
   // Pass user request to children.
   process_new_user_request(request);
 }
 
 void
-Data_Cache_Manager_Base::broadcast_user_request_serviced_signal(User_Request& request)
+Data_Cache_Manager_Base::broadcast_user_request_serviced_signal(User_Request* request)
 {
   // TODO Ready to remove _myInstance
   for (auto handler : connected_user_request_serviced_signal_handlers)
-    handler(&request);
+    handler(request);
 
 #if 0
   // TODO Unblock this commented lines
@@ -71,11 +71,11 @@ Data_Cache_Manager_Base::broadcast_user_request_serviced_signal(User_Request& re
 }
 
 void
-Data_Cache_Manager_Base::broadcast_user_memory_transaction_serviced_signal(NVM_Transaction& transaction)
+Data_Cache_Manager_Base::broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction)
 {
   // TODO Ready to remove _myInstance
   for (auto handler: connected_user_memory_transaction_serviced_signal_handlers)
-    handler(&transaction);
+    handler(transaction);
 
 #if 0
   // TODO Unblock this commented lines
@@ -87,7 +87,7 @@ Data_Cache_Manager_Base::broadcast_user_memory_transaction_serviced_signal(NVM_T
 void
 Data_Cache_Manager_Base::handle_user_request_arrived_signal(User_Request* user_request)
 {
-  _my_instance->process_new_user_request(*user_request);
+  _my_instance->process_new_user_request(user_request);
 }
 
 void

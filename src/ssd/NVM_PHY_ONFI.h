@@ -59,18 +59,18 @@ namespace SSD_Components
     // ============================
     // Handler connecting functions
     // ============================
-    void connect_to_transaction_service_signal(TransactionServiceHandlerBase& handler);
+    void connect_to_transaction_service_signal(FlashTransactionHandlerBase& handler);
     void connect_to_channel_idle_signal(ChannelIdleSignalHandlerBase& handler);
     void connect_to_chip_idle_signal(ChipIdleSignalHandlerBase& handler);
 
   private:
-    TransactionServiceHandlerList __transaction_service_handlers;
-    ChannelIdleSignalHandlerList  __channel_idle_signal_handlers;
-    ChipIdleSignalHandlerList     __chip_idle_signal_handlers;
+    FlashTransactionHandlerList  __transaction_service_handlers;
+    ChannelIdleSignalHandlerList __channel_idle_signal_handlers;
+    ChipIdleSignalHandlerList    __chip_idle_signal_handlers;
   };
 
   force_inline void
-  NVM_PHY_ONFI::connect_to_transaction_service_signal(TransactionServiceHandlerBase& handler)
+  NVM_PHY_ONFI::connect_to_transaction_service_signal(FlashTransactionHandlerBase& handler)
   {
     __transaction_service_handlers.emplace_back(&handler);
   }

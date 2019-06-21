@@ -1,8 +1,8 @@
 #include <stdexcept>
-#include "../sim/Engine.h"
+#include "../../sim/Engine.h"
 #include "Host_Interface_NVMe.h"
-#include "NVM_Transaction_Flash_RD.h"
-#include "NVM_Transaction_Flash_WR.h"
+#include "../NVM_Transaction_Flash_RD.h"
+#include "../NVM_Transaction_Flash_WR.h"
 
 
 namespace SSD_Components
@@ -64,7 +64,7 @@ namespace SSD_Components
     if (request->Type == UserRequestType::READ)
     {
       ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Waiting_user_requests.push_back(request);
-      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->STAT_number_of_read_requests++;
+      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->STAT_rd_requests++;
       segment_user_request(request);
 
       ((Host_Interface_NVMe*)host_interface)->broadcast_user_request_arrival_signal(request);
@@ -72,7 +72,7 @@ namespace SSD_Components
     else//This is a write request
     {
       ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Waiting_user_requests.push_back(request);
-      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->STAT_number_of_write_requests++;
+      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->STAT_wr_requests++;
       ((Host_Interface_NVMe*)host_interface)->request_fetch_unit->Fetch_write_data(request);
     }
   }
@@ -119,7 +119,7 @@ namespace SSD_Components
     }
 
     inform_host_request_completed(stream_id, request);//Completion queue is not full, so the device can DMA the completion queue entry to the host
-    DELETE_REQUEST_NVME(request);
+    delete_request_nvme(request);
   }
   
   uint16_t Input_Stream_Manager_NVMe::Get_submission_queue_depth(stream_id_type stream_id)
@@ -170,22 +170,22 @@ namespace SSD_Components
       }
       LPA_type lpa = internal_lsa / host_interface->sectors_per_page;
 
-      page_status_type temp = ~(0xffffffffffffffff << (int)transaction_size);
-      access_status_bitmap = temp << (int)(internal_lsa % host_interface->sectors_per_page);
+      page_status_type temp = ~(0xffffffffffffffff << (uint32_t)transaction_size);
+      access_status_bitmap = temp << (uint32_t)(internal_lsa % host_interface->sectors_per_page);
 
       if (user_request->Type == UserRequestType::READ)
       {
-        NVM_Transaction_Flash_RD* transaction = new NVM_Transaction_Flash_RD(Transaction_Source_Type::USERIO, user_request->Stream_id,
+        auto* transaction = new NVM_Transaction_Flash_RD(Transaction_Source_Type::USERIO, user_request->Stream_id,
           transaction_size * SECTOR_SIZE_IN_BYTE, lpa, NO_PPA, user_request, 0, access_status_bitmap, CurrentTimeStamp);
         user_request->Transaction_list.push_back(transaction);
-        input_streams[user_request->Stream_id]->STAT_number_of_read_transactions++;
+        input_streams[user_request->Stream_id]->STAT_rd_transactions++;
       }
       else //user_request->Type == UserRequestType::WRITE
       {
-        NVM_Transaction_Flash_WR* transaction = new NVM_Transaction_Flash_WR(Transaction_Source_Type::USERIO, user_request->Stream_id,
+        auto* transaction = new NVM_Transaction_Flash_WR(Transaction_Source_Type::USERIO, user_request->Stream_id,
           transaction_size * SECTOR_SIZE_IN_BYTE, lpa, user_request, 0, access_status_bitmap, CurrentTimeStamp);
         user_request->Transaction_list.push_back(transaction);
-        input_streams[user_request->Stream_id]->STAT_number_of_write_transactions++;
+        input_streams[user_request->Stream_id]->STAT_wr_transactions++;
       }
 
       lsa = lsa + transaction_size;
@@ -196,10 +196,10 @@ namespace SSD_Components
   Request_Fetch_Unit_NVMe::Request_Fetch_Unit_NVMe(Host_Interface_Base* host_interface) :
     Request_Fetch_Unit_Base(host_interface), current_phase(0xffff), number_of_sent_cqe(0) {}
   
-  void Request_Fetch_Unit_NVMe::Process_pcie_write_message(uint64_t address, void * payload, uint32_t payload_size)
+  void Request_Fetch_Unit_NVMe::Process_pcie_write_message(uint64_t address, void * payload, uint32_t /* payload_size */)
   {
-    Host_Interface_NVMe* hi = (Host_Interface_NVMe*)host_interface;
-    uint64_t val = (uint64_t)payload;
+    auto* hi = (Host_Interface_NVMe*)host_interface;
+    auto  val = (uint64_t)payload;
     switch (address)
     {
     case SUBMISSION_QUEUE_REGISTER_1:
@@ -255,9 +255,9 @@ namespace SSD_Components
     }
   }
   
-  void Request_Fetch_Unit_NVMe::Process_pcie_read_message(uint64_t address, void * payload, uint32_t payload_size)
+  void Request_Fetch_Unit_NVMe::Process_pcie_read_message(uint64_t /* address */, void * payload, uint32_t payload_size)
   {
-    Host_Interface_NVMe* hi = (Host_Interface_NVMe*)host_interface;
+    auto* hi = (Host_Interface_NVMe*)host_interface;
     DMA_Req_Item* dma_req_item = dma_list.front();
     dma_list.pop_front();
 
@@ -265,23 +265,23 @@ namespace SSD_Components
     {
     case DMA_Req_Type::REQUEST_INFO:
     {
-      User_Request* new_reqeust = new User_Request;
+      auto* new_reqeust = new User_Request;
       new_reqeust->IO_command_info = payload;
       new_reqeust->Stream_id = (stream_id_type)((uint64_t)(dma_req_item->object));
       new_reqeust->Priority_class = ((Input_Stream_Manager_NVMe*)host_interface->input_stream_manager)->Get_priority_class(new_reqeust->Stream_id);
       new_reqeust->STAT_InitiationTime = Simulator->Time();
-      Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)payload;
+      auto* sqe = (Submission_Queue_Entry*)payload;
       switch (sqe->Opcode)
       {
       case NVME_READ_OPCODE:
         new_reqeust->Type = UserRequestType::READ;
-        new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
+        new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31U | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
         new_reqeust->SizeInSectors = sqe->Command_specific[2] & (LHA_type)(0x0000ffff);
         new_reqeust->Size_in_byte = new_reqeust->SizeInSectors * SECTOR_SIZE_IN_BYTE;
         break;
       case NVME_WRITE_OPCODE:
         new_reqeust->Type = UserRequestType::WRITE;
-        new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31 | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
+        new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31U | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
         new_reqeust->SizeInSectors = sqe->Command_specific[2] & (LHA_type)(0x0000ffff);
         new_reqeust->Size_in_byte = new_reqeust->SizeInSectors * SECTOR_SIZE_IN_BYTE;
         break;
@@ -292,7 +292,7 @@ namespace SSD_Components
       break;
     }
     case DMA_Req_Type::WRITE_DATA:
-      COPYDATA(((User_Request*)dma_req_item->object)->Data, payload, payload_size);
+      ((User_Request*)dma_req_item->object)->assign_data(payload, payload_size);
       ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Handle_arrived_write_data((User_Request*)dma_req_item->object);
       break;
     default:
@@ -303,34 +303,34 @@ namespace SSD_Components
 
   void Request_Fetch_Unit_NVMe::Fetch_next_request(stream_id_type stream_id)
   {
-    DMA_Req_Item* dma_req_item = new DMA_Req_Item;
+    auto* dma_req_item = new DMA_Req_Item;
     dma_req_item->Type = DMA_Req_Type::REQUEST_INFO;
     dma_req_item->object = (void *)(intptr_t)stream_id;
     dma_list.push_back(dma_req_item);
 
-    Host_Interface_NVMe* hi = (Host_Interface_NVMe*)host_interface;
+    auto* hi = (Host_Interface_NVMe*)host_interface;
     Input_Stream_NVMe* im = ((Input_Stream_NVMe*)hi->input_stream_manager->input_streams[stream_id]);
     host_interface->Send_read_message_to_host(im->Submission_queue_base_address + im->Submission_head * sizeof(Submission_Queue_Entry), sizeof(Submission_Queue_Entry));
   }
 
   void Request_Fetch_Unit_NVMe::Fetch_write_data(User_Request* request)
   {
-    DMA_Req_Item* dma_req_item = new DMA_Req_Item;
+    auto* dma_req_item = new DMA_Req_Item;
     dma_req_item->Type = DMA_Req_Type::WRITE_DATA;
     dma_req_item->object = (void *)request;
     dma_list.push_back(dma_req_item);
 
-    Submission_Queue_Entry* sqe = (Submission_Queue_Entry*) request->IO_command_info;
-    host_interface->Send_read_message_to_host((sqe->PRP_entry_2<<31) | sqe->PRP_entry_1, request->Size_in_byte);
+    auto* sqe = (Submission_Queue_Entry*) request->IO_command_info;
+    host_interface->Send_read_message_to_host((sqe->PRP_entry_2<<31U) | sqe->PRP_entry_1, request->Size_in_byte);
   }
 
   void Request_Fetch_Unit_NVMe::Send_completion_queue_element(User_Request* request, uint16_t sq_head_value)
   {
-    Host_Interface_NVMe* hi = (Host_Interface_NVMe*)host_interface;
-    Completion_Queue_Entry* cqe = new Completion_Queue_Entry;
+    auto* hi = (Host_Interface_NVMe*)host_interface;
+    auto* cqe = new Completion_Queue_Entry;
     cqe->SQ_Head = sq_head_value;
     cqe->SQ_ID = FLOW_ID_TO_Q_ID(request->Stream_id);
-    cqe->SF_P = 0x0001 & current_phase;
+    cqe->SF_P = 0x0001U & current_phase;
     cqe->Command_Identifier = ((Submission_Queue_Entry*)request->IO_command_info)->Command_Identifier;
     Input_Stream_NVMe* im = ((Input_Stream_NVMe*)hi->input_stream_manager->input_streams[request->Stream_id]);
     host_interface->Send_write_message_to_host(im->Completion_queue_base_address + im->Completion_tail * sizeof(Completion_Queue_Entry), cqe, sizeof(Completion_Queue_Entry));
@@ -346,15 +346,26 @@ namespace SSD_Components
 
   void Request_Fetch_Unit_NVMe::Send_read_data(User_Request* request)
   {
-    Submission_Queue_Entry* sqe = (Submission_Queue_Entry*)request->IO_command_info;
+    auto* sqe = (Submission_Queue_Entry*)request->IO_command_info;
     host_interface->Send_write_message_to_host(sqe->PRP_entry_1, request->Data, request->Size_in_byte);
   }
 
   Host_Interface_NVMe::Host_Interface_NVMe(const sim_object_id_type& id,
-    LHA_type max_logical_sector_address, uint16_t submission_queue_depth, uint16_t completion_queue_depth,
-    uint32_t no_of_input_streams, uint16_t queue_fetch_size, uint32_t sectors_per_page, Data_Cache_Manager_Base* cache) :
-    Host_Interface_Base(id, HostInterface_Types::NVME, max_logical_sector_address, sectors_per_page, cache),
-    submission_queue_depth(submission_queue_depth), completion_queue_depth(completion_queue_depth), no_of_input_streams(no_of_input_streams)
+                                           LHA_type max_logical_sector_address,
+                                           uint16_t submission_queue_depth,
+                                           uint16_t completion_queue_depth,
+                                           uint32_t no_of_input_streams,
+                                           uint16_t queue_fetch_size,
+                                           uint32_t sectors_per_page,
+                                           Data_Cache_Manager_Base* cache)
+    : Host_Interface_Base(id,
+                          HostInterface_Types::NVME,
+                          max_logical_sector_address,
+                          sectors_per_page,
+                          cache),
+      submission_queue_depth(submission_queue_depth),
+      completion_queue_depth(completion_queue_depth),
+      no_of_input_streams(no_of_input_streams)
   {
     this->input_stream_manager = new Input_Stream_Manager_NVMe(this, queue_fetch_size);
     this->request_fetch_unit = new Request_Fetch_Unit_NVMe(this);
@@ -370,15 +381,15 @@ namespace SSD_Components
   void Host_Interface_NVMe::Validate_simulation_config()
   {
     Host_Interface_Base::Validate_simulation_config();
-    if (this->input_stream_manager == NULL)
+    if (this->input_stream_manager == nullptr)
       throw std::logic_error("Input stream manager is not set for Host Interface");
-    if (this->request_fetch_unit == NULL)
+    if (this->request_fetch_unit == nullptr)
       throw std::logic_error("Request fetch unit is not set for Host Interface");
   }
   
   void Host_Interface_NVMe::Start_simulation() {}
 
-  void Host_Interface_NVMe::Execute_simulator_event(MQSimEngine::Sim_Event* event) {}
+  void Host_Interface_NVMe::Execute_simulator_event(MQSimEngine::Sim_Event* /* event */) {}
 
   uint16_t Host_Interface_NVMe::Get_submission_queue_depth()
   {
@@ -402,7 +413,7 @@ namespace SSD_Components
 
     for (uint32_t stream_id = 0; stream_id < no_of_input_streams; stream_id++)
     {
-      std::string tmp = name_prefix + ".IO_Stream";
+      tmp = name_prefix + ".IO_Stream";
       xmlwriter.Write_open_tag(tmp);
 
       attr = "Stream_ID";
@@ -410,35 +421,40 @@ namespace SSD_Components
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Read_Transaction_Turnaround_Time";
-      val = std::to_string(input_stream_manager->Get_average_read_transaction_turnaround_time(stream_id));
+      val = std::to_string(
+        input_stream_manager->avg_rd_turnaround_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Read_Transaction_Execution_Time";
-      val = std::to_string(input_stream_manager->Get_average_read_transaction_execution_time(stream_id));
+      val = std::to_string(
+        input_stream_manager->avg_rd_execution_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Read_Transaction_Transfer_Time";
-      val = std::to_string(input_stream_manager->Get_average_read_transaction_transfer_time(stream_id));
+      val = std::to_string(
+        input_stream_manager->avg_rd_transfer_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Read_Transaction_Waiting_Time";
-      val = std::to_string(input_stream_manager->Get_average_read_transaction_waiting_time(stream_id));
+      val = std::to_string(input_stream_manager->avg_rd_waiting_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Write_Transaction_Turnaround_Time";
-      val = std::to_string(input_stream_manager->Get_average_write_transaction_turnaround_time(stream_id));
+      val = std::to_string(
+        input_stream_manager->avg_wr_turnaround_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Write_Transaction_Execution_Time";
-      val = std::to_string(input_stream_manager->Get_average_write_transaction_execution_time(stream_id));
+      val = std::to_string(
+        input_stream_manager->avg_wr_execution_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Write_Transaction_Transfer_Time";
-      val = std::to_string(input_stream_manager->Get_average_write_transaction_transfer_time(stream_id));
+      val = std::to_string(input_stream_manager->avg_wr_transfer_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       attr = "Average_Write_Transaction_Waiting_Time";
-      val = std::to_string(input_stream_manager->Get_average_write_transaction_waiting_time(stream_id));
+      val = std::to_string(input_stream_manager->avg_wr_waiting_time(stream_id));
       xmlwriter.Write_attribute_string(attr, val);
 
       xmlwriter.Write_close_tag();

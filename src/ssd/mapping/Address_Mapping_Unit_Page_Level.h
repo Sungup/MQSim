@@ -151,7 +151,7 @@ namespace SSD_Components
   private:
     static Address_Mapping_Unit_Page_Level* _my_instance;
 
-    TransactionServiceHandler<Address_Mapping_Unit_Page_Level> __transaction_service_handler;
+    FlashTransactionHandler<Address_Mapping_Unit_Page_Level> __transaction_service_handler;
 
     uint32_t cmt_capacity;
     AddressMappingDomain** domains;
@@ -188,7 +188,7 @@ namespace SSD_Components
                                             LPA_type lpa, uint32_t stream_id,
                                             function lambda);
 
-    void __handle_transaction_service_signal(NVM_Transaction_Flash& transaction);
+    void __handle_transaction_service_signal(NVM_Transaction_Flash* transaction);
 
     void __ppa_to_address(PPA_type ppn,
                           NVM::FlashMemory::Physical_Page_Address& address);

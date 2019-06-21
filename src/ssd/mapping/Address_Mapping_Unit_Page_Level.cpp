@@ -14,8 +14,8 @@ Cached_Mapping_Table::Cached_Mapping_Table(uint32_t capacity)
 
 Cached_Mapping_Table::~Cached_Mapping_Table()
 {
-  std::unordered_map<LPA_type, CMTSlotType*> addressMap;
-  std::list<std::pair<LPA_type, CMTSlotType*>> lruList;
+  // std::unordered_map<LPA_type, CMTSlotType*> addressMap;
+  // std::list<std::pair<LPA_type, CMTSlotType*>> lruList;
 
   auto entry = addressMap.begin();
   while (entry != addressMap.end())
@@ -107,7 +107,7 @@ void Cached_Mapping_Table::Reserve_slot_for_lpn(const stream_id_type streamID, c
   if (addressMap.size() >= capacity)
     throw std::logic_error("CMT overfull!");
 
-  CMTSlotType* cmtEnt = new CMTSlotType();
+  auto* cmtEnt = new CMTSlotType();
   cmtEnt->Dirty = false;
   cmtEnt->Stream_id = streamID;
   lruList.push_front(std::pair<LPA_type, CMTSlotType*>(key, cmtEnt));
@@ -263,7 +263,7 @@ inline PPA_type AddressMappingDomain::Get_ppa(const bool ideal_mapping, const st
   else
     return CMT->Retrieve_ppa(stream_id, lpa);
 }
-inline PPA_type AddressMappingDomain::Get_ppa_for_preconditioning(const stream_id_type stream_id, const LPA_type lpa)
+inline PPA_type AddressMappingDomain::Get_ppa_for_preconditioning(const stream_id_type /* stream_id */, const LPA_type lpa)
 {
   return GlobalMappingTable[lpa].PPA;
 }
@@ -849,6 +849,8 @@ Address_Mapping_Unit_Page_Level::__processing_unmapped_transactions(FlashTransac
     } else {
       if (translate_lpa_to_ppa(stream_id, it2->second)) {
         ftl->TSU->Submit_transaction(it2->second);
+
+        lambda(it2->second);
       } else {
         manage_unsuccessful_translation(it2->second);
       }
@@ -859,29 +861,29 @@ Address_Mapping_Unit_Page_Level::__processing_unmapped_transactions(FlashTransac
 }
 
 void
-Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NVM_Transaction_Flash& transaction)
+Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NVM_Transaction_Flash* transaction)
 {
   //First check if the transaction source is Mapping Module
-  if (transaction.Source != Transaction_Source_Type::MAPPING)
+  if (transaction->Source != Transaction_Source_Type::MAPPING)
     return;
 
   if (ideal_mapping_table)
     throw std::logic_error("There should not be any flash read/write when ideal mapping is enabled!");
 
-  if (transaction.Type == Transaction_Type::WRITE)
+  if (transaction->Type == Transaction_Type::WRITE)
   {
-    domains[transaction.Stream_id]->DepartingMappingEntries.erase((MVPN_type)((NVM_Transaction_Flash_WR&)transaction).Content);
+    domains[transaction->Stream_id]->DepartingMappingEntries.erase((MVPN_type)((NVM_Transaction_Flash_WR*)transaction)->Content);
   }
   else
   {
     /*If this is a read for an MVP that is required for merging unchanged mapping enries
     * (stored on flash) with those updated entries that are evicted from CMT*/
-    if (((NVM_Transaction_Flash_RD&)transaction).RelatedWrite != nullptr)
-      ((NVM_Transaction_Flash_RD&)transaction).RelatedWrite->RelatedRead = nullptr;
+    if (((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite != nullptr)
+      ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->RelatedRead = nullptr;
 
     ftl->TSU->Prepare_for_transaction_submit();
-    auto  mvpn = (MVPN_type)((NVM_Transaction_Flash_RD&)transaction).Content;
-    auto  stream_id = transaction.Stream_id;
+    auto  mvpn = (MVPN_type)((NVM_Transaction_Flash_RD*)transaction)->Content;
+    auto  stream_id = transaction->Stream_id;
     auto* domain = domains[stream_id];
     auto  it = domain->ArrivingMappingEntries.find(mvpn);
 
@@ -924,7 +926,7 @@ Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NVM_Transac
 void
 Address_Mapping_Unit_Page_Level::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction)
 {
-  _my_instance->__handle_transaction_service_signal(*transaction);
+  _my_instance->__handle_transaction_service_signal(transaction);
 }
 
 // --------------------------
