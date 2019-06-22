@@ -149,8 +149,6 @@ namespace SSD_Components
     friend class GC_and_WL_Unit_Page_Level;
 
   private:
-    static Address_Mapping_Unit_Page_Level* _my_instance;
-
     FlashTransactionHandler<Address_Mapping_Unit_Page_Level> __transaction_service_handler;
 
     uint32_t cmt_capacity;
@@ -192,8 +190,6 @@ namespace SSD_Components
 
     void __ppa_to_address(PPA_type ppn,
                           NVM::FlashMemory::Physical_Page_Address& address);
-
-    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
 
   public:
     Address_Mapping_Unit_Page_Level(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,

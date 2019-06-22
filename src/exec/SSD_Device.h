@@ -11,7 +11,7 @@
 #include "../ssd/dcm/Data_Cache_Manager_Base.h"
 #include "../ssd/dcm/Data_Cache_Flash.h"
 #include "../ssd/NVM_Firmware.h"
-#include "../ssd/NVM_PHY_Base.h"
+#include "../ssd/phy/NVM_PHY_Base.h"
 #include "../ssd/NVM_Channel_Base.h"
 #include "../host/PCIe_Switch.h"
 #include "../nvm_chip/NVM_Types.h"

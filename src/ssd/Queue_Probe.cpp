@@ -126,13 +126,14 @@ namespace SSD_Components
   }
   double Queue_Probe::STDevQueueLength()
   {
+    auto sim = Simulator;
     sim_time_type sum = 0;
     for (uint32_t len = 0; len < states.size(); len++)
       sum += states[len].totalTime * len;
-    double mean = (double)sum / (double)Simulator->Time();
+    double mean = (double)sum / (double)sim->Time();
     double stdev = 0.0;
     for (uint32_t len = 0; len < states.size(); len++)
-      stdev += std::pow((double)states[len].totalTime * len / (double)Simulator->Time() - mean, 2);
+      stdev += std::pow((double)states[len].totalTime * len / (double)sim->Time() - mean, 2);
     return std::sqrt(stdev);
   }
   double Queue_Probe::AvgQueueLengthEpoch()

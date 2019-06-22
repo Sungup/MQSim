@@ -6,7 +6,7 @@
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
 #include "../SSD_Defs.h"
 #include "../NVM_Transaction_Flash.h"
-#include "../NVM_PHY_ONFI_NVDDR2.h"
+#include "../phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../FTL.h"
 #include "../Flash_Block_Manager_Base.h"
 #include "AddressMappingUnitDefs.h"
@@ -55,7 +55,7 @@ namespace SSD_Components
       uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
       uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
       double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED, bool fold_large_addresses = true);
-    virtual ~Address_Mapping_Unit_Base();
+    ~Address_Mapping_Unit_Base() override = default;
 
     //Functions used for preconditioning
     virtual void Allocate_address_for_preconditioning(stream_id_type stream_id,

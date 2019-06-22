@@ -8,7 +8,7 @@
 #include "mapping/Address_Mapping_Unit_Base.h"
 #include "Flash_Block_Manager_Base.h"
 #include "gc_and_wl/GC_and_WL_Unit_Base.h"
-#include "NVM_PHY_ONFI.h"
+#include "phy/NVM_PHY_ONFI.h"
 #include "Stats.h"
 
 namespace SSD_Components

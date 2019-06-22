@@ -7,7 +7,7 @@
 #include "../mapping/Address_Mapping_Unit_Base.h"
 #include "../Flash_Block_Manager_Base.h"
 #include "../tsu/TSU_Base.h"
-#include "../NVM_PHY_ONFI.h"
+#include "../phy/NVM_PHY_ONFI.h"
 
 #include "GCandWLUnitDefs.h"
 
@@ -27,7 +27,7 @@ namespace SSD_Components
   class GC_and_WL_Unit_Base : public MQSimEngine::Sim_Object {
   protected:
     GC_Block_Selection_Policy_Type block_selection_policy;
-    static GC_and_WL_Unit_Base * _my_instance;
+
     Address_Mapping_Unit_Base* address_mapping_unit;
     Flash_Block_Manager_Base* block_manager;
     TSU_Base* tsu;
@@ -71,8 +71,6 @@ namespace SSD_Components
     void run_static_wearleveling(const NVM::FlashMemory::Physical_Page_Address& plane_address);
 
     void __handle_transaction_service(NVM_Transaction_Flash* transaction);
-
-    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
 
   public:
     GC_and_WL_Unit_Base(const sim_object_id_type& id,

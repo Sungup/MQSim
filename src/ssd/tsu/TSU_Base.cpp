@@ -3,8 +3,6 @@
 
 using namespace SSD_Components;
 
-TSU_Base* TSU_Base::_my_instance = nullptr;
-
 TSU_Base::TSU_Base(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, Flash_Scheduling_Type Type,
   uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
   bool EraseSuspensionEnabled, bool ProgramSuspensionEnabled,
@@ -21,9 +19,6 @@ TSU_Base::TSU_Base(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* 
   writeReasonableSuspensionTimeForRead(WriteReasonableSuspensionTimeForRead), eraseReasonableSuspensionTimeForRead(EraseReasonableSuspensionTimeForRead),
   eraseReasonableSuspensionTimeForWrite(EraseReasonableSuspensionTimeForWrite), opened_scheduling_reqs(0)
 {
-  // TODO Ready to remove _myInstance
-  _my_instance = this;
-
   __channel_rr_turn = new flash_chip_ID_type[channel_count];
   for (uint32_t channelID = 0; channelID < channel_count; channelID++)
     __channel_rr_turn[channelID] = 0;
@@ -37,11 +32,6 @@ TSU_Base::~TSU_Base()
 void TSU_Base::Setup_triggers()
 {
   Sim_Object::Setup_triggers();
-
-  // TODO Ready to remove _myInstance
-  _NVMController->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
-  _NVMController->ConnectToChannelIdleSignal(handle_channel_idle_signal);
-  _NVMController->ConnectToChipIdleSignal(handle_chip_idle_signal);
 
   _NVMController->connect_to_transaction_service_signal(__transaction_service_handler);
   _NVMController->connect_to_channel_idle_signal(__channel_idle_signal_handler);
@@ -65,20 +55,3 @@ TSU_Base::__handle_chip_idle_signal(const NVM::FlashMemory::Flash_Chip& chip)
     _service_chip_transaction(chip);
 }
 
-void
-TSU_Base::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction)
-{
-  _my_instance->__handle_transaction_serviced_signal(transaction);
-}
-
-void
-TSU_Base::handle_channel_idle_signal(flash_channel_ID_type channelID)
-{
-  _my_instance->__handle_channel_idle_signal(channelID);
-}
-
-void
-TSU_Base::handle_chip_idle_signal(NVM::FlashMemory::Flash_Chip* chip)
-{
-  _my_instance->__handle_chip_idle_signal(*chip);
-}

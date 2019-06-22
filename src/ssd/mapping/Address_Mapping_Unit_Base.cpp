@@ -1,6 +1,6 @@
 #include "../FTL.h"
 #include "Address_Mapping_Unit_Base.h"
-#include "../NVM_PHY_ONFI_NVDDR2.h"
+#include "../phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../Flash_Block_Manager_Base.h"
 #include "AddressMappingUnitDefs.h"
 
@@ -27,8 +27,6 @@ namespace SSD_Components
     total_logical_pages_no = (uint32_t)((double)total_physical_pages_no * (1 - overprovisioning_ratio));
     max_logical_sector_address = (LHA_type)(SectorsPerPage * total_logical_pages_no - 1);
   }
-
-  Address_Mapping_Unit_Base::~Address_Mapping_Unit_Base() {}
 
   uint32_t Address_Mapping_Unit_Base::Get_device_physical_pages_count()
   {

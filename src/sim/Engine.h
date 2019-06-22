@@ -14,33 +14,90 @@ namespace MQSimEngine {
   class Engine
   {
     friend class EventTree;
-  public:
-    Engine()
-    {
-      this->_EventList = new EventTree;
-      started = false;
-    }
-    ~Engine() { delete _EventList; }
-    static Engine* Instance();
-    sim_time_type Time();
-    Sim_Event* Register_sim_event(sim_time_type fireTime, Sim_Object* targetObject, void* parameters = NULL, int type = 0);
-    void Ignore_sim_event(Sim_Event*);
-    void Reset();
-    void AddObject(Sim_Object* obj);
-    Sim_Object* GetObject(sim_object_id_type object_id);
-    void RemoveObject(Sim_Object* obj);
-    void Start_simulation();
-    void Stop_simulation();
-    bool Has_started();
-    bool Is_integrated_execution_mode();
+
   private:
+    static Engine* _instance;
+
     sim_time_type _sim_time;
     EventTree* _EventList;
     std::unordered_map<sim_object_id_type, Sim_Object*> _ObjectList;
     bool stop;
     bool started;
-    static Engine* _instance;
+
+  public:
+    Engine();
+    ~Engine();
+
+    static Engine* Instance();
+    sim_time_type Time() const;
+    Sim_Event* Register_sim_event(sim_time_type fireTime, Sim_Object* targetObject, void* parameters = nullptr, int type = 0);
+    void Ignore_sim_event(Sim_Event*);
+    void Reset();
+    void AddObject(Sim_Object* obj);
+    Sim_Object* GetObject(const sim_object_id_type& object_id);
+    void RemoveObject(Sim_Object* obj);
+    void Start_simulation();
+    void Stop_simulation();
+    bool Has_started() const;
+    bool Is_integrated_execution_mode() const;
+
   };
+
+  force_inline
+  Engine::Engine()
+    : _sim_time(0),
+      _EventList(new EventTree()),
+      _ObjectList(),
+      stop(false),
+      started(false)
+  { }
+
+  force_inline
+  Engine::~Engine()
+  {
+    delete _EventList;
+  }
+
+  force_inline Engine*
+  Engine::Instance() {
+    if (_instance == nullptr)
+      _instance = new Engine();
+
+    return _instance;
+  }
+
+  force_inline Sim_Event*
+  Engine::Register_sim_event(sim_time_type fireTime,
+                             Sim_Object* targetObject,
+                             void* parameters,
+                             int type)
+  {
+    auto* ev = new Sim_Event(fireTime, targetObject, parameters, type);
+
+    DEBUG("RegisterEvent " << fireTime << " " << targetObject)
+
+    _EventList->Insert_sim_event(ev);
+
+    return ev;
+  }
+
+  force_inline sim_time_type
+  Engine::Time() const
+  {
+    return _sim_time;
+  }
+
+  force_inline bool
+  Engine::Has_started() const
+  {
+    return started;
+  }
+
+  force_inline bool
+  Engine::Is_integrated_execution_mode() const
+  {
+    return false;
+  }
 
   force_inline void*
   copy_data(void* src, size_t size) {

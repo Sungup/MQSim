@@ -13,7 +13,6 @@
 
 #include "HostInterfaceHandler.h"
 #include "../phy/PhyHandler.h"
-// TODO Remove static features
 
 namespace Host_Components
 {
@@ -275,11 +274,7 @@ namespace SSD_Components
     friend class Request_Fetch_Unit_NVMe;
     friend class Request_Fetch_Unit_SATA;
 
-    typedef void(*UserRequestArrivedSignalHandlerType) (User_Request*);
-
   private:
-    static Host_Interface_Base* _my_instance;
-
     const HostInterface_Types type;
     const LHA_type max_logical_sector_address;
     const uint32_t sectors_per_page;
@@ -287,9 +282,7 @@ namespace SSD_Components
     UserRequestServiceHandler<Host_Interface_Base> __user_request_handler;
     NvmTransactionHandler<Host_Interface_Base> __user_transaction_handler;
 
-
     UserRequestServiceHandlerList __connected_user_req_signal_handlers;
-    std::vector<UserRequestArrivedSignalHandlerType> connected_user_request_arrived_signal_handlers;
 
     Data_Cache_Manager_Base* cache;
 
@@ -306,9 +299,6 @@ namespace SSD_Components
     void __handle_user_request_signal_from_cache(User_Request* request);
     void __handle_user_transaction_signal_from_cache(NVM_Transaction* transaction);
 
-    static void handle_user_request_serviced_signal_from_cache(User_Request* user_request);
-    static void handle_user_memory_transaction_serviced_signal_from_cache(NVM_Transaction* transaction);
-
   public:
     Host_Interface_Base(const sim_object_id_type& id,
                         HostInterface_Types type,
@@ -318,9 +308,6 @@ namespace SSD_Components
 
     virtual ~Host_Interface_Base();
     void Setup_triggers();
-
-    // TODO Ready to remove _myInstance
-    void Connect_to_user_request_arrived_signal(UserRequestArrivedSignalHandlerType function);
 
     void connect_to_user_request_signal(UserRequestServiceHandlerBase& handler);
 
@@ -338,24 +325,9 @@ namespace SSD_Components
   force_inline void
   Host_Interface_Base::broadcast_user_request_arrival_signal(User_Request* user_request)
   {
-    // TODO Ready to remove _myInstance
-    for (auto handler : connected_user_request_arrived_signal_handlers)
-      handler(user_request);
-
-#if 0
     for (auto& handler : __connected_user_req_signal_handlers)
-      (*handler)(*user_request);
-#endif
+      (*handler)(user_request);
   }
-
-  // ===========================================================================
-  // TODO Ready to remove _myInstance
-  force_inline void
-  Host_Interface_Base::Connect_to_user_request_arrived_signal(UserRequestArrivedSignalHandlerType function)
-  {
-    connected_user_request_arrived_signal_handlers.push_back(function);
-  }
-  // ===========================================================================
 
   force_inline void
   Host_Interface_Base::connect_to_user_request_signal(UserRequestServiceHandlerBase& handler)

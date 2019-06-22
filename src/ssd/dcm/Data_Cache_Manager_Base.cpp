@@ -3,7 +3,6 @@
 
 using namespace SSD_Components;
 
-Data_Cache_Manager_Base* Data_Cache_Manager_Base::_my_instance = nullptr;
 Caching_Mode* Data_Cache_Manager_Base::caching_mode_per_input_stream;
 
 Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
@@ -32,13 +31,8 @@ Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
     dram_tCL(dram_tCL),
     dram_tRP(dram_tRP),
     sharing_mode(sharing_mode),
-    stream_count(stream_count),
-    connected_user_request_serviced_signal_handlers(),
-    connected_user_memory_transaction_serviced_signal_handlers()
+    stream_count(stream_count)
 {
-  // TODO Ready to remove _myInstance
-  _my_instance = this;
-
   caching_mode_per_input_stream = new Caching_Mode[stream_count];
   for (uint32_t i = 0; i < stream_count; i++)
     caching_mode_per_input_stream[i] = caching_mode_per_istream[i];
@@ -59,35 +53,15 @@ Data_Cache_Manager_Base::__handle_user_request(User_Request* request)
 void
 Data_Cache_Manager_Base::broadcast_user_request_serviced_signal(User_Request* request)
 {
-  // TODO Ready to remove _myInstance
-  for (auto handler : connected_user_request_serviced_signal_handlers)
-    handler(request);
-
-#if 0
-  // TODO Unblock this commented lines
   for (auto handler : __user_req_svc_handler)
     (*handler)(request);
-#endif
 }
 
 void
 Data_Cache_Manager_Base::broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction)
 {
-  // TODO Ready to remove _myInstance
-  for (auto handler: connected_user_memory_transaction_serviced_signal_handlers)
-    handler(transaction);
-
-#if 0
-  // TODO Unblock this commented lines
   for (auto handler : __user_mem_tr_svc_handler)
     (*handler)(transaction);
-#endif
-}
-
-void
-Data_Cache_Manager_Base::handle_user_request_arrived_signal(User_Request* user_request)
-{
-  _my_instance->process_new_user_request(user_request);
 }
 
 void
@@ -95,24 +69,7 @@ Data_Cache_Manager_Base::Setup_triggers()
 {
   Sim_Object::Setup_triggers();
 
-  // TODO Ready to remove _myInstance
-  host_interface->Connect_to_user_request_arrived_signal(handle_user_request_arrived_signal);
-
   host_interface->connect_to_user_request_signal(__user_request_handler);
-}
-
-void
-Data_Cache_Manager_Base::Connect_to_user_request_serviced_signal(UserRequestServicedSignalHanderType function)
-{
-  // TODO Ready to remove _myInstance
-  connected_user_request_serviced_signal_handlers.push_back(function);
-}
-
-void
-Data_Cache_Manager_Base::Connect_to_user_memory_transaction_serviced_signal(MemoryTransactionServicedSignalHanderType function)
-{
-  // TODO Ready to remove _myInstance
-  connected_user_memory_transaction_serviced_signal_handlers.push_back(function);
 }
 
 void

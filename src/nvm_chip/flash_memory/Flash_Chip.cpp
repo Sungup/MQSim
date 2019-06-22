@@ -47,11 +47,6 @@ namespace NVM
       delete[] _programLatency;
     }
 
-    void Flash_Chip::Connect_to_chip_ready_signal(ChipReadySignalHandlerType function)
-    {
-      connectedReadyHandlers.push_back(function);
-    }
-    
     void Flash_Chip::Start_simulation() {}
 
     void Flash_Chip::Validate_simulation_config()
@@ -104,8 +99,10 @@ namespace NVM
           || command->CommandCode == CMD_ERASE_BLOCK))
         PRINT_ERROR("Flash chip " << ID() << ": executing a flash operation on a busy die!")
 
-      targetDie->Expected_finish_time = Simulator->Time() + Get_command_execution_latency(command->CommandCode, command->Address[0].PageID);
-      targetDie->CommandFinishEvent = Simulator->Register_sim_event(targetDie->Expected_finish_time,
+      auto sim = Simulator;
+
+      targetDie->Expected_finish_time = sim->Time() + Get_command_execution_latency(command->CommandCode, command->Address[0].PageID);
+      targetDie->CommandFinishEvent = sim->Register_sim_event(targetDie->Expected_finish_time,
         this, command, static_cast<int>(Chip_Sim_Event_Type::COMMAND_FINISHED));
       targetDie->CurrentCMD = command;
       targetDie->Status = DieStatus::BUSY;
@@ -113,7 +110,7 @@ namespace NVM
 
       if (status == Internal_Status::IDLE)
       {
-        executionStartTime = Simulator->Time();
+        executionStartTime = sim->Time();
         expectedFinishTime = targetDie->Expected_finish_time;
         status = Internal_Status::BUSY;
       }
@@ -133,10 +130,13 @@ namespace NVM
       this->idleDieNo++;
       if (idleDieNo == die_no)
       {
+        auto sim = Simulator;
+
         this->status = Internal_Status::IDLE;
-        STAT_totalExecTime += Simulator->Time() - executionStartTime;
+
+        STAT_totalExecTime += sim->Time() - executionStartTime;
         if (this->lastTransferStart != INVALID_TIME)
-          STAT_totalOverlappedXferExecTime += Simulator->Time() - lastTransferStart;
+          STAT_totalOverlappedXferExecTime += sim->Time() - lastTransferStart;
       }
 
       switch (command->CommandCode)
@@ -192,14 +192,15 @@ namespace NVM
 
     void Flash_Chip::broadcast_ready_signal(Flash_Command* command)
     {
-      for (std::vector<ChipReadySignalHandlerType>::iterator it = connectedReadyHandlers.begin();
-        it != connectedReadyHandlers.end(); it++)
-        (*it)(this, command);
+      for (auto it : __connected_ready_handlers)
+        (*it)(*this, *command);
     }
 
     void Flash_Chip::Suspend(flash_die_ID_type dieID)
     {
-      STAT_totalExecTime += Simulator->Time() - executionStartTime;
+      auto sim = Simulator;
+
+      STAT_totalExecTime += sim->Time() - executionStartTime;
 
       Die* targetDie = Dies[dieID];
       if (targetDie->Suspended)
@@ -208,8 +209,8 @@ namespace NVM
       /*if (targetDie->CurrentCMD & CMD_READ != 0)
       throw "Suspend is not supported for read operations!";*/
 
-      targetDie->RemainingSuspendedExecTime = targetDie->Expected_finish_time - Simulator->Time();
-      Simulator->Ignore_sim_event(targetDie->CommandFinishEvent);//The simulator engine should not execute the finish event for the suspended command
+      targetDie->RemainingSuspendedExecTime = targetDie->Expected_finish_time - sim->Time();
+      sim->Ignore_sim_event(targetDie->CommandFinishEvent);//The simulator engine should not execute the finish event for the suspended command
       targetDie->CommandFinishEvent = NULL;
 
       targetDie->SuspendedCMD = targetDie->CurrentCMD;
@@ -238,8 +239,10 @@ namespace NVM
       targetDie->Suspended = false;
       STAT_totalResumeCount++;
 
-      targetDie->Expected_finish_time = Simulator->Time() + targetDie->RemainingSuspendedExecTime;
-      targetDie->CommandFinishEvent = Simulator->Register_sim_event(targetDie->Expected_finish_time,
+      auto sim = Simulator;
+
+      targetDie->Expected_finish_time = sim->Time() + targetDie->RemainingSuspendedExecTime;
+      targetDie->CommandFinishEvent = sim->Register_sim_event(targetDie->Expected_finish_time,
         this, targetDie->CurrentCMD, static_cast<int>(Chip_Sim_Event_Type::COMMAND_FINISHED));
       if (targetDie->Expected_finish_time > this->expectedFinishTime)
         this->expectedFinishTime = targetDie->Expected_finish_time;
@@ -249,7 +252,7 @@ namespace NVM
       targetDie->Status = DieStatus::BUSY;
       this->idleDieNo--;
       this->status = Internal_Status::BUSY;
-      executionStartTime = Simulator->Time();
+      executionStartTime = sim->Time();
     }
 
     sim_time_type Flash_Chip::GetSuspendProgramTime()
@@ -264,6 +267,8 @@ namespace NVM
 
     void Flash_Chip::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
     {
+      auto sim = Simulator;
+
       std::string tmp = name_prefix;
       xmlwriter.Write_start_element_tag(tmp + ".FlashChips");
 
@@ -272,19 +277,19 @@ namespace NVM
       xmlwriter.Write_attribute_string_inline(attr, val);
 
       attr = "Fraction_of_Time_in_Execution";
-      val = std::to_string(STAT_totalExecTime / double(Simulator->Time()));
+      val = std::to_string(STAT_totalExecTime / double(sim->Time()));
       xmlwriter.Write_attribute_string_inline(attr, val);
 
       attr = "Fraction_of_Time_in_DataXfer";
-      val = std::to_string(STAT_totalXferTime / double(Simulator->Time()));
+      val = std::to_string(STAT_totalXferTime / double(sim->Time()));
       xmlwriter.Write_attribute_string_inline(attr, val);
 
       attr = "Fraction_of_Time_in_DataXfer_and_Execution";
-      val = std::to_string(STAT_totalOverlappedXferExecTime / double(Simulator->Time()));
+      val = std::to_string(STAT_totalOverlappedXferExecTime / double(sim->Time()));
       xmlwriter.Write_attribute_string_inline(attr, val);
 
       attr = "Fraction_of_Time_Idle";
-      val = std::to_string((Simulator->Time() - STAT_totalOverlappedXferExecTime - STAT_totalXferTime) / double(Simulator->Time()));
+      val = std::to_string((sim->Time() - STAT_totalOverlappedXferExecTime - STAT_totalXferTime) / double(sim->Time()));
       xmlwriter.Write_attribute_string_inline(attr, val);
     
       xmlwriter.Write_end_element_tag();

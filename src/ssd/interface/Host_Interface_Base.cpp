@@ -7,8 +7,6 @@ using namespace SSD_Components;
 // ==============================
 // Declare of Host_Interface_Base
 // ==============================
-Host_Interface_Base* Host_Interface_Base::_my_instance = nullptr;
-
 Host_Interface_Base::Host_Interface_Base(const sim_object_id_type& id,
                                          HostInterface_Types type,
                                          LHA_type max_logical_sector_address,
@@ -25,10 +23,7 @@ Host_Interface_Base::Host_Interface_Base(const sim_object_id_type& id,
     __pcie_switch(nullptr),
     input_stream_manager(nullptr),
     request_fetch_unit(nullptr)
-{
-  // TODO Ready to remove _myInstance
-  _my_instance = this;
-}
+{ }
 
 Host_Interface_Base::~Host_Interface_Base()
 {
@@ -48,28 +43,9 @@ Host_Interface_Base::__handle_user_transaction_signal_from_cache(NVM_Transaction
   input_stream_manager->Update_transaction_statistics(transaction);
 }
 
-// ===========================================================================
-// TODO Ready to remove _myInstance
-void
-Host_Interface_Base::handle_user_request_serviced_signal_from_cache(User_Request* request)
-{
-  _my_instance->__handle_user_request_signal_from_cache(request);
-}
-
-void
-Host_Interface_Base::handle_user_memory_transaction_serviced_signal_from_cache(NVM_Transaction* transaction)
-{
-  _my_instance->__handle_user_transaction_signal_from_cache(transaction);
-}
-// ===========================================================================
-
 void Host_Interface_Base::Setup_triggers()
 {
   Sim_Object::Setup_triggers();
-
-  // TODO Ready to remove _myInstance
-  cache->Connect_to_user_request_serviced_signal(handle_user_request_serviced_signal_from_cache);
-  cache->Connect_to_user_memory_transaction_serviced_signal(handle_user_memory_transaction_serviced_signal_from_cache);
 
   cache->connect_to_user_request_service_handler(__user_request_handler);
   cache->connect_to_user_transaction_service_handler(__user_transaction_handler);

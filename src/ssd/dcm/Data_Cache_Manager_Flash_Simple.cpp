@@ -226,10 +226,12 @@ Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(User_Request& user_requ
   if (!writeback_transactions.empty())//If any writeback should be performed, then issue flash write transactions
     static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(writeback_transactions);
 
-  if (Simulator->Time() > next_bloom_filter_reset_milestone)//Reset control data structures used for hot/cold separation
+  auto sim_time = Simulator->Time();
+
+  if (sim_time > next_bloom_filter_reset_milestone)//Reset control data structures used for hot/cold separation
   {
     bloom_filter[0].clear();
-    next_bloom_filter_reset_milestone = Simulator->Time() + bloom_filter_reset_step;
+    next_bloom_filter_reset_milestone = sim_time + bloom_filter_reset_step;
   }
 }
 
@@ -240,7 +242,8 @@ Data_Cache_Manager_Flash_Simple::service_dram_access_request(Memory_Transfer_Inf
   dram_execution_queue[request_info.Stream_id].push(&request_info);
   if(dram_execution_queue[request_info.Stream_id].size() == 1)
   {
-    Simulator->Register_sim_event(Simulator->Time() + estimate_dram_access_time(request_info.Size_in_bytes, dram_row_size,
+    auto sim = Simulator;
+    sim->Register_sim_event(sim->Time() + estimate_dram_access_time(request_info.Size_in_bytes, dram_row_size,
       dram_busrt_size, dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
       this, &request_info, static_cast<int>(request_info.next_event_type));
   }
@@ -325,12 +328,6 @@ Data_Cache_Manager_Flash_Simple::__handle_transaction_service(NVM_Transaction_Fl
 }
 
 void
-Data_Cache_Manager_Flash_Simple::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash *transaction)
-{
-  ((Data_Cache_Manager_Flash_Simple*)(_my_instance))->__handle_transaction_service(transaction);
-}
-
-void
 Data_Cache_Manager_Flash_Simple::Execute_simulator_event(MQSimEngine::Sim_Event* ev)
 {
   auto eventType = (Data_Cache_Simulation_Event_Type)ev->Type;
@@ -356,7 +353,10 @@ Data_Cache_Manager_Flash_Simple::Execute_simulator_event(MQSimEngine::Sim_Event*
   if (!dram_execution_queue[transfer_inf->Stream_id].empty())
   {
     Memory_Transfer_Info* new_transfer_info = dram_execution_queue[transfer_inf->Stream_id].front();
-    Simulator->Register_sim_event(Simulator->Time() + estimate_dram_access_time(new_transfer_info->Size_in_bytes, dram_row_size, dram_busrt_size,
+
+    auto sim = Simulator;
+
+    sim->Register_sim_event(sim->Time() + estimate_dram_access_time(new_transfer_info->Size_in_bytes, dram_row_size, dram_busrt_size,
       dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
       this, new_transfer_info, static_cast<int>(new_transfer_info->next_event_type));
   }
@@ -367,9 +367,6 @@ void
 Data_Cache_Manager_Flash_Simple::Setup_triggers()
 {
   Data_Cache_Manager_Base::Setup_triggers();
-
-  // TODO Ready to remove _myInstance
-  flash_controller->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
 
   flash_controller->connect_to_transaction_service_signal(__user_transaction_handler);
 }

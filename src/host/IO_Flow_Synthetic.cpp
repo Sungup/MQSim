@@ -212,8 +212,9 @@ namespace Host_Components
       Host_IO_Request* req = Generate_next_request();
       if (req != NULL)
       {
+        auto sim = Simulator;
         Submit_io_request(req);
-        Simulator->Register_sim_event(Simulator->Time() + (sim_time_type)random_time_interval_generator->Exponential((double)Average_inter_arrival_time_nano_sec), this, 0, 0);
+        sim->Register_sim_event(sim->Time() + (sim_time_type)random_time_interval_generator->Exponential((double)Average_inter_arrival_time_nano_sec), this, 0, 0);
       }
     }
     else for (uint32_t i = 0; i < average_number_of_enqueued_requests; i++)

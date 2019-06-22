@@ -13,7 +13,7 @@
 #include "../ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.h"
 #include "../ssd/tsu/TSU_OutofOrder.h"
 #include "../ssd/ONFI_Channel_NVDDR2.h"
-#include "../ssd/NVM_PHY_ONFI_NVDDR2.h"
+#include "../ssd/phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../utils/Logical_Address_Partitioning_Unit.h"
 
 SSD_Device * SSD_Device::my_instance;//Used in static functions

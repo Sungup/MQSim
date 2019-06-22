@@ -280,10 +280,12 @@ Data_Cache_Manager_Flash_Advanced::write_to_destage_buffer(User_Request& user_re
   if (!writeback_transactions.empty())//If any writeback should be performed, then issue flash write transactions
     static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(writeback_transactions);
 
-  if (Simulator->Time() > next_bloom_filter_reset_milestone)//Reset control data structures used for hot/cold separation
+  auto sim_time = Simulator->Time();
+
+  if (sim_time > next_bloom_filter_reset_milestone)//Reset control data structures used for hot/cold separation
   {
     bloom_filter[user_request.Stream_id].clear();
-    next_bloom_filter_reset_milestone = Simulator->Time() + bloom_filter_reset_step;
+    next_bloom_filter_reset_milestone = sim_time + bloom_filter_reset_step;
   }
 }
 
@@ -299,9 +301,10 @@ Data_Cache_Manager_Flash_Advanced::service_dram_access_request(Memory_Transfer_I
   }
   else
   {
-    Simulator->Register_sim_event(Simulator->Time() + estimate_dram_access_time(request_info.Size_in_bytes, dram_row_size,
-                                                                                dram_busrt_size, dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
-                                  this, &request_info, static_cast<int>(request_info.next_event_type));
+    auto sim = Simulator;
+    sim->Register_sim_event(sim->Time() + estimate_dram_access_time(request_info.Size_in_bytes, dram_row_size,
+                                                                    dram_busrt_size, dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
+                            this, &request_info, static_cast<int>(request_info.next_event_type));
     memory_channel_is_busy = true;
     dram_execution_list_turn = request_info.Stream_id;
   }
@@ -481,12 +484,6 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
 }
 
 void
-Data_Cache_Manager_Flash_Advanced::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction)
-{
-  ((Data_Cache_Manager_Flash_Advanced*)(_my_instance))->__handle_transaction_service(transaction);
-}
-
-void
 Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::Sim_Event* ev)
 {
   auto eventType = (Data_Cache_Simulation_Event_Type)ev->Type;
@@ -510,15 +507,18 @@ Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::Sim_Even
   delete transfer_info;
 
   memory_channel_is_busy = false;
+
+  auto sim = Simulator;
+
   if (shared_dram_request_queue)
   {
     if (!dram_execution_queue[0].empty())
     {
       Memory_Transfer_Info* info = dram_execution_queue[0].front();
       dram_execution_queue[0].pop();
-      Simulator->Register_sim_event(Simulator->Time() + estimate_dram_access_time(info->Size_in_bytes, dram_row_size, dram_busrt_size,
-                                                                                  dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
-                                    this, info, static_cast<int>(info->next_event_type));
+      sim->Register_sim_event(sim->Time() + estimate_dram_access_time(info->Size_in_bytes, dram_row_size, dram_busrt_size,
+                                                                      dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
+                              this, info, static_cast<int>(info->next_event_type));
       memory_channel_is_busy = true;
     }
   }
@@ -532,9 +532,9 @@ Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::Sim_Even
       {
         Memory_Transfer_Info* info = dram_execution_queue[dram_execution_list_turn].front();
         dram_execution_queue[dram_execution_list_turn].pop();
-        Simulator->Register_sim_event(Simulator->Time() + estimate_dram_access_time(info->Size_in_bytes, dram_row_size, dram_busrt_size,
-                                                                                    dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
-                                      this, info, static_cast<int>(info->next_event_type));
+        sim->Register_sim_event(sim->Time() + estimate_dram_access_time(info->Size_in_bytes, dram_row_size, dram_busrt_size,
+                                                                        dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
+                                this, info, static_cast<int>(info->next_event_type));
         memory_channel_is_busy = true;
         break;
       }
@@ -546,9 +546,6 @@ void
 Data_Cache_Manager_Flash_Advanced::Setup_triggers()
 {
   Data_Cache_Manager_Base::Setup_triggers();
-
-  // TODO Prepare removing _myInstance
-  flash_controller->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
 
   flash_controller->connect_to_transaction_service_signal(__user_transaction_handler);
 }

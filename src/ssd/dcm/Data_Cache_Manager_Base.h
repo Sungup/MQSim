@@ -6,7 +6,7 @@
 #include "../interface/Host_Interface_Base.h"
 #include "../request/User_Request.h"
 #include "../NVM_Firmware.h"
-#include "../NVM_PHY_ONFI.h"
+#include "../phy/NVM_PHY_ONFI.h"
 #include "../../utils/Workload_Statistics.h"
 
 #include "DataCacheDefs.h"
@@ -22,10 +22,6 @@ namespace SSD_Components
     friend class Data_Cache_Manager_Flash_Advanced;
     friend class Data_Cache_Manager_Flash_Simple;
 
-  public:
-    typedef void(*UserRequestServicedSignalHanderType) (User_Request*);
-    typedef void(*MemoryTransactionServicedSignalHanderType) (NVM_Transaction*);
-
   private:
     UserRequestServiceHandler<Data_Cache_Manager_Base> __user_request_handler;
 
@@ -35,7 +31,6 @@ namespace SSD_Components
     void __handle_user_request(User_Request* request);
 
   protected:
-    static Data_Cache_Manager_Base* _my_instance;
     static Caching_Mode* caching_mode_per_input_stream;
 
     Host_Interface_Base* host_interface;
@@ -57,13 +52,9 @@ namespace SSD_Components
     Cache_Sharing_Mode sharing_mode;
     uint32_t stream_count;
 
-    std::vector<UserRequestServicedSignalHanderType> connected_user_request_serviced_signal_handlers;
-    std::vector<MemoryTransactionServicedSignalHanderType> connected_user_memory_transaction_serviced_signal_handlers;
-
     void broadcast_user_request_serviced_signal(User_Request* user_request);
     void broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction);
 
-    static void handle_user_request_arrived_signal(User_Request* user_request);
     virtual void process_new_user_request(User_Request* user_request) = 0;
 
   public:
@@ -83,9 +74,6 @@ namespace SSD_Components
     virtual ~Data_Cache_Manager_Base();
 
     void Setup_triggers();
-
-    void Connect_to_user_request_serviced_signal(UserRequestServicedSignalHanderType);
-    void Connect_to_user_memory_transaction_serviced_signal(MemoryTransactionServicedSignalHanderType);
 
     void connect_to_user_request_service_handler(UserRequestServiceHandlerBase& handler);
     void connect_to_user_transaction_service_handler(NvmTransactionHandlerBase& handler);

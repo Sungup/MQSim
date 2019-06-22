@@ -16,10 +16,72 @@ namespace NVM
 {
   namespace FlashMemory
   {
+    class Flash_Chip;
+
+    class ChipReadySignalHandlerBase {
+    public:
+      virtual ~ChipReadySignalHandlerBase() = default;
+      virtual void operator()(Flash_Chip& chip, Flash_Command& command) = 0;
+    };
+
+    template <typename T>
+    class ChipReadySignalHandler : public ChipReadySignalHandlerBase {
+      typedef void(T::*Handler)(Flash_Chip& chip, Flash_Command& command);
+
+    private:
+      T* __callee;
+      Handler __handler;
+
+    public:
+      ChipReadySignalHandler(T* callee, Handler handler)
+        : ChipReadySignalHandlerBase(),
+          __callee(callee),
+          __handler(handler)
+      { }
+
+      ~ChipReadySignalHandler() final = default;
+
+      void operator()(Flash_Chip& chip, Flash_Command& command) final
+      { (__callee->*__handler)(chip, command); }
+    };
+
+    typedef std::vector<ChipReadySignalHandlerBase*> ChipReadySignalHandlerList;
+
     class Flash_Chip : public NVM_Chip
     {
       enum class Internal_Status { IDLE, BUSY };
       enum class Chip_Sim_Event_Type { COMMAND_FINISHED };
+      typedef void(*ChipReadySignalHandlerType) (Flash_Chip* targetChip, Flash_Command* command);
+
+    public:
+      flash_channel_ID_type ChannelID;
+      flash_chip_ID_type ChipID;         //Flashchip position in its related channel
+
+    private:
+      Flash_Technology_Type flash_technology;
+      Internal_Status status;
+      uint32_t idleDieNo;
+      Die** Dies;
+      uint32_t die_no;
+      uint32_t plane_no_in_die;                  //indicate how many planes in a die
+      uint32_t block_no_in_plane;                //indicate how many blocks in a plane
+      uint32_t page_no_per_block;                 //indicate how many pages in a block
+      sim_time_type *_readLatency, *_programLatency, _eraseLatency;
+      sim_time_type _suspendProgramLatency, _suspendEraseLatency;
+      sim_time_type _RBSignalDelayRead, _RBSignalDelayWrite, _RBSignalDelayErase;
+      sim_time_type lastTransferStart;
+      sim_time_type executionStartTime, expectedFinishTime;
+
+      unsigned long STAT_readCount, STAT_progamCount, STAT_eraseCount;
+      unsigned long STAT_totalSuspensionCount, STAT_totalResumeCount;
+      sim_time_type STAT_totalExecTime, STAT_totalXferTime, STAT_totalOverlappedXferExecTime;
+
+      ChipReadySignalHandlerList __connected_ready_handlers;
+
+      void start_command_execution(Flash_Command* command);
+      void finish_command_execution(Flash_Command* command);
+      void broadcast_ready_signal(Flash_Command* command);
+
     public:
       Flash_Chip(const sim_object_id_type&, flash_channel_ID_type channelID, flash_chip_ID_type localChipID,
         Flash_Technology_Type flash_technology, 
@@ -28,8 +90,6 @@ namespace NVM
         sim_time_type suspendProgramLatency, sim_time_type suspendEraseLatency,
         sim_time_type commProtocolDelayRead = 20, sim_time_type commProtocolDelayWrite = 0, sim_time_type commProtocolDelayErase = 0);
       ~Flash_Chip();
-      flash_channel_ID_type ChannelID;
-      flash_chip_ID_type ChipID;         //Flashchip position in its related channel
 
       void StartCMDXfer()
       {
@@ -45,10 +105,14 @@ namespace NVM
       }
       void EndCMDXfer(Flash_Command* command)//End transferring write data to the Flash chip
       {
-        this->STAT_totalXferTime += (Simulator->Time() - this->lastTransferStart);
+        auto sim = Simulator;
+
+        this->STAT_totalXferTime += (sim->Time() - this->lastTransferStart);
+
         if (this->idleDieNo != die_no)
-          STAT_totalOverlappedXferExecTime += (Simulator->Time() - lastTransferStart);
-        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (Simulator->Time() - lastTransferStart);
+          STAT_totalOverlappedXferExecTime += (sim->Time() - lastTransferStart);
+
+        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (sim->Time() - lastTransferStart);
 
         start_command_execution(command);
 
@@ -56,10 +120,12 @@ namespace NVM
       }
       void EndCMDDataInXfer(Flash_Command* command)//End transferring write data of a group of multi-plane transactions to the Flash chip
       {
-        this->STAT_totalXferTime += (Simulator->Time() - this->lastTransferStart);
+        auto sim = Simulator;
+
+        this->STAT_totalXferTime += (sim->Time() - this->lastTransferStart);
         if (this->idleDieNo != die_no)
-          STAT_totalOverlappedXferExecTime += (Simulator->Time() - lastTransferStart);
-        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (Simulator->Time() - lastTransferStart);
+          STAT_totalOverlappedXferExecTime += (sim->Time() - lastTransferStart);
+        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (sim->Time() - lastTransferStart);
 
         start_command_execution(command);
 
@@ -67,10 +133,14 @@ namespace NVM
       }
       void EndDataOutXfer(Flash_Command* command)
       {
-        this->STAT_totalXferTime += (Simulator->Time() - this->lastTransferStart);
+        auto sim = Simulator;
+
+        this->STAT_totalXferTime += (sim->Time() - this->lastTransferStart);
+
         if (this->idleDieNo != die_no)
-          STAT_totalOverlappedXferExecTime += (Simulator->Time() - lastTransferStart);
-        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (Simulator->Time() - lastTransferStart);
+          STAT_totalOverlappedXferExecTime += (sim->Time() - lastTransferStart);
+
+        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (sim->Time() - lastTransferStart);
 
         this->lastTransferStart = INVALID_TIME;
       }
@@ -79,7 +149,6 @@ namespace NVM
       void Validate_simulation_config();
       void Setup_triggers();
       void Execute_simulator_event(MQSimEngine::Sim_Event*);
-      typedef void(*ChipReadySignalHandlerType) (Flash_Chip* targetChip, Flash_Command* command);
       void Connect_to_chip_ready_signal(ChipReadySignalHandlerType);
       sim_time_type Get_command_execution_latency(command_code_type CMDCode, flash_page_ID_type pageID)
       {
@@ -118,31 +187,16 @@ namespace NVM
       sim_time_type GetSuspendProgramTime();
       sim_time_type GetSuspendEraseTime();
       void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
-      LPA_type Get_metadata(flash_die_ID_type die_id, flash_plane_ID_type plane_id, flash_block_ID_type block_id, flash_page_ID_type page_id);//A simplification to decrease the complexity of GC execution! The GC unit may need to know the metadata of a page to decide if a page is valid or invalid. 
-    private:
-      Flash_Technology_Type flash_technology;
-      Internal_Status status;
-      uint32_t idleDieNo;
-      Die** Dies;
-      uint32_t die_no;
-      uint32_t plane_no_in_die;                  //indicate how many planes in a die
-      uint32_t block_no_in_plane;                //indicate how many blocks in a plane
-      uint32_t page_no_per_block;                 //indicate how many pages in a block
-      sim_time_type *_readLatency, *_programLatency, _eraseLatency;
-      sim_time_type _suspendProgramLatency, _suspendEraseLatency;
-      sim_time_type _RBSignalDelayRead, _RBSignalDelayWrite, _RBSignalDelayErase;
-      sim_time_type lastTransferStart;
-      sim_time_type executionStartTime, expectedFinishTime;
+      LPA_type Get_metadata(flash_die_ID_type die_id, flash_plane_ID_type plane_id, flash_block_ID_type block_id, flash_page_ID_type page_id);//A simplification to decrease the complexity of GC execution! The GC unit may need to know the metadata of a page to decide if a page is valid or invalid.
 
-      unsigned long STAT_readCount, STAT_progamCount, STAT_eraseCount;
-      unsigned long STAT_totalSuspensionCount, STAT_totalResumeCount;
-      sim_time_type STAT_totalExecTime, STAT_totalXferTime, STAT_totalOverlappedXferExecTime;
-
-      void start_command_execution(Flash_Command* command);
-      void finish_command_execution(Flash_Command* command);
-      void broadcast_ready_signal(Flash_Command* command);
-      std::vector<ChipReadySignalHandlerType> connectedReadyHandlers;
+      void connect_to_chip_ready_signal(ChipReadySignalHandlerBase& handler);
     };
+
+    force_inline void
+    Flash_Chip::connect_to_chip_ready_signal(ChipReadySignalHandlerBase& handler)
+    {
+      __connected_ready_handlers.emplace_back(&handler);
+    }
   }
 }
 

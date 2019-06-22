@@ -139,8 +139,10 @@ namespace Host_Components
 
   void IO_Flow_Base::SATA_consume_io_request(Host_IO_Request* request)
   {
-    sim_time_type device_response_time = Simulator->Time() - request->Enqueue_time;
-    sim_time_type request_delay = Simulator->Time() - request->Arrival_time;
+    auto sim = Simulator;
+
+    sim_time_type device_response_time = sim->Time() - request->Enqueue_time;
+    sim_time_type request_delay = sim->Time() - request->Arrival_time;
     STAT_serviced_request_count++;
     STAT_serviced_request_count_short_term++;
 
@@ -194,7 +196,7 @@ namespace Host_Components
     //Announce simulation progress
     if (stop_time > 0)
     {
-      progress = int(Simulator->Time() / (double)stop_time * 100);
+      progress = int(sim->Time() / (double)stop_time * 100);
     }
     else
     {
@@ -216,23 +218,24 @@ namespace Host_Components
         next_progress_step += 5;
     }
 
-    if (Simulator->Time() > next_logging_milestone)
+    if (sim->Time() > next_logging_milestone)
     {
-      log_file << Simulator->Time() / SIM_TIME_TO_MICROSECONDS_COEFF << "\t" << Get_device_response_time_short_term() << "\t" << Get_end_to_end_request_delay_short_term() << std::endl;
+      log_file << sim->Time() / SIM_TIME_TO_MICROSECONDS_COEFF << "\t" << Get_device_response_time_short_term() << "\t" << Get_end_to_end_request_delay_short_term() << std::endl;
       STAT_sum_device_response_time_short_term = 0;
       STAT_sum_request_delay_short_term = 0;
       STAT_serviced_request_count_short_term = 0;
-      next_logging_milestone = Simulator->Time() + logging_period;
+      next_logging_milestone = sim->Time() + logging_period;
     }
   }
   void IO_Flow_Base::NVMe_consume_io_request(Completion_Queue_Entry* cqe)
   {
+    auto sim = Simulator;
     //Find the request and update statistics
     Host_IO_Request* request = nvme_software_request_queue[cqe->Command_Identifier];
     nvme_software_request_queue.erase(cqe->Command_Identifier);
     available_command_ids.insert(cqe->Command_Identifier);
-    sim_time_type device_response_time = Simulator->Time() - request->Enqueue_time;
-    sim_time_type request_delay = Simulator->Time() - request->Arrival_time;
+    sim_time_type device_response_time = sim->Time() - request->Enqueue_time;
+    sim_time_type request_delay = sim->Time() - request->Arrival_time;
     STAT_serviced_request_count++;
     STAT_serviced_request_count_short_term++;
 
@@ -303,7 +306,7 @@ namespace Host_Components
           request_queue_in_memory[nvme_queue_pair.Submission_queue_tail] = new_req;
           NVME_UPDATE_SQ_TAIL(nvme_queue_pair);
         }
-        new_req->Enqueue_time = Simulator->Time();
+        new_req->Enqueue_time = sim->Time();
         pcie_root_complex->Write_to_device(nvme_queue_pair.Submission_tail_register_address_on_device, nvme_queue_pair.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
       }
       else break;
@@ -313,7 +316,7 @@ namespace Host_Components
     //Announce simulation progress
     if (stop_time > 0)
     {
-      progress = int(Simulator->Time() / (double)stop_time * 100);
+      progress = int(sim->Time() / (double)stop_time * 100);
     }
     else
     {
@@ -335,13 +338,13 @@ namespace Host_Components
       next_progress_step += 5;
     }
 
-    if (Simulator->Time() > next_logging_milestone)
+    if (sim->Time() > next_logging_milestone)
     {
-      log_file << Simulator->Time() / SIM_TIME_TO_MICROSECONDS_COEFF << "\t" << Get_device_response_time_short_term() << "\t" << Get_end_to_end_request_delay_short_term() << std::endl;
+      log_file << sim->Time() / SIM_TIME_TO_MICROSECONDS_COEFF << "\t" << Get_device_response_time_short_term() << "\t" << Get_end_to_end_request_delay_short_term() << std::endl;
       STAT_sum_device_response_time_short_term = 0;
       STAT_sum_request_delay_short_term = 0;
       STAT_serviced_request_count_short_term = 0;
-      next_logging_milestone = Simulator->Time() + logging_period;
+      next_logging_milestone = sim->Time() + logging_period;
     }
   }
   Submission_Queue_Entry* IO_Flow_Base::NVMe_read_sqe(uint64_t address)
@@ -469,6 +472,8 @@ namespace Host_Components
   }
   void IO_Flow_Base::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
   {
+    auto sim = Simulator;
+
     std::string tmp = name_prefix + ".IO_Flow";
     xmlwriter.Write_open_tag(tmp);
 
@@ -490,15 +495,15 @@ namespace Host_Components
     xmlwriter.Write_attribute_string(attr, val);
 
     attr = "IOPS";
-    val = std::to_string((double)STAT_generated_request_count / (Simulator->Time() / SIM_TIME_TO_SECONDS_COEFF));
+    val = std::to_string((double)STAT_generated_request_count / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
     xmlwriter.Write_attribute_string(attr, val);
 
     attr = "IOPS_Read";
-    val = std::to_string((double)STAT_generated_read_request_count / (Simulator->Time() / SIM_TIME_TO_SECONDS_COEFF));
+    val = std::to_string((double)STAT_generated_read_request_count / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
     xmlwriter.Write_attribute_string(attr, val);
 
     attr = "IOPS_Write";
-    val = std::to_string((double)STAT_generated_write_request_count / (Simulator->Time() / SIM_TIME_TO_SECONDS_COEFF));
+    val = std::to_string((double)STAT_generated_write_request_count / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
     xmlwriter.Write_attribute_string(attr, val);
 
     attr = "Bytes_Transferred";
@@ -514,15 +519,15 @@ namespace Host_Components
     xmlwriter.Write_attribute_string(attr, val);
 
     attr = "Bandwidth";
-    val = std::to_string((double)STAT_transferred_bytes_total / (Simulator->Time() / SIM_TIME_TO_SECONDS_COEFF));
+    val = std::to_string((double)STAT_transferred_bytes_total / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
     xmlwriter.Write_attribute_string(attr, val);
 
     attr = "Bandwidth_Read";
-    val = std::to_string((double)STAT_transferred_bytes_read / (Simulator->Time() / SIM_TIME_TO_SECONDS_COEFF));
+    val = std::to_string((double)STAT_transferred_bytes_read / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
     xmlwriter.Write_attribute_string(attr, val);
 
     attr = "Bandwidth_Write";
-    val = std::to_string((double)STAT_transferred_bytes_write / (Simulator->Time() / SIM_TIME_TO_SECONDS_COEFF));
+    val = std::to_string((double)STAT_transferred_bytes_write / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
     xmlwriter.Write_attribute_string(attr, val);
 
 

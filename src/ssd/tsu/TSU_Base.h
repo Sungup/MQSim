@@ -8,7 +8,7 @@
 #include "../../nvm_chip/flash_memory/Flash_Chip.h"
 #include "../../sim/Sim_Reporter.h"
 #include "../FTL.h"
-#include "../NVM_PHY_ONFI_NVDDR2.h"
+#include "../phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../Flash_Transaction_Queue.h"
 
 #include "../phy/PhyHandler.h"
@@ -29,8 +29,7 @@ namespace SSD_Components
     virtual ~TSU_Base();
     void Setup_triggers();
 
-
-    /*When an MQSim needs to send a set of transactions for execution, the following 
+    /*When an MQSim needs to send a set of transactions for execution, the following
     * three funcitons should be invoked in this order:
     * Prepare_for_transaction_submit()
     * Submit_transaction(transaction)
@@ -85,18 +84,12 @@ namespace SSD_Components
   private:
     flash_chip_ID_type* __channel_rr_turn;//Used for round-robin service of the chips in channels
 
-    static TSU_Base* _my_instance;
-
   protected:
     std::list<NVM_Transaction_Flash*> transaction_receive_slots;//Stores the transactions that are received for sheduling
     std::list<NVM_Transaction_Flash*> transaction_dispatch_slots;//Used to submit transactions to the channel controller
     virtual bool service_read_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
     virtual bool service_write_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
     virtual bool service_erase_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
-
-    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
-    static void handle_channel_idle_signal(flash_channel_ID_type);
-    static void handle_chip_idle_signal(NVM::FlashMemory::Flash_Chip* chip);
 
     int opened_scheduling_reqs;
 

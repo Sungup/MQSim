@@ -44,7 +44,6 @@ namespace SSD_Components
     void service_dram_access_request(Memory_Transfer_Info& request_info);
 
     void __handle_transaction_service(NVM_Transaction_Flash* nvm_transaction);
-    static void handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction);
 
   public:
     Data_Cache_Manager_Flash_Simple(const sim_object_id_type& id,

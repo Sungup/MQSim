@@ -117,18 +117,6 @@ namespace SSD_Components
     lru_list.push_front(std::pair<LPA_type, Data_Cache_Slot_Type*>(key, cache_slot));
     cache_slot->lru_list_ptr = lru_list.begin();
     slots[key] = cache_slot;
-    /*if (slots.size() < 32768)
-    {
-      if (slots.size() % 100 == 0)
-        PRINT_MESSAGE("Insert, size is: " << slots.size());
-    }
-    else
-    {
-      static int i = 0;
-      i++;
-      if (i % 100 == 0)
-        PRINT_MESSAGE("Insert, size is: " << slots.size());
-    }*/
   }
   void Data_Cache_Flash::Update_data(const stream_id_type stream_id, const LPA_type lpn, const data_cache_content_type content,
     const data_timestamp_type timestamp, const page_status_type state_bitmap_of_write_sectors)

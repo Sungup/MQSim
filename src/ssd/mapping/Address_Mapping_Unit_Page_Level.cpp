@@ -278,8 +278,6 @@ inline bool AddressMappingDomain::Mapping_entry_accessible(const bool ideal_mapp
 // =====================================================
 // Address Mapping Unit Page Level class implementations
 // =====================================================
-Address_Mapping_Unit_Page_Level* Address_Mapping_Unit_Page_Level::_my_instance = nullptr;
-
 Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_object_id_type& id,
                                                                  FTL* ftl,
                                                                  NVM_PHY_ONFI* flash_controller,
@@ -322,8 +320,6 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                               fold_large_addresses),
     __transaction_service_handler(this, &Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal)
 {
-  // TODO Ready to remove _myInstance
-  _my_instance = this;
   domains = new AddressMappingDomain*[no_of_input_streams];
 
   Write_transactions_for_overfull_planes = new std::set<NVM_Transaction_Flash_WR*>***[channel_count];
@@ -923,12 +919,6 @@ Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NVM_Transac
   }
 }
 
-void
-Address_Mapping_Unit_Page_Level::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash* transaction)
-{
-  _my_instance->__handle_transaction_service_signal(transaction);
-}
-
 // --------------------------
 // Over-ridden from SimObject
 // --------------------------
@@ -942,9 +932,6 @@ void
 Address_Mapping_Unit_Page_Level::Setup_triggers()
 {
   Sim_Object::Setup_triggers();
-
-  // TODO Ready to remove _myInstance
-  flash_controller->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
 
   flash_controller->connect_to_transaction_service_signal(__transaction_service_handler);
 }
@@ -1421,7 +1408,7 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_lpa(stream_id_type
   auto read_tr = domains[stream_id]->Read_transactions_behind_LPA_barrier.find(lpa);
   while (read_tr != domains[stream_id]->Read_transactions_behind_LPA_barrier.end())
   {
-    handle_transaction_serviced_signal_from_PHY((*read_tr).second);
+    __handle_transaction_service_signal((*read_tr).second);
     delete (*read_tr).second;
     domains[stream_id]->Read_transactions_behind_LPA_barrier.erase(read_tr);
     read_tr = domains[stream_id]->Read_transactions_behind_LPA_barrier.find(lpa);
@@ -1431,7 +1418,7 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_lpa(stream_id_type
   auto write_tr = domains[stream_id]->Write_transactions_behind_LPA_barrier.find(lpa);
   while (write_tr != domains[stream_id]->Write_transactions_behind_LPA_barrier.end())
   {
-    handle_transaction_serviced_signal_from_PHY((*write_tr).second);
+    __handle_transaction_service_signal((*write_tr).second);
     delete (*write_tr).second;
     domains[stream_id]->Write_transactions_behind_LPA_barrier.erase(write_tr);
     write_tr = domains[stream_id]->Write_transactions_behind_LPA_barrier.find(lpa);
@@ -1461,7 +1448,8 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_mvpn(stream_id_typ
     Stats::Total_flash_reads_for_mapping++;
     Stats::Total_flash_reads_for_mapping_per_stream[stream_id]++;
 
-    handle_transaction_serviced_signal_from_PHY(readTR);
+    __handle_transaction_service_signal(readTR);
+
     delete readTR;
   }
 
@@ -1501,7 +1489,7 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_mvpn(stream_id_typ
     Stats::Total_flash_reads_for_mapping_per_stream[stream_id]++;
     Stats::Total_flash_writes_for_mapping_per_stream[stream_id]++;
 
-    handle_transaction_serviced_signal_from_PHY(writeTR);
+    __handle_transaction_service_signal(writeTR);
     delete writeTR;
   }
 }

@@ -92,8 +92,6 @@ set(MQSIM_SSD_SOURCES
     ssd/mapping/AllocationScheme.h
     ssd/phy/PhyHandler.h
     ssd/tsu/TSU_Defs.h
-    ssd/Controller.cpp
-    ssd/Controller.h
     ssd/dcm/Data_Cache_Flash.cpp
     ssd/dcm/Data_Cache_Flash.h
     ssd/dcm/Data_Cache_Manager_Base.cpp
@@ -106,7 +104,6 @@ set(MQSIM_SSD_SOURCES
     ssd/Flash_Block_Manager.h
     ssd/Flash_Block_Manager_Base.cpp
     ssd/Flash_Block_Manager_Base.h
-    ssd/Flash_Transaction_Queue.cpp
     ssd/Flash_Transaction_Queue.h
     ssd/FTL.cpp
     ssd/FTL.h
@@ -124,12 +121,12 @@ set(MQSIM_SSD_SOURCES
     ssd/NVM_Channel_Base.h
     ssd/NVM_Firmware.cpp
     ssd/NVM_Firmware.h
-    ssd/NVM_PHY_Base.cpp
-    ssd/NVM_PHY_Base.h
-    ssd/NVM_PHY_ONFI.cpp
-    ssd/NVM_PHY_ONFI.h
-    ssd/NVM_PHY_ONFI_NVDDR2.cpp
-    ssd/NVM_PHY_ONFI_NVDDR2.h
+    ssd/phy/NVM_PHY_Base.cpp
+    ssd/phy/NVM_PHY_Base.h
+    ssd/phy/NVM_PHY_ONFI.cpp
+    ssd/phy/NVM_PHY_ONFI.h
+    ssd/phy/NVM_PHY_ONFI_NVDDR2.cpp
+    ssd/phy/NVM_PHY_ONFI_NVDDR2.h
     ssd/NVM_Transaction.h
     ssd/NVM_Transaction_Flash.cpp
     ssd/NVM_Transaction_Flash.h

@@ -40,6 +40,7 @@ namespace Host_Components
 
   void SATA_HBA::Execute_simulator_event(MQSimEngine::Sim_Event* event)
   {
+    auto sim = Simulator;
     switch ((HBA_Sim_Events)event->Type)
     {
     case HBA_Sim_Events::CONSUME_IO_REQUEST:
@@ -72,7 +73,7 @@ namespace Host_Components
             request_queue_in_memory[sata_ncq.Submission_queue_tail] = new_req;
             SATA_UPDATE_SQ_TAIL(sata_ncq);
           }
-          new_req->Enqueue_time = Simulator->Time();
+          new_req->Enqueue_time = sim->Time();
           pcie_root_complex->Write_to_device(sata_ncq.Submission_tail_register_address_on_device, sata_ncq.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
         }
         else break;
@@ -80,7 +81,7 @@ namespace Host_Components
         delete cqe;
 
         if(consume_requests.size() > 0)
-          Simulator->Register_sim_event(Simulator->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
+          sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
       break;
     }
     case HBA_Sim_Events::SUBMIT_IO_REQUEST:
@@ -101,12 +102,12 @@ namespace Host_Components
           request_queue_in_memory[sata_ncq.Submission_queue_tail] = request;
           SATA_UPDATE_SQ_TAIL(sata_ncq);
         }
-        request->Enqueue_time = Simulator->Time();
+        request->Enqueue_time = sim->Time();
         pcie_root_complex->Write_to_device(sata_ncq.Submission_tail_register_address_on_device, sata_ncq.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
       }
 
       if (host_requests.size() > 0)
-        Simulator->Register_sim_event(Simulator->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
+        sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
 
       break;
     }
@@ -116,14 +117,18 @@ namespace Host_Components
   void SATA_HBA::Submit_io_request(Host_IO_Request* request)
   {
     host_requests.push(request);
-    if (host_requests.size() == 1)
-      Simulator->Register_sim_event(Simulator->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
+    if (host_requests.size() == 1) {
+      auto sim = Simulator;
+      sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
+    }
   }
   void SATA_HBA::SATA_consume_io_request(Completion_Queue_Entry* cqe)
   {
     consume_requests.push(cqe);
-    if (consume_requests.size() == 1)
-      Simulator->Register_sim_event(Simulator->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
+    if (consume_requests.size() == 1) {
+      auto sim = Simulator;
+      sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
+    }
   }
   Submission_Queue_Entry* SATA_HBA::Read_ncq_entry(uint64_t address)
   {

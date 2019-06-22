@@ -3,8 +3,6 @@
 
 using namespace SSD_Components;
 
-GC_and_WL_Unit_Base* GC_and_WL_Unit_Base::_my_instance;
-
 GC_and_WL_Unit_Base::GC_and_WL_Unit_Base(const sim_object_id_type& id,
                                          Address_Mapping_Unit_Base* address_mapping_unit,
                                          Flash_Block_Manager_Base* block_manager,
@@ -53,8 +51,6 @@ GC_and_WL_Unit_Base::GC_and_WL_Unit_Base(const sim_object_id_type& id,
     static_wearleveling_threshold(static_wearleveling_threshold),
     __transaction_service_handler(this, &GC_and_WL_Unit_Base::__handle_transaction_service)
 {
-  // TODO Ready to remove _myInstance;
-  _my_instance = this;
   block_pool_gc_threshold = (uint32_t)(gc_threshold * (double)block_no_per_plane);
   if (block_pool_gc_threshold < 1)
     block_pool_gc_threshold = 1;
@@ -298,18 +294,9 @@ GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash* transac
 }
 
 void
-GC_and_WL_Unit_Base::handle_transaction_serviced_signal_from_PHY(NVM_Transaction_Flash *transaction)
-{
-  _my_instance->__handle_transaction_service(transaction);
-}
-
-void
 GC_and_WL_Unit_Base::Setup_triggers()
 {
   Sim_Object::Setup_triggers();
-
-  // TODO Ready to remove _myInstance;
-  flash_controller->ConnectToTransactionServicedSignal(handle_transaction_serviced_signal_from_PHY);
 
   flash_controller->connect_to_transaction_service_signal(__transaction_service_handler);
 }
@@ -319,7 +306,7 @@ GC_and_WL_Unit_Base::Stop_servicing_writes(const NVM::FlashMemory::Physical_Page
 {
 #if 0
   // Unused variable
-  PlaneBookKeepingType* pbke = &(_my_instance->block_manager->plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID]);
+  PlaneBookKeepingType* pbke = &(block_manager->plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID]);
 #endif
 
   return block_manager->Get_pool_size(plane_address) < max_ongoing_gc_reqs_per_plane;

@@ -118,6 +118,8 @@ namespace Host_Components
 
     if (STAT_generated_request_count < total_requests_to_be_generated)
     {
+      auto sim = Simulator;
+
       std::string trace_line;
       if (std::getline(trace_file, trace_line))
       {
@@ -130,7 +132,7 @@ namespace Host_Components
         trace_file.close();
         trace_file.open(trace_file_path);
         replay_counter++;
-        time_offset = Simulator->Time();
+        time_offset = sim->Time();
         std::getline(trace_file, trace_line);
         Utils::Helper_Functions::Remove_cr(trace_line);
         current_trace_line.clear();
@@ -138,7 +140,7 @@ namespace Host_Components
         PRINT_MESSAGE("* Replay round "<< replay_counter << "of "<< total_replay_no << " started  for" << ID())
       }
       char* pEnd;
-      Simulator->Register_sim_event(time_offset + std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
+      sim->Register_sim_event(time_offset + std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
     }
   }
 
