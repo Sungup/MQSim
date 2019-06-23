@@ -103,11 +103,13 @@ ChipBookKeepingEntry::PrepareResume() {
 // ------------------------------------
 NVM_PHY_ONFI_NVDDR2::NVM_PHY_ONFI_NVDDR2(const sim_object_id_type& id,
                                          ONFI_Channel_NVDDR2** channels,
+                                         Stats& stats,
                                          uint32_t ChannelCount,
                                          uint32_t chip_no_per_channel,
                                          uint32_t DieNoPerChip,
                                          uint32_t PlaneNoPerDie)
   : NVM_PHY_ONFI(id,
+                 stats,
                  ChannelCount,
                  chip_no_per_channel,
                  DieNoPerChip,
@@ -310,11 +312,11 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
       switch (dieBKE->__active_transactions.front()->Type)
       {
       case Transaction_Type::WRITE:
-        Stats::IssuedSuspendProgramCMD++;
+        __stats.IssuedSuspendProgramCMD++;
         suspendTime = target_channel->ProgramSuspendCommandTime + targetChip->GetSuspendProgramTime();
         break;
       case Transaction_Type::ERASE:
-        Stats::IssuedSuspendEraseCMD++;
+        __stats.IssuedSuspendEraseCMD++;
         suspendTime = target_channel->EraseSuspendCommandTime + targetChip->GetSuspendEraseTime();
         break;
       default:
@@ -346,13 +348,13 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
   {
   case Transaction_Type::READ:
     if (transaction_list.size() == 1) {
-      Stats::IssuedReadCMD++;
+      __stats.IssuedReadCMD++;
       dieBKE->__active_cmd->CommandCode = CMD_READ_PAGE;
       DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending read command to chip for LPA: " << transaction_list.front()->LPA)
     }
     else
     {
-      Stats::IssuedMultiplaneReadCMD++;
+      __stats.IssuedMultiplaneReadCMD++;
       dieBKE->__active_cmd->CommandCode = CMD_READ_PAGE_MULTIPLANE;
       DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending multi-plane read command to chip for LPA: " << transaction_list.front()->LPA)
     }
@@ -384,13 +386,13 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
     if (((NVM_Transaction_Flash_WR*)transaction_list.front())->ExecutionMode == WriteExecutionModeType::SIMPLE)
     {
       if (transaction_list.size() == 1) {
-        Stats::IssuedProgramCMD++;
+        __stats.IssuedProgramCMD++;
         dieBKE->__active_cmd->CommandCode = CMD_PROGRAM_PAGE;
         DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending program command to chip for LPA: " << transaction_list.front()->LPA)
       }
       else
       {
-        Stats::IssuedMultiplaneProgramCMD++;
+        __stats.IssuedMultiplaneProgramCMD++;
         dieBKE->__active_cmd->CommandCode = CMD_PROGRAM_PAGE_MULTIPLANE;
         DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending multi-plane program command to chip for LPA: " << transaction_list.front()->LPA)
       }
@@ -424,11 +426,11 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
     else//Copyback write for GC
     {
       if (transaction_list.size() == 1) {
-        Stats::IssuedCopybackReadCMD++;
+        __stats.IssuedCopybackReadCMD++;
         dieBKE->__active_cmd->CommandCode = CMD_READ_PAGE_COPYBACK;
       }
       else {
-        Stats::IssuedMultiplaneCopybackProgramCMD++;
+        __stats.IssuedMultiplaneCopybackProgramCMD++;
         dieBKE->__active_cmd->CommandCode = CMD_READ_PAGE_COPYBACK_MULTIPLANE;
       }
 
@@ -458,12 +460,12 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
   case Transaction_Type::ERASE:
     //DEBUG2("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending erase command to chip")
     if (transaction_list.size() == 1) {
-      Stats::IssuedEraseCMD++;
+      __stats.IssuedEraseCMD++;
       dieBKE->__active_cmd->CommandCode = CMD_ERASE_BLOCK;
     }
     else
     {
-      Stats::IssuedMultiplaneEraseCMD++;
+      __stats.IssuedMultiplaneEraseCMD++;
       dieBKE->__active_cmd->CommandCode = CMD_ERASE_BLOCK_MULTIPLANE;
     }
 
@@ -623,12 +625,12 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::Sim_Event* ev)
     ChipBookKeepingEntry* waitingChipBKE = &bookKeepingTable[channel_id][targetChip->ChipID];
     if (waitingBKE->__active_transactions.size() > 1)
     {
-      Stats::IssuedMultiplaneCopybackProgramCMD++;
+      __stats.IssuedMultiplaneCopybackProgramCMD++;
       waitingBKE->__active_cmd->CommandCode = CMD_PROGRAM_PAGE_COPYBACK_MULTIPLANE;
     }
     else
     {
-      Stats::IssuedCopybackProgramCMD++;
+      __stats.IssuedCopybackProgramCMD++;
       waitingBKE->__active_cmd->CommandCode = CMD_PROGRAM_PAGE_COPYBACK;
     }
     targetChip->StartCMDXfer();
@@ -730,12 +732,12 @@ NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip
     {
       if (dieBKE.__active_transactions.size() > 1)
       {
-        Stats::IssuedMultiplaneCopybackProgramCMD++;
+        __stats.IssuedMultiplaneCopybackProgramCMD++;
         dieBKE.__active_cmd->CommandCode = CMD_PROGRAM_PAGE_COPYBACK_MULTIPLANE;
       }
       else
       {
-        Stats::IssuedCopybackProgramCMD++;
+        __stats.IssuedCopybackProgramCMD++;
         dieBKE.__active_cmd->CommandCode = CMD_PROGRAM_PAGE_COPYBACK;
       }
 

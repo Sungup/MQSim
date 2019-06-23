@@ -28,10 +28,8 @@ namespace SSD_Components
     UserRequestServiceHandlerList __user_req_svc_handler;
     NvmTransactionHandlerList __user_mem_tr_svc_handler;
 
-    void __handle_user_request(User_Request* request);
-
   protected:
-    static Caching_Mode* caching_mode_per_input_stream;
+    std::vector<Caching_Mode> caching_mode_per_input_stream;
 
     Host_Interface_Base* host_interface;
     NVM_Firmware* nvm_firmware;
@@ -52,6 +50,10 @@ namespace SSD_Components
     Cache_Sharing_Mode sharing_mode;
     uint32_t stream_count;
 
+  private:
+    void __handle_user_request(User_Request* request);
+
+  protected:
     void broadcast_user_request_serviced_signal(User_Request* user_request);
     void broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction);
 
@@ -71,7 +73,7 @@ namespace SSD_Components
                             Cache_Sharing_Mode sharing_mode,
                             uint32_t stream_count);
 
-    virtual ~Data_Cache_Manager_Base();
+    virtual ~Data_Cache_Manager_Base() = default;
 
     void Setup_triggers();
 

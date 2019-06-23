@@ -4,11 +4,11 @@
 namespace SSD_Components
 {
   Address_Mapping_Unit_Hybrid::Address_Mapping_Unit_Hybrid(sim_object_id_type id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
-    bool ideal_mapping_table, uint32_t concurrent_streams_no,
+    Stats& stats, bool ideal_mapping_table, uint32_t concurrent_streams_no,
     uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_in_die,
     uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t sectors_per_page, uint32_t page_size_in_byte,
     double overprovisioning_ratio, CMT_Sharing_Mode sharing_mode, bool fold_out_of_range_addresses) :
-    Address_Mapping_Unit_Base(id, ftl, flash_controller, block_manager, ideal_mapping_table,
+    Address_Mapping_Unit_Base(id, ftl, flash_controller, block_manager, stats, ideal_mapping_table,
       concurrent_streams_no, channel_count, chip_no_per_channel, die_no_per_chip, plane_no_in_die,
       block_no_per_plane, page_no_per_block, sectors_per_page, page_size_in_byte, overprovisioning_ratio, sharing_mode, fold_out_of_range_addresses) {}
   void Address_Mapping_Unit_Hybrid::Setup_triggers() {}

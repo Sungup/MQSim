@@ -3,8 +3,6 @@
 
 using namespace SSD_Components;
 
-Caching_Mode* Data_Cache_Manager_Base::caching_mode_per_input_stream;
-
 Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
                                                  Host_Interface_Base* host_interface,
                                                  NVM_Firmware* nvm_firmware,
@@ -21,6 +19,8 @@ Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
     __user_request_handler(this, &Data_Cache_Manager_Base::__handle_user_request),
     __user_req_svc_handler(),
     __user_mem_tr_svc_handler(),
+    caching_mode_per_input_stream(caching_mode_per_istream,
+                                  caching_mode_per_istream + stream_count),
     host_interface(host_interface),
     nvm_firmware(nvm_firmware),
     dram_row_size(dram_row_size),
@@ -32,16 +32,7 @@ Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
     dram_tRP(dram_tRP),
     sharing_mode(sharing_mode),
     stream_count(stream_count)
-{
-  caching_mode_per_input_stream = new Caching_Mode[stream_count];
-  for (uint32_t i = 0; i < stream_count; i++)
-    caching_mode_per_input_stream[i] = caching_mode_per_istream[i];
-}
-
-Data_Cache_Manager_Base::~Data_Cache_Manager_Base()
-{
-  delete [] caching_mode_per_input_stream;
-}
+{ }
 
 void
 Data_Cache_Manager_Base::__handle_user_request(User_Request* request)

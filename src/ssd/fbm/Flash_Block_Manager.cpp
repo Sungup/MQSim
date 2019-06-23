@@ -1,19 +1,15 @@
 
-#include "../nvm_chip/flash_memory/Physical_Page_Address.h"
+#include "../../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "Flash_Block_Manager.h"
-#include "Stats.h"
+#include "../Stats.h"
 
 namespace SSD_Components
 {
-  Flash_Block_Manager::Flash_Block_Manager(GC_and_WL_Unit_Base* gc_and_wl_unit, uint32_t max_allowed_block_erase_count, uint32_t total_concurrent_streams_no,
+  Flash_Block_Manager::Flash_Block_Manager(GC_and_WL_Unit_Base* gc_and_wl_unit, Stats& stats, uint32_t max_allowed_block_erase_count, uint32_t total_concurrent_streams_no,
     uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
     uint32_t block_no_per_plane, uint32_t page_no_per_block)
-    : Flash_Block_Manager_Base(gc_and_wl_unit, max_allowed_block_erase_count, total_concurrent_streams_no, channel_count, chip_no_per_channel, die_no_per_chip,
+    : Flash_Block_Manager_Base(gc_and_wl_unit, stats, max_allowed_block_erase_count, total_concurrent_streams_no, channel_count, chip_no_per_channel, die_no_per_chip,
       plane_no_per_die, block_no_per_plane, page_no_per_block)
-  {
-  }
-
-  Flash_Block_Manager::~Flash_Block_Manager()
   {
   }
 
@@ -121,16 +117,16 @@ namespace SSD_Components
 
   void Flash_Block_Manager::Add_erased_block_to_pool(const NVM::FlashMemory::Physical_Page_Address& block_address)
   {
-    PlaneBookKeepingType *plane_record = &plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID];
-    Block_Pool_Slot_Type* block = &(plane_record->Blocks[block_address.BlockID]);
-    plane_record->Free_pages_count += block->Invalid_page_count;
-    plane_record->Invalid_pages_count -= block->Invalid_page_count;
+    PlaneBookKeepingType& plane_record = plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID];
+    Block_Pool_Slot_Type& block = (plane_record.Blocks[block_address.BlockID]);
+    plane_record.Free_pages_count += block.Invalid_page_count;
+    plane_record.Invalid_pages_count -= block.Invalid_page_count;
 
-    Stats::Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block->Erase_count]--;
-    block->Erase();
-    Stats::Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block->Erase_count]++;
-    plane_record->Add_to_free_block_pool(block, gc_and_wl_unit->Use_dynamic_wearleveling());
-    plane_record->Check_bookkeeping_correctness(block_address);
+    __stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]--;
+    block.Erase();
+    __stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]++;
+    plane_record.Add_to_free_block_pool(block, gc_and_wl_unit->Use_dynamic_wearleveling());
+    plane_record.Check_bookkeeping_correctness(block_address);
   }
 
   inline uint32_t Flash_Block_Manager::Get_pool_size(const NVM::FlashMemory::Physical_Page_Address& plane_address)

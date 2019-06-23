@@ -100,10 +100,10 @@ set(MQSIM_SSD_SOURCES
     ssd/dcm/Data_Cache_Manager_Flash_Advanced.h
     ssd/dcm/Data_Cache_Manager_Flash_Simple.cpp
     ssd/dcm/Data_Cache_Manager_Flash_Simple.h
-    ssd/Flash_Block_Manager.cpp
-    ssd/Flash_Block_Manager.h
-    ssd/Flash_Block_Manager_Base.cpp
-    ssd/Flash_Block_Manager_Base.h
+    ssd/fbm/Flash_Block_Manager.cpp
+    ssd/fbm/Flash_Block_Manager.h
+    ssd/fbm/Flash_Block_Manager_Base.cpp
+    ssd/fbm/Flash_Block_Manager_Base.h
     ssd/Flash_Transaction_Queue.h
     ssd/FTL.cpp
     ssd/FTL.h

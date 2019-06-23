@@ -5,9 +5,10 @@
 #include "../../nvm_chip/flash_memory/Flash_Chip.h"
 #include "../../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "../mapping/Address_Mapping_Unit_Base.h"
-#include "../Flash_Block_Manager_Base.h"
+#include "../fbm/Flash_Block_Manager_Base.h"
 #include "../tsu/TSU_Base.h"
 #include "../phy/NVM_PHY_ONFI.h"
+#include "../Stats.h"
 
 #include "GCandWLUnitDefs.h"
 
@@ -32,6 +33,9 @@ namespace SSD_Components
     Flash_Block_Manager_Base* block_manager;
     TSU_Base* tsu;
     NVM_PHY_ONFI* flash_controller;
+
+    Stats& __stats;
+
     bool force_gc;
     double gc_threshold;//As the ratio of free pages to the total number of physical pages
     uint32_t block_pool_gc_threshold;
@@ -78,6 +82,7 @@ namespace SSD_Components
                         Flash_Block_Manager_Base* block_manager,
                         TSU_Base* tsu,
                         NVM_PHY_ONFI* flash_controller,
+                        Stats& stats,
                         GC_Block_Selection_Policy_Type block_selection_policy,
                         double gc_threshold,
                         bool preemptible_gc_enabled,

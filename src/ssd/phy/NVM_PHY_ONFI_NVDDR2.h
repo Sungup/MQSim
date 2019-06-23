@@ -128,6 +128,7 @@ namespace SSD_Components
   public:
     NVM_PHY_ONFI_NVDDR2(const sim_object_id_type& id,
                         ONFI_Channel_NVDDR2** channels,
+                        Stats& stats,
                         uint32_t ChannelCount,
                         uint32_t chip_no_per_channel,
                         uint32_t DieNoPerChip,

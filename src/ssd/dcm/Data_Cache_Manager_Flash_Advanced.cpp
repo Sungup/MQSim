@@ -334,7 +334,7 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
       ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->RelatedRead = nullptr;
       return;
     }
-    switch (Data_Cache_Manager_Flash_Advanced::caching_mode_per_input_stream[transaction->Stream_id])
+    switch (caching_mode_per_input_stream[transaction->Stream_id])
     {
       case Caching_Mode::TURNED_OFF:
       case Caching_Mode::WRITE_CACHE:
@@ -407,7 +407,7 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
   }
   else//This is a write request
   {
-    switch (Data_Cache_Manager_Flash_Advanced::caching_mode_per_input_stream[transaction->Stream_id])
+    switch (caching_mode_per_input_stream[transaction->Stream_id])
     {
       case Caching_Mode::TURNED_OFF:
       case Caching_Mode::READ_CACHE:

@@ -8,8 +8,9 @@
 #include "../NVM_Transaction_Flash.h"
 #include "../phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../FTL.h"
-#include "../Flash_Block_Manager_Base.h"
+#include "../fbm/Flash_Block_Manager_Base.h"
 #include "AddressMappingUnitDefs.h"
+#include "../Stats.h"
 
 namespace SSD_Components
 {
@@ -49,9 +50,11 @@ namespace SSD_Components
     bool fold_large_addresses;
     bool mapping_table_stored_on_flash;
 
+    Stats& __stats;
+
   public:
     Address_Mapping_Unit_Base(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* FlashController, Flash_Block_Manager_Base* block_manager,
-      bool ideal_mapping_table, uint32_t no_of_input_streams,
+      Stats& stats, bool ideal_mapping_table, uint32_t no_of_input_streams,
       uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
       uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
       double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED, bool fold_large_addresses = true);

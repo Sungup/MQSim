@@ -7,7 +7,7 @@
 #include <set>
 #include <list>
 #include "Address_Mapping_Unit_Base.h"
-#include "../Flash_Block_Manager_Base.h"
+#include "../fbm/Flash_Block_Manager_Base.h"
 #include "../SSD_Defs.h"
 #include "../NVM_Transaction_Flash_RD.h"
 #include "../NVM_Transaction_Flash_WR.h"
@@ -193,7 +193,7 @@ namespace SSD_Components
 
   public:
     Address_Mapping_Unit_Page_Level(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
-      bool ideal_mapping_table, uint32_t cmt_capacity_in_byte, Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
+      Stats& stats, bool ideal_mapping_table, uint32_t cmt_capacity_in_byte, Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
       uint32_t ConcurrentStreamNo,
       uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
       std::vector<std::vector<flash_channel_ID_type>> stream_channel_ids, std::vector<std::vector<flash_chip_ID_type>> stream_chip_ids,

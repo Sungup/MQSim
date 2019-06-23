@@ -2,7 +2,7 @@
 #include <vector>
 #include <set>
 #include "GC_and_WL_Unit_Page_Level.h"
-#include "../Flash_Block_Manager.h"
+#include "../fbm/Flash_Block_Manager.h"
 #include "../FTL.h"
 
 namespace SSD_Components
@@ -10,11 +10,11 @@ namespace SSD_Components
 
   GC_and_WL_Unit_Page_Level::GC_and_WL_Unit_Page_Level(const sim_object_id_type& id,
     Address_Mapping_Unit_Base* address_mapping_unit, Flash_Block_Manager_Base* block_manager, TSU_Base* tsu, NVM_PHY_ONFI* flash_controller, 
-    GC_Block_Selection_Policy_Type block_selection_policy, double gc_threshold, bool preemptible_gc_enabled, double gc_hard_threshold,
+    Stats& stats, GC_Block_Selection_Policy_Type block_selection_policy, double gc_threshold, bool preemptible_gc_enabled, double gc_hard_threshold,
     uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
     uint32_t block_no_per_plane, uint32_t Page_no_per_block, uint32_t sectors_per_page,
     bool use_copyback, double rho, uint32_t max_ongoing_gc_reqs_per_plane, bool dynamic_wearleveling_enabled, bool static_wearleveling_enabled, uint32_t static_wearleveling_threshold, int seed)
-    : GC_and_WL_Unit_Base(id, address_mapping_unit, block_manager, tsu, flash_controller, block_selection_policy, gc_threshold, preemptible_gc_enabled, gc_hard_threshold,
+    : GC_and_WL_Unit_Base(id, address_mapping_unit, block_manager, tsu, flash_controller, stats, block_selection_policy, gc_threshold, preemptible_gc_enabled, gc_hard_threshold,
     ChannelCount, chip_no_per_channel, die_no_per_chip, plane_no_per_die, block_no_per_plane, Page_no_per_block, sectors_per_page, use_copyback, rho, max_ongoing_gc_reqs_per_plane, 
       dynamic_wearleveling_enabled, static_wearleveling_enabled, static_wearleveling_threshold, seed)
   {
@@ -136,7 +136,7 @@ namespace SSD_Components
       address_mapping_unit->Set_barrier_for_accessing_physical_block(gc_candidate_address);//Lock the block, so no user request can intervene while the GC is progressing
       if (block_manager->Can_execute_gc_wl(gc_candidate_address))//If there are ongoing requests targeting the candidate block, the gc execution should be postponed
       {
-        Stats::Total_gc_executions++;
+        __stats.Total_gc_executions++;
         tsu->Prepare_for_transaction_submit();
 
         NVM_Transaction_Flash_ER* gc_erase_tr = new NVM_Transaction_Flash_ER(Transaction_Source_Type::GC_WL, pbke->Blocks[gc_candidate_block_id].Stream_id, gc_candidate_address);
@@ -148,7 +148,7 @@ namespace SSD_Components
           {
             if (block_manager->Is_page_valid(block, pageID))
             {
-              Stats::Total_page_movements_for_gc;
+              __stats.Total_page_movements_for_gc;
               gc_candidate_address.PageID = pageID;
               if (use_copyback)
               {

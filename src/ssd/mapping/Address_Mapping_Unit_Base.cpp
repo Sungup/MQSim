@@ -1,14 +1,14 @@
 #include "../FTL.h"
 #include "Address_Mapping_Unit_Base.h"
 #include "../phy/NVM_PHY_ONFI_NVDDR2.h"
-#include "../Flash_Block_Manager_Base.h"
+#include "../fbm/Flash_Block_Manager_Base.h"
 #include "AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {
 
   Address_Mapping_Unit_Base::Address_Mapping_Unit_Base(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
-    bool ideal_mapping_table, uint32_t no_of_input_streams,
+    Stats& stats, bool ideal_mapping_table, uint32_t no_of_input_streams,
     uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
     uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
     double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode, bool fold_large_addresses)
@@ -17,7 +17,8 @@ namespace SSD_Components
     channel_count(ChannelCount), chip_no_per_channel(chip_no_per_channel), die_no_per_chip(DieNoPerChip), plane_no_per_die(PlaneNoPerDie),
     block_no_per_plane(Block_no_per_plane), pages_no_per_block(Page_no_per_block), sector_no_per_page(SectorsPerPage), page_size_in_byte(PageSizeInBytes), 
     overprovisioning_ratio(Overprovisioning_ratio), sharing_mode(sharing_mode), fold_large_addresses(fold_large_addresses),
-    mapping_table_stored_on_flash(false)
+    mapping_table_stored_on_flash(false),
+      __stats(stats)
   {
     page_no_per_plane = pages_no_per_block * block_no_per_plane;
     page_no_per_die = page_no_per_plane * plane_no_per_die;

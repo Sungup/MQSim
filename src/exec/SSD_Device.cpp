@@ -3,7 +3,7 @@
 #include <ctime>
 #include "SSD_Device.h"
 #include "../ssd/ONFI_Channel_Base.h"
-#include "../ssd/Flash_Block_Manager.h"
+#include "../ssd/fbm/Flash_Block_Manager.h"
 #include "../ssd/dcm/Data_Cache_Manager_Flash_Advanced.h"
 #include "../ssd/dcm/Data_Cache_Manager_Flash_Simple.h"
 #include "../ssd/mapping/Address_Mapping_Unit_Base.h"
@@ -72,6 +72,15 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
       throw std::invalid_argument("The specified flash technologies is not supported");
     }
 
+    //Steps 4 - 8: create FTL components and connect them together
+    SSD_Components::FTL* ftl = new SSD_Components::FTL(device->ID() + ".FTL", NULL, parameters->Flash_Channel_Count,
+                                                       parameters->Chip_No_Per_Channel, parameters->Flash_Parameters.Die_No_Per_Chip, parameters->Flash_Parameters.Plane_No_Per_Die,
+                                                       parameters->Flash_Parameters.Block_No_Per_Plane, parameters->Flash_Parameters.Page_No_Per_Block,
+                                                       parameters->Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, average_flash_read_latency, average_flash_write_latency, parameters->Overprovisioning_Ratio,
+                                                       parameters->Flash_Parameters.Block_PE_Cycles_Limit, parameters->Seed++);
+    Simulator->AddObject(ftl);
+    device->Firmware = ftl;
+
     //Step 2: create memory channels to connect chips to the controller
     this->Channel_count = parameters->Flash_Channel_Count;
     this->Chip_no_per_channel = parameters->Chip_No_Per_Channel;
@@ -99,7 +108,7 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
       }
 
       //Step 3: create channel controller and connect channels to it
-      device->PHY = new SSD_Components::NVM_PHY_ONFI_NVDDR2(device->ID() + ".PHY", channels, parameters->Flash_Channel_Count, parameters->Chip_No_Per_Channel,
+      device->PHY = new SSD_Components::NVM_PHY_ONFI_NVDDR2(device->ID() + ".PHY", channels, ftl->get_stats_reference(), parameters->Flash_Channel_Count, parameters->Chip_No_Per_Channel,
         parameters->Flash_Parameters.Die_No_Per_Chip, parameters->Flash_Parameters.Plane_No_Per_Die);
       Simulator->AddObject(device->PHY);
       break;
@@ -110,15 +119,7 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
     delete[] read_latencies;
     delete[] write_latencies;
 
-    //Steps 4 - 8: create FTL components and connect them together
-    SSD_Components::FTL* ftl = new SSD_Components::FTL(device->ID() + ".FTL", NULL, parameters->Flash_Channel_Count,
-      parameters->Chip_No_Per_Channel, parameters->Flash_Parameters.Die_No_Per_Chip, parameters->Flash_Parameters.Plane_No_Per_Die,
-      parameters->Flash_Parameters.Block_No_Per_Plane, parameters->Flash_Parameters.Page_No_Per_Block,
-      parameters->Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, average_flash_read_latency, average_flash_write_latency, parameters->Overprovisioning_Ratio,
-      parameters->Flash_Parameters.Block_PE_Cycles_Limit, parameters->Seed++);
     ftl->PHY = (SSD_Components::NVM_PHY_ONFI*)PHY;
-    Simulator->AddObject(ftl);
-    device->Firmware = ftl;
 
     //Step 5: create TSU
     SSD_Components::TSU_Base* tsu;
@@ -169,7 +170,7 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
 
     //Step 6: create Flash_Block_Manager
     SSD_Components::Flash_Block_Manager_Base* fbm;
-    fbm = new SSD_Components::Flash_Block_Manager(NULL, parameters->Flash_Parameters.Block_PE_Cycles_Limit,
+    fbm = new SSD_Components::Flash_Block_Manager(NULL, ftl->get_stats_reference(), parameters->Flash_Parameters.Block_PE_Cycles_Limit,
       (uint32_t)io_flows->size(), parameters->Flash_Channel_Count, parameters->Chip_No_Per_Channel,
       parameters->Flash_Parameters.Die_No_Per_Chip, parameters->Flash_Parameters.Plane_No_Per_Die,
       parameters->Flash_Parameters.Block_No_Per_Plane, parameters->Flash_Parameters.Page_No_Per_Block);
@@ -242,7 +243,7 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
     {
     case SSD_Components::Flash_Address_Mapping_Type::PAGE_LEVEL:
       amu = new SSD_Components::Address_Mapping_Unit_Page_Level(ftl->ID() + ".AddressMappingUnit", ftl, (SSD_Components::NVM_PHY_ONFI*) device->PHY,
-        fbm, parameters->Ideal_Mapping_Table, parameters->CMT_Capacity, parameters->Plane_Allocation_Scheme, stream_count,
+        fbm, ftl->get_stats_reference(), parameters->Ideal_Mapping_Table, parameters->CMT_Capacity, parameters->Plane_Allocation_Scheme, stream_count,
         parameters->Flash_Channel_Count, parameters->Chip_No_Per_Channel, parameters->Flash_Parameters.Die_No_Per_Chip, parameters->Flash_Parameters.Plane_No_Per_Die,
         flow_channel_id_assignments, flow_chip_id_assignments, flow_die_id_assignments, flow_plane_id_assignments,
         parameters->Flash_Parameters.Block_No_Per_Plane, parameters->Flash_Parameters.Page_No_Per_Block,
@@ -251,7 +252,7 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
       break;
     case SSD_Components::Flash_Address_Mapping_Type::HYBRID:
       amu = new SSD_Components::Address_Mapping_Unit_Hybrid(ftl->ID() + ".AddressMappingUnit", ftl, (SSD_Components::NVM_PHY_ONFI*) device->PHY,
-        fbm, parameters->Ideal_Mapping_Table, stream_count,
+        fbm, ftl->get_stats_reference(), parameters->Ideal_Mapping_Table, stream_count,
         parameters->Flash_Channel_Count, parameters->Chip_No_Per_Channel, parameters->Flash_Parameters.Die_No_Per_Chip,
         parameters->Flash_Parameters.Plane_No_Per_Die, parameters->Flash_Parameters.Block_No_Per_Plane, parameters->Flash_Parameters.Page_No_Per_Block,
         parameters->Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, parameters->Flash_Parameters.Page_Capacity, parameters->Overprovisioning_Ratio);
@@ -270,6 +271,7 @@ SSD_Device::SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Par
     max_rho /= 100;//Convert from percentage to a value between zero and 1
     SSD_Components::GC_and_WL_Unit_Base* gcwl;
     gcwl = new SSD_Components::GC_and_WL_Unit_Page_Level(ftl->ID() + ".GCandWLUnit", amu, fbm, tsu, (SSD_Components::NVM_PHY_ONFI*)device->PHY,
+      ftl->get_stats_reference(),
       parameters->GC_Block_Selection_Policy, parameters->GC_Exec_Threshold, parameters->Preemptible_GC_Enabled, parameters->GC_Hard_Threshold,
       parameters->Flash_Channel_Count, parameters->Chip_No_Per_Channel,
       parameters->Flash_Parameters.Die_No_Per_Chip, parameters->Flash_Parameters.Plane_No_Per_Die,

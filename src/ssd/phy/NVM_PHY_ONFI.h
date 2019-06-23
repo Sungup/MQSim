@@ -10,6 +10,7 @@
 #include "../NVM_Transaction_Flash_ER.h"
 #include "NVM_PHY_Base.h"
 #include "../ONFI_Channel_Base.h"
+#include "../Stats.h"
 
 #include "PhyHandler.h"
 
@@ -30,6 +31,7 @@ namespace SSD_Components
   class NVM_PHY_ONFI : public NVM_PHY_Base
   {
   protected:
+    Stats& __stats;
     uint32_t channel_count;
     uint32_t chip_no_per_channel;
     uint32_t die_no_per_chip;
@@ -45,6 +47,7 @@ namespace SSD_Components
 
   public:
     NVM_PHY_ONFI(const sim_object_id_type& id,
+                 Stats& stats,
                  uint32_t ChannelCount,
                  uint32_t chip_no_per_channel,
                  uint32_t DieNoPerChip,

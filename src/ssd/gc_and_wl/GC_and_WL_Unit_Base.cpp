@@ -8,6 +8,7 @@ GC_and_WL_Unit_Base::GC_and_WL_Unit_Base(const sim_object_id_type& id,
                                          Flash_Block_Manager_Base* block_manager,
                                          TSU_Base* tsu,
                                          NVM_PHY_ONFI* flash_controller,
+                                         Stats& stats,
                                          GC_Block_Selection_Policy_Type block_selection_policy,
                                          double gc_threshold,
                                          bool preemptible_gc_enabled,
@@ -31,6 +32,7 @@ GC_and_WL_Unit_Base::GC_and_WL_Unit_Base(const sim_object_id_type& id,
     block_manager(block_manager),
     tsu(tsu),
     flash_controller(flash_controller),
+    __stats(stats),
     force_gc(false),
     block_selection_policy(block_selection_policy),
     gc_threshold(gc_threshold),
@@ -106,7 +108,7 @@ GC_and_WL_Unit_Base::run_static_wearleveling(const NVM::FlashMemory::Physical_Pa
   address_mapping_unit->Set_barrier_for_accessing_physical_block(wl_candidate_address);//Lock the block, so no user request can intervene while the GC is progressing
   if (block_manager->Can_execute_gc_wl(wl_candidate_address))//If there are ongoing requests targeting the candidate block, the gc execution should be postponed
   {
-    Stats::Total_wl_executions++;
+    __stats.Total_wl_executions++;
     tsu->Prepare_for_transaction_submit();
 
     NVM_Transaction_Flash_ER* wl_erase_tr = new NVM_Transaction_Flash_ER(Transaction_Source_Type::GC_WL, pbke->Blocks[wl_candidate_block_id].Stream_id, wl_candidate_address);
@@ -118,7 +120,7 @@ GC_and_WL_Unit_Base::run_static_wearleveling(const NVM::FlashMemory::Physical_Pa
       {
         if (block_manager->Is_page_valid(block, pageID))
         {
-          Stats::Total_page_movements_for_gc;
+          __stats.Total_page_movements_for_gc;
           wl_candidate_address.PageID = pageID;
           if (use_copyback)
           {
@@ -175,7 +177,7 @@ GC_and_WL_Unit_Base::__handle_transaction_service(NVM_Transaction_Flash* transac
       {
         NVM::FlashMemory::Physical_Page_Address gc_wl_candidate_address(transaction->Address);
         Block_Pool_Slot_Type* block = &pbke->Blocks[transaction->Address.BlockID];
-        Stats::Total_gc_executions++;
+        __stats.Total_gc_executions++;
         tsu->Prepare_for_transaction_submit();
         auto gc_wl_erase_tr = new NVM_Transaction_Flash_ER(Transaction_Source_Type::GC_WL, block->Stream_id, gc_wl_candidate_address);
         if (block->Current_page_write_index - block->Invalid_page_count > 0)//If there are some valid pages in block, then prepare flash transactions for page movement

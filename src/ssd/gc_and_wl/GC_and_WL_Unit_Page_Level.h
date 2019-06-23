@@ -14,7 +14,7 @@ namespace SSD_Components
   public:
     GC_and_WL_Unit_Page_Level(const sim_object_id_type& id,
       Address_Mapping_Unit_Base* address_mapping_unit, Flash_Block_Manager_Base* block_manager, TSU_Base* tsu, NVM_PHY_ONFI* flash_controller,
-      GC_Block_Selection_Policy_Type block_selection_policy, double gc_threshold, bool preemptible_gc_enabled, double gc_hard_threshold,
+      Stats& stats, GC_Block_Selection_Policy_Type block_selection_policy, double gc_threshold, bool preemptible_gc_enabled, double gc_hard_threshold,
       uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
       uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t sectors_per_page,
       bool use_copyback, double rho, uint32_t max_ongoing_gc_reqs_per_plane = 10,

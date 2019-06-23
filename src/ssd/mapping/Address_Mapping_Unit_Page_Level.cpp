@@ -282,6 +282,7 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                                                                  FTL* ftl,
                                                                  NVM_PHY_ONFI* flash_controller,
                                                                  Flash_Block_Manager_Base* block_manager,
+                                                                 Stats& stats,
                                                                  bool ideal_mapping_table,
                                                                  uint32_t cmt_capacity_in_byte,
                                                                  Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
@@ -305,6 +306,7 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                               ftl,
                               flash_controller,
                               block_manager,
+                              stats,
                               ideal_mapping_table,
                               concurrent_stream_no,
                               channel_count,
@@ -712,8 +714,8 @@ Address_Mapping_Unit_Page_Level::generate_flash_read_request_for_mapping_data(st
     readTR->PPA = ppn;
     ftl->TSU->Submit_transaction(readTR);
 
-    Stats::Total_flash_reads_for_mapping++;
-    Stats::Total_flash_reads_for_mapping_per_stream[stream_id]++;
+    __stats.Total_flash_reads_for_mapping++;
+    __stats.Total_flash_reads_for_mapping_per_stream[stream_id]++;
 
     ftl->TSU->Schedule();
   }
@@ -776,10 +778,10 @@ Address_Mapping_Unit_Page_Level::generate_flash_writeback_request_for_mapping_da
     domains[stream_id]->DepartingMappingEntries.insert(get_MVPN(lpn, stream_id));
     ftl->TSU->Submit_transaction(writeTR);
 
-    Stats::Total_flash_reads_for_mapping++;
-    Stats::Total_flash_writes_for_mapping++;
-    Stats::Total_flash_reads_for_mapping_per_stream[stream_id]++;
-    Stats::Total_flash_writes_for_mapping_per_stream[stream_id]++;
+    __stats.Total_flash_reads_for_mapping++;
+    __stats.Total_flash_writes_for_mapping++;
+    __stats.Total_flash_reads_for_mapping_per_stream[stream_id]++;
+    __stats.Total_flash_writes_for_mapping_per_stream[stream_id]++;
 
     ftl->TSU->Schedule();
   }
@@ -1279,17 +1281,17 @@ Address_Mapping_Unit_Page_Level::Allocate_new_page_for_gc(NVM_Transaction_Flash_
 
     //The mapping entry should be updated
     stream_id_type stream_id = transaction->Stream_id;
-    Stats::total_CMT_queries++;
-    Stats::total_CMT_queries_per_stream[stream_id]++;
+    __stats.total_CMT_queries++;
+    __stats.total_CMT_queries_per_stream[stream_id]++;
 
     if (domains[stream_id]->Mapping_entry_accessible(ideal_mapping_table, stream_id, transaction->LPA))//either limited or unlimited mapping
     {
-      Stats::CMT_hits++;
-      Stats::CMT_hits_per_stream[stream_id]++;
-      Stats::total_writeTR_CMT_queries++;
-      Stats::total_writeTR_CMT_queries_per_stream[stream_id]++;
-      Stats::writeTR_CMT_hits++;
-      Stats::writeTR_CMT_hits_per_stream[stream_id]++;
+      __stats.CMT_hits++;
+      __stats.CMT_hits_per_stream[stream_id]++;
+      __stats.total_writeTR_CMT_queries++;
+      __stats.total_writeTR_CMT_queries_per_stream[stream_id]++;
+      __stats.writeTR_CMT_hits++;
+      __stats.writeTR_CMT_hits_per_stream[stream_id]++;
       domains[stream_id]->Update_mapping_info(ideal_mapping_table, stream_id, transaction->LPA, transaction->PPA, transaction->write_sectors_bitmap);
     }
     else//the else block only executed for non-ideal mapping table in which CMT has a limited capacity and mapping data is read/written from/to the flash storage
@@ -1445,8 +1447,8 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_mvpn(stream_id_typ
         SECTOR_SIZE_IN_BYTE, NO_LPA, NO_PPA, nullptr, mvpn, ((page_status_type)0x1) << sector_no_per_page, CurrentTimeStamp);
     Convert_ppa_to_address(ppn, readTR->Address);
     readTR->PPA = ppn;
-    Stats::Total_flash_reads_for_mapping++;
-    Stats::Total_flash_reads_for_mapping_per_stream[stream_id]++;
+    __stats.Total_flash_reads_for_mapping++;
+    __stats.Total_flash_reads_for_mapping_per_stream[stream_id]++;
 
     __handle_transaction_service_signal(readTR);
 
@@ -1484,10 +1486,10 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_mvpn(stream_id_typ
       mvpn, mppn, nullptr, mvpn, nullptr, (((page_status_type)0x1) << sector_no_per_page) - 1, CurrentTimeStamp);
 
 
-    Stats::Total_flash_reads_for_mapping++;
-    Stats::Total_flash_writes_for_mapping++;
-    Stats::Total_flash_reads_for_mapping_per_stream[stream_id]++;
-    Stats::Total_flash_writes_for_mapping_per_stream[stream_id]++;
+    __stats.Total_flash_reads_for_mapping++;
+    __stats.Total_flash_writes_for_mapping++;
+    __stats.Total_flash_reads_for_mapping_per_stream[stream_id]++;
+    __stats.Total_flash_writes_for_mapping_per_stream[stream_id]++;
 
     __handle_transaction_service_signal(writeTR);
     delete writeTR;
@@ -1524,27 +1526,27 @@ bool
 Address_Mapping_Unit_Page_Level::query_cmt(NVM_Transaction_Flash* transaction)
 {
   stream_id_type stream_id = transaction->Stream_id;
-  Stats::total_CMT_queries++;
-  Stats::total_CMT_queries_per_stream[stream_id]++;
+  __stats.total_CMT_queries++;
+  __stats.total_CMT_queries_per_stream[stream_id]++;
 
   //Either limited or unlimited CMT
   if (domains[stream_id]->Mapping_entry_accessible(ideal_mapping_table, stream_id, transaction->LPA))
   {
-    Stats::CMT_hits_per_stream[stream_id]++;
-    Stats::CMT_hits++;
+    __stats.CMT_hits_per_stream[stream_id]++;
+    __stats.CMT_hits++;
     if (transaction->Type == Transaction_Type::READ)
     {
-      Stats::total_readTR_CMT_queries_per_stream[stream_id]++;
-      Stats::total_readTR_CMT_queries++;
-      Stats::readTR_CMT_hits_per_stream[stream_id]++;
-      Stats::readTR_CMT_hits++;
+      __stats.total_readTR_CMT_queries_per_stream[stream_id]++;
+      __stats.total_readTR_CMT_queries++;
+      __stats.readTR_CMT_hits_per_stream[stream_id]++;
+      __stats.readTR_CMT_hits++;
     }
     else//This is a write transaction
     {
-      Stats::total_writeTR_CMT_queries++;
-      Stats::total_writeTR_CMT_queries_per_stream[stream_id]++;
-      Stats::writeTR_CMT_hits++;
-      Stats::writeTR_CMT_hits_per_stream[stream_id]++;
+      __stats.total_writeTR_CMT_queries++;
+      __stats.total_writeTR_CMT_queries_per_stream[stream_id]++;
+      __stats.writeTR_CMT_hits++;
+      __stats.writeTR_CMT_hits_per_stream[stream_id]++;
     }
     if (translate_lpa_to_ppa(stream_id, transaction))
       return true;
@@ -1558,21 +1560,21 @@ Address_Mapping_Unit_Page_Level::query_cmt(NVM_Transaction_Flash* transaction)
   {
     if (request_mapping_entry(stream_id, transaction->LPA))//Maybe we can catch mapping data from an on-the-fly write back request
     {
-      Stats::CMT_miss++;
-      Stats::CMT_miss_per_stream[stream_id]++;
+      __stats.CMT_miss++;
+      __stats.CMT_miss_per_stream[stream_id]++;
       if (transaction->Type == Transaction_Type::READ)
       {
-        Stats::total_readTR_CMT_queries++;
-        Stats::total_readTR_CMT_queries_per_stream[stream_id]++;
-        Stats::readTR_CMT_miss++;
-        Stats::readTR_CMT_miss_per_stream[stream_id]++;
+        __stats.total_readTR_CMT_queries++;
+        __stats.total_readTR_CMT_queries_per_stream[stream_id]++;
+        __stats.readTR_CMT_miss++;
+        __stats.readTR_CMT_miss_per_stream[stream_id]++;
       }
       else//This is a write transaction
       {
-        Stats::total_writeTR_CMT_queries++;
-        Stats::total_writeTR_CMT_queries_per_stream[stream_id]++;
-        Stats::writeTR_CMT_miss++;
-        Stats::writeTR_CMT_miss_per_stream[stream_id]++;
+        __stats.total_writeTR_CMT_queries++;
+        __stats.total_writeTR_CMT_queries_per_stream[stream_id]++;
+        __stats.writeTR_CMT_miss++;
+        __stats.writeTR_CMT_miss_per_stream[stream_id]++;
       }
       if (translate_lpa_to_ppa(stream_id, transaction))
         return true;
@@ -1586,18 +1588,18 @@ Address_Mapping_Unit_Page_Level::query_cmt(NVM_Transaction_Flash* transaction)
     {
       if (transaction->Type == Transaction_Type::READ)
       {
-        Stats::total_readTR_CMT_queries++;
-        Stats::total_readTR_CMT_queries_per_stream[stream_id]++;
-        Stats::readTR_CMT_miss++;
-        Stats::readTR_CMT_miss_per_stream[stream_id]++;
+        __stats.total_readTR_CMT_queries++;
+        __stats.total_readTR_CMT_queries_per_stream[stream_id]++;
+        __stats.readTR_CMT_miss++;
+        __stats.readTR_CMT_miss_per_stream[stream_id]++;
         domains[stream_id]->Waiting_unmapped_read_transactions.insert(std::pair<LPA_type, NVM_Transaction_Flash*>(transaction->LPA, transaction));
       }
       else//This is a write transaction
       {
-        Stats::total_writeTR_CMT_queries++;
-        Stats::total_writeTR_CMT_queries_per_stream[stream_id]++;
-        Stats::writeTR_CMT_miss++;
-        Stats::writeTR_CMT_miss_per_stream[stream_id]++;
+        __stats.total_writeTR_CMT_queries++;
+        __stats.total_writeTR_CMT_queries_per_stream[stream_id]++;
+        __stats.writeTR_CMT_miss++;
+        __stats.writeTR_CMT_miss_per_stream[stream_id]++;
         domains[stream_id]->Waiting_unmapped_program_transactions.insert(std::pair<LPA_type, NVM_Transaction_Flash*>(transaction->LPA, transaction));
       }
     }

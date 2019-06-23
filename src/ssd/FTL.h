@@ -6,7 +6,7 @@
 #include "NVM_Firmware.h"
 #include "tsu/TSU_Base.h"
 #include "mapping/Address_Mapping_Unit_Base.h"
-#include "Flash_Block_Manager_Base.h"
+#include "fbm/Flash_Block_Manager_Base.h"
 #include "gc_and_wl/GC_and_WL_Unit_Base.h"
 #include "phy/NVM_PHY_ONFI.h"
 #include "Stats.h"
@@ -27,6 +27,9 @@ namespace SSD_Components
       uint32_t block_no_per_plane, uint32_t page_no_per_block, uint32_t page_size_in_sectors,
       sim_time_type avg_flash_read_latency, sim_time_type avg_flash_program_latency, double over_provisioning_ratio, uint32_t max_allowed_block_erase_count, int seed);
     ~FTL();
+
+    Stats& get_stats_reference();
+
     void Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats);
     void Validate_simulation_config();
     void Start_simulation();
@@ -39,6 +42,7 @@ namespace SSD_Components
     TSU_Base * TSU;
     NVM_PHY_ONFI* PHY;
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
+
   private:
     uint32_t channel_no, chip_no_per_channel, die_no_per_chip, plane_no_per_die;
     uint32_t block_no_per_plane, page_no_per_block, page_size_in_sectors;
@@ -48,7 +52,15 @@ namespace SSD_Components
     double over_provisioning_ratio;
     sim_time_type avg_flash_read_latency;
     sim_time_type avg_flash_program_latency;
+
+    Stats __stats;
   };
+
+  force_inline Stats&
+  FTL::get_stats_reference()
+  {
+    return __stats;
+  }
 }
 
 
