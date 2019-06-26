@@ -115,7 +115,7 @@ namespace NVM
         status = Internal_Status::BUSY;
       }
 
-      DEBUG("Command execution started on channel: " << this->ChannelID << " chip: " << this->ChipID)
+      PRINT_DEBUG("Command execution started on channel: " << this->ChannelID << " chip: " << this->ChipID)
     }
 
     void Flash_Chip::finish_command_execution(Flash_Command* command)
@@ -145,7 +145,7 @@ namespace NVM
       case CMD_READ_PAGE_MULTIPLANE:
       case CMD_READ_PAGE_COPYBACK:
       case CMD_READ_PAGE_COPYBACK_MULTIPLANE:
-        DEBUG("Channel " << this->ChannelID << " Chip " << this->ChipID << "- Finished executing read command")
+        PRINT_DEBUG("Channel " << this->ChannelID << " Chip " << this->ChipID << "- Finished executing read command")
         for (uint32_t planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
         {
           STAT_readCount++;
@@ -157,7 +157,7 @@ namespace NVM
       case CMD_PROGRAM_PAGE_MULTIPLANE:
       case CMD_PROGRAM_PAGE_COPYBACK:
       case CMD_PROGRAM_PAGE_COPYBACK_MULTIPLANE:
-        DEBUG("Channel " << this->ChannelID << " Chip " << this->ChipID << "- Finished executing program command")
+        PRINT_DEBUG("Channel " << this->ChannelID << " Chip " << this->ChipID << "- Finished executing program command")
         for (uint32_t planeCntr = 0; planeCntr < command->Address.size(); planeCntr++)
         {
           STAT_progamCount++;

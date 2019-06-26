@@ -16,7 +16,13 @@ Block_Pool_Slot_Type::Block_Pool_Slot_Type(uint32_t block_id,
                          / BITMAP_SIZE
                          + (pages_no_per_block % BITMAP_SIZE == 0 ? 0 : 1)),
     Invalid_page_count(0),
+#if (DEBUG || PROFILE)
+    // Wrapping the ALL_VALID_PAGES because C++11 cannot replace constexpr
+    // directly on -O0 optimization mode.
+    Invalid_page_bitmap(__page_vector_size, uint64_t(ALL_VALID_PAGE)),
+#else
     Invalid_page_bitmap(__page_vector_size, ALL_VALID_PAGE),
+#endif
     Holds_mapping_data(false),
     Has_ongoing_gc_wl(false),
     Erase_transaction(nullptr),

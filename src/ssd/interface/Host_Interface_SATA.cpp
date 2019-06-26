@@ -81,7 +81,7 @@ namespace SSD_Components
     ((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->Waiting_user_requests.remove(request);
     ((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->On_the_fly_requests--;
 
-    DEBUG("** Host Interface: Request #" << request->ID << " is finished")
+    PRINT_DEBUG("** Host Interface: Request #" << request->ID << " is finished")
 
       if (request->Type == UserRequestType::READ)//If this is a read request, then the read data should be written to host memory
         ((Host_Interface_SATA*)host_interface)->request_fetch_unit->Send_read_data(request);

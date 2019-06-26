@@ -1,6 +1,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include <cstring>
 #include <iostream>
 #include <unordered_map>
 #include "Sim_Defs.h"
@@ -74,7 +75,7 @@ namespace MQSimEngine {
   {
     auto* ev = new Sim_Event(fireTime, targetObject, parameters, type);
 
-    DEBUG("RegisterEvent " << fireTime << " " << targetObject)
+    PRINT_DEBUG("RegisterEvent " << fireTime << " " << targetObject)
 
     _EventList->Insert_sim_event(ev);
 

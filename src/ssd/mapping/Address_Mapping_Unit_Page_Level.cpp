@@ -31,15 +31,15 @@ inline bool Cached_Mapping_Table::Exists(const stream_id_type streamID, const LP
   auto it = addressMap.find(key);
   if (it == addressMap.end())
   {
-    DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", MISS")
+    PRINT_DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", MISS")
       return false;
   }
   if (it->second->Status != CMTEntryStatus::VALID)
   {
     return false;
-    DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", MISS")
+    PRINT_DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", MISS")
   }
-  DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", HIT")
+  PRINT_DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", HIT")
     return true;
 }
 PPA_type Cached_Mapping_Table::Retrieve_ppa(const stream_id_type streamID, const LPA_type lpn)
@@ -70,7 +70,7 @@ void Cached_Mapping_Table::Update_mapping_info(const stream_id_type streamID, co
   it->second->WrittenStateBitmap = pageWriteState;
   it->second->Dirty = true;
   it->second->Stream_id = streamID;
-  DEBUG("Address mapping table update entry - Stream ID:" << streamID << ", LPA:" << lpa << ", PPA:" << ppa)
+  PRINT_DEBUG("Address mapping table update entry - Stream ID:" << streamID << ", LPA:" << lpa << ", PPA:" << ppa)
 }
 void Cached_Mapping_Table::Insert_new_mapping_info(const stream_id_type streamID, const LPA_type lpa, const PPA_type ppa, const unsigned long long pageWriteState)
 {
@@ -84,7 +84,7 @@ void Cached_Mapping_Table::Insert_new_mapping_info(const stream_id_type streamID
   it->second->WrittenStateBitmap = pageWriteState;
   it->second->Dirty = false;
   it->second->Stream_id = streamID;
-  DEBUG("Address mapping table insert entry - Stream ID:" << streamID << ", LPA:" << lpa << ", PPA:" << ppa)
+  PRINT_DEBUG("Address mapping table insert entry - Stream ID:" << streamID << ", LPA:" << lpa << ", PPA:" << ppa)
 }
 bool Cached_Mapping_Table::Is_slot_reserved_for_lpn_and_waiting(const stream_id_type streamID, const LPA_type lpn)
 {

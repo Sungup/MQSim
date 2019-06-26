@@ -9,7 +9,7 @@
 #ifndef __MQSim__InlineTools__
 #define __MQSim__InlineTools__
 
-#if FORCE_INLINE
+#ifdef USE_FORCE_INLINE
 #define force_inline __attribute__((always_inline)) inline
 #else
 #define force_inline inline

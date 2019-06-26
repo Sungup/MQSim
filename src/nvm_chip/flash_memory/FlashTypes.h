@@ -1,7 +1,8 @@
 #ifndef FLASH_TYPES_H
 #define FLASH_TYPES_H
 
-#include<cstdint>
+#include <cstdint>
+#include <vector>
 #include "../../sim/Sim_Defs.h"
 #include "../NVM_Types.h"
 
@@ -24,6 +25,17 @@ typedef uint32_t flash_page_ID_type;
 typedef uint64_t LPA_type;
 typedef uint64_t PPA_type;
 typedef uint64_t command_code_type;
+
+// Device structure ID list and ID lists per stream.
+typedef std::vector<flash_channel_ID_type> ChannelIDs;
+typedef std::vector<flash_chip_ID_type>    ChipIDs;
+typedef std::vector<flash_die_ID_type>     DieIDs;
+typedef std::vector<flash_plane_ID_type>   PlaneIDs;
+
+typedef std::vector<ChannelIDs> StreamChannelIDs;
+typedef std::vector<ChipIDs>    StreamChipIDs;
+typedef std::vector<DieIDs>     StreamDieIDs;
+typedef std::vector<PlaneIDs>   StreamPlaneIDs;
 
 enum class Flash_Technology_Type { SLC = 1, MLC = 2, TLC = 3 };
 

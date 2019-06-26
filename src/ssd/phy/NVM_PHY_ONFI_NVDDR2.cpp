@@ -350,13 +350,13 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
     if (transaction_list.size() == 1) {
       __stats.IssuedReadCMD++;
       dieBKE->__active_cmd->CommandCode = CMD_READ_PAGE;
-      DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending read command to chip for LPA: " << transaction_list.front()->LPA)
+      PRINT_DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending read command to chip for LPA: " << transaction_list.front()->LPA)
     }
     else
     {
       __stats.IssuedMultiplaneReadCMD++;
       dieBKE->__active_cmd->CommandCode = CMD_READ_PAGE_MULTIPLANE;
-      DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending multi-plane read command to chip for LPA: " << transaction_list.front()->LPA)
+      PRINT_DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending multi-plane read command to chip for LPA: " << transaction_list.front()->LPA)
     }
 
     for (std::list<NVM_Transaction_Flash*>::iterator it = transaction_list.begin();
@@ -388,13 +388,13 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
       if (transaction_list.size() == 1) {
         __stats.IssuedProgramCMD++;
         dieBKE->__active_cmd->CommandCode = CMD_PROGRAM_PAGE;
-        DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending program command to chip for LPA: " << transaction_list.front()->LPA)
+        PRINT_DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending program command to chip for LPA: " << transaction_list.front()->LPA)
       }
       else
       {
         __stats.IssuedMultiplaneProgramCMD++;
         dieBKE->__active_cmd->CommandCode = CMD_PROGRAM_PAGE_MULTIPLANE;
-        DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending multi-plane program command to chip for LPA: " << transaction_list.front()->LPA)
+        PRINT_DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending multi-plane program command to chip for LPA: " << transaction_list.front()->LPA)
       }
 
       sim_time_type data_transfer_time = 0;
@@ -693,7 +693,7 @@ NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip
   {
   case CMD_READ_PAGE:
   case CMD_READ_PAGE_MULTIPLANE:
-    DEBUG("Chip " << chip->ChannelID << ", " << chip->ChipID << ": finished  read command")
+    PRINT_DEBUG("Chip " << chip->ChannelID << ", " << chip->ChipID << ": finished  read command")
 
     chipBKE.No_of_active_dies--;
     if (chipBKE.No_of_active_dies == 0)//After finishing the last command, the chip state is changed
@@ -779,7 +779,7 @@ NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip
   case CMD_PROGRAM_PAGE_COPYBACK:
   case CMD_PROGRAM_PAGE_COPYBACK_MULTIPLANE:
   {
-    DEBUG("Chip " << chip->ChannelID << ", " << chip->ChipID << ": finished program command")
+    PRINT_DEBUG("Chip " << chip->ChannelID << ", " << chip->ChipID << ": finished program command")
     int i = 0;
     for (auto it = dieBKE.__active_transactions.begin(); it != dieBKE.__active_transactions.end(); it++, i++)
     {
@@ -803,7 +803,7 @@ NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip
   }
   case CMD_ERASE_BLOCK:
   case CMD_ERASE_BLOCK_MULTIPLANE:
-    DEBUG("Chip " << chip->ChannelID << ", " << chip->ChipID << ": finished erase command")
+    PRINT_DEBUG("Chip " << chip->ChannelID << ", " << chip->ChipID << ": finished erase command")
 
     for (auto it = dieBKE.__active_transactions.begin(); it != dieBKE.__active_transactions.end(); it++)
       broadcastTransactionServicedSignal(*it);
