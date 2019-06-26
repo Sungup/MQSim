@@ -31,31 +31,35 @@
 class SSD_Device : public MQSimEngine::Sim_Object
 {
 public:
-  SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Parameter_Set*>* io_flows);
-  ~SSD_Device();
-  bool Preconditioning_required;
-  NVM::NVM_Type Memory_Type;
+  const bool Preconditioning_required;
+  const NVM::NVM_Type Memory_Type;
+
+  const uint32_t Channel_count;
+  const uint32_t Chip_no_per_channel;
+
+  const Utils::LhaToLpaConverter<SSD_Device>     lha_to_lpa_converter;
+  const Utils::NvmAccessBitmapFinder<SSD_Device> nvm_access_bitmap_finder;
+
   SSD_Components::Host_Interface_Base *Host_interface;
   SSD_Components::Data_Cache_Manager_Base *Cache_manager;
   SSD_Components::NVM_Firmware* Firmware;
   SSD_Components::NVM_PHY_Base* PHY;
   std::vector<SSD_Components::NVM_Channel_Base*> Channels;
-  void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
+
+public:
+  SSD_Device(Device_Parameter_Set* parameters, std::vector<IO_Flow_Parameter_Set*>* io_flows);
+  ~SSD_Device() final;
+
+  void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) final;
   uint32_t Get_no_of_LHAs_in_an_NVM_write_unit();
 
   void Attach_to_host(Host_Components::PCIe_Switch* pcie_switch);
-  void Perform_preconditioning(std::vector<Utils::Workload_Statistics*> workload_stats);
-  void Start_simulation();
-  void Validate_simulation_config();
-  void Execute_simulator_event(MQSimEngine::Sim_Event* event);
-  static LPA_type Convert_host_logical_address_to_device_address(LHA_type lha);
-  static page_status_type Find_NVM_subunit_access_bitmap(LHA_type lha);
-
-  uint32_t Channel_count;
-  uint32_t Chip_no_per_channel;
+  void Perform_preconditioning(const std::vector<Utils::Workload_Statistics*>& workload_stats);
 
 private:
-  static SSD_Device * my_instance;//Used in static functions
+  LPA_type __convert_lha_to_lpa(LHA_type lha) const;
+  page_status_type __find_nvm_subunit_access_bitmap(LHA_type lha) const;
+
 };
 
 #endif //!SSD_DEVICE_H

@@ -175,8 +175,8 @@ std::vector<Utils::Workload_Statistics*> Host_System::get_workloads_statistics()
 
   for (auto &workload : IO_flows)
   {
-    Utils::Workload_Statistics* s = new Utils::Workload_Statistics;
-    workload->Get_statistics(*s, ssd_device->Convert_host_logical_address_to_device_address, ssd_device->Find_NVM_subunit_access_bitmap);
+    auto s = new Utils::Workload_Statistics;
+    workload->get_stats(*s, ssd_device->lha_to_lpa_converter, ssd_device->nvm_access_bitmap_finder);
     stats.push_back(s);
   }
 

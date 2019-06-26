@@ -18,68 +18,45 @@ namespace Utils
 #define HOT_REGION_METRIC 2.5
 #define STATISTICALLY_SUFFICIENT_WRITES_FOR_PRECONDITIONING 10000
 
-  // ==================================================
-  // Proxy class for LHA to LPA for Workload Statistics
-  // ==================================================
-  class LHAtoLPAConverterBase {
+  // ================================
+  // Workload Stats' support functors
+  // ================================
+  template <typename RET_TYPE>
+  class IOFlowStatsHandlerBase {
   public:
-    virtual ~LHAtoLPAConverterBase() = default;
-
-    virtual LPA_type operator()(LHA_type lha) const = 0;
+    virtual ~IOFlowStatsHandlerBase() = default;
+    virtual RET_TYPE operator()(LHA_type lha) const = 0;
   };
 
-  typedef const LHAtoLPAConverterBase& LHAtoLPAConverterRef;
-
-  template<typename T>
-  class LHAtoLPAConverter : public LHAtoLPAConverterBase {
-    typedef LPA_type (T::*Handler)(LHA_type lha) const;
+  template <typename T, typename RET_TYPE>
+  class IOFlowStatsHandler : public IOFlowStatsHandlerBase<RET_TYPE> {
+    typedef RET_TYPE (T::*Handler)(LHA_type lha) const;
 
   private:
-    const T* __callee;
+    T* __callee;
     Handler __handler;
 
   public:
-    LHAtoLPAConverter(T* callee, Handler handler)
-      : __callee(callee),
+    IOFlowStatsHandler(T* callee, Handler handler)
+      : IOFlowStatsHandlerBase<RET_TYPE>(),
+        __callee(callee),
         __handler(handler)
     { }
 
-    ~LHAtoLPAConverter() final = default;
+    ~IOFlowStatsHandler() final = default;
 
-    LPA_type operator()(LHA_type lha) const final
+    RET_TYPE operator()(LHA_type lha) const final
     { return (__callee->*__handler)(lha); }
   };
 
-  // =========================================
-  // Proxy class for NVM SubUnit Access BitMap
-  // =========================================
-  class NVMSubUnitAccessBitMapBase {
-  public:
-    virtual ~NVMSubUnitAccessBitMapBase() = default;
-    virtual page_status_type operator()(LHA_type lha) const = 0;
-  };
+  typedef IOFlowStatsHandlerBase<LPA_type>         LhaToLpaConverterBase;
+  typedef IOFlowStatsHandlerBase<page_status_type> NvmAccessBitmapFinderBase;
 
-  typedef const NVMSubUnitAccessBitMapBase& NVMSubUnitAccessBitMapRef;
+  template <typename T>
+  using LhaToLpaConverter = IOFlowStatsHandler<T, LPA_type>;
 
-  template<typename T>
-  class NVMSubUnitAccessBitMap : public NVMSubUnitAccessBitMapBase {
-    typedef page_status_type (T::*Handler)(LHA_type lha) const;
-
-  private:
-    const T* __callee;
-    Handler __handler;
-
-  public:
-    NVMSubUnitAccessBitMap(T* callee, Handler handler)
-      : __callee(callee),
-        __handler(handler)
-    { }
-
-    ~NVMSubUnitAccessBitMap() final = default;
-
-    page_status_type operator()(LHA_type lha) const final
-    { return (__callee->*__handler)(lha); }
-  };
+  template <typename T>
+  using NvmAccessBitmapFinder = IOFlowStatsHandler<T, page_status_type>;
 
   // ===========================
   // Workload Statistics classes

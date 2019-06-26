@@ -144,8 +144,10 @@ namespace Host_Components
     }
   }
 
-  void IO_Flow_Trace_Based::Get_statistics(Utils::Workload_Statistics& stats, LPA_type(*Convert_host_logical_address_to_device_address)(LHA_type lha),
-    page_status_type(*Find_NVM_subunit_access_bitmap)(LHA_type lha))
+  void
+  IO_Flow_Trace_Based::get_stats(Utils::Workload_Statistics& stats,
+                                 const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,
+                                 const Utils::NvmAccessBitmapFinderBase& find_nvm_subunit_access_bitmap)
   {
     stats.Type = Utils::Workload_Type::TRACE_BASED;
     stats.Stream_id = io_queue_id - 1; //In MQSim, there is a simple relation between stream id and the io_queue_id of NVMe
@@ -167,7 +169,7 @@ namespace Host_Components
     std::ifstream trace_file_temp;
     trace_file_temp.open(trace_file_path, std::ios::in);
     if (!trace_file_temp.is_open())
-      PRINT_ERROR("Error while opening the input trace file!")
+    PRINT_ERROR("Error while opening the input trace file!")
 
     std::string trace_line;
     char* pEnd;
@@ -185,7 +187,7 @@ namespace Host_Components
       sim_time_type prev_time = last_request_arrival_time;
       last_request_arrival_time = std::strtoull(line_splitted[ASCIITraceTimeColumn].c_str(), &pEnd, 10);
       if (last_request_arrival_time < prev_time)
-        PRINT_ERROR("Unexpected request arrival time: " << last_request_arrival_time << "\nMQSim expects request arrival times to be monotonic increasing in the input trace!")
+      PRINT_ERROR("Unexpected request arrival time: " << last_request_arrival_time << "\nMQSim expects request arrival times to be monotonic increasing in the input trace!")
       sim_time_type diff = (last_request_arrival_time - prev_time) / 1000;//The arrival rate histogram is stored in the microsecond unit
       sum_inter_arrival += last_request_arrival_time - prev_time;
 
@@ -204,8 +206,8 @@ namespace Host_Components
       //Address access pattern statistics
       while (start_LBA <= end_LBA)
       {
-        LPA_type device_address = Convert_host_logical_address_to_device_address(start_LBA);
-        page_status_type access_status_bitmap = Find_NVM_subunit_access_bitmap(start_LBA);
+        LPA_type device_address = convert_lha_to_lpa(start_LBA);
+        page_status_type access_status_bitmap = find_nvm_subunit_access_bitmap(start_LBA);
         if (line_splitted[ASCIITraceTypeColumn].compare(ASCIITraceWriteCode) == 0)
         {
           if (stats.Write_address_access_pattern.find(device_address) == stats.Write_address_access_pattern.end())
@@ -220,7 +222,7 @@ namespace Host_Components
             stats.Write_address_access_pattern[device_address].Access_count = stats.Write_address_access_pattern[device_address].Access_count + 1;
             stats.Write_address_access_pattern[device_address].Accessed_sub_units = stats.Write_address_access_pattern[device_address].Accessed_sub_units | access_status_bitmap;
           }
-          
+
           if (stats.Read_address_access_pattern.find(device_address) != stats.Read_address_access_pattern.end())
             stats.Write_read_shared_addresses.insert(device_address);
         }
@@ -278,4 +280,5 @@ namespace Host_Components
     stats.Initial_occupancy_ratio = initial_occupancy_ratio;
     stats.Replay_no = total_replay_no;
   }
+
 }
