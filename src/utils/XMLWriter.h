@@ -24,6 +24,9 @@ namespace Utils
 {
   class XmlWriter {
   public:
+    XmlWriter() = default;
+    explicit XmlWriter(const std::string& file_name);
+
     bool Open(const std::string& file_name);
     void Close();
     bool exists(const std::string& file_name);
@@ -111,5 +114,7 @@ namespace Utils
     XmlWriter::write_attr_str_inline(name, to_string(value));
   }
 
+#define XML_WRITER_MACRO_WRITE_ATTR_STR(WRITER, NAME) \
+  (WRITER).Write_attribute_string(#NAME, (NAME))
 }
 #endif //!XMLWRITE_H

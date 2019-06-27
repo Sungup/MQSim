@@ -3,11 +3,11 @@
 
 #include "../sim/Sim_Defs.h"
 #include "../nvm_chip/flash_memory/FlashTypes.h"
-#include "Parameter_Set_Base.h"
+#include "params/ParameterSetBase.h"
 
 // TODO Remove static features
 
-class Flash_Parameter_Set : Parameter_Set_Base
+class Flash_Parameter_Set : ParameterSetBase
 {
 public:
   static Flash_Technology_Type Flash_Technology;
@@ -28,8 +28,8 @@ public:
   static uint32_t Page_No_Per_Block;//Page no per block
   static uint32_t Page_Capacity;//Flash page capacity in bytes
   static uint32_t Page_Metadat_Capacity;//Flash page metadata capacity in bytes
-  void XML_serialize(Utils::XmlWriter& xmlwriter);
-  void XML_deserialize(rapidxml::xml_node<> *node);
+  void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
+  void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
 
 #endif // !FLASH_PARAMETER_SET_H

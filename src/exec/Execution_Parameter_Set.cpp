@@ -1,15 +1,80 @@
 #include "Execution_Parameter_Set.h"
 
+#include <fstream>
 
-Host_Parameter_Set Execution_Parameter_Set::Host_Configuration;
-Device_Parameter_Set Execution_Parameter_Set::SSD_Device_Configuration;
-
-
-void Execution_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)
+force_inline void
+Execution_Parameter_Set::__dump_config_params(const std::string& file_path) const
 {
-  std::string tmp;
-  tmp = "Execution_Parameter_Set";
-  xmlwriter.Write_open_tag(tmp);
+  std::cout << "Using MQSim's default configuration." << std::endl
+            << "Writing the default configuration parameters to the expected "
+            << "configuration file." << std::endl;
+
+  Utils::XmlWriter xmlwriter(file_path);
+  XML_serialize(xmlwriter);
+  xmlwriter.Close();
+
+  std::cout << "[====================] Done!" << std::endl;
+}
+
+Execution_Parameter_Set::Execution_Parameter_Set(const std::string& file_path)
+  : Host_Configuration(),
+    SSD_Device_Configuration()
+{
+  load_config_params(file_path);
+}
+
+void
+Execution_Parameter_Set::load_config_params(const std::string& file_path)
+{
+  std::ifstream ssd_config_file;
+  ssd_config_file.open(file_path);
+
+  if (!ssd_config_file) {
+    std::cerr << "The specified SSD configuration file does not exist."
+              << std::endl;
+
+    __dump_config_params(file_path);
+    return;
+  }
+
+  /// 1. Read input workload parameters
+  std::string line((std::istreambuf_iterator<char>(ssd_config_file)),
+                   std::istreambuf_iterator<char>());
+
+  ssd_config_file.close();
+
+  /// 2. Check default flag option in file
+  if (line == "USE_INTERNAL_PARAMS") {
+    __dump_config_params(file_path);
+
+    return;
+  }
+
+  /// TODO Remove RapidXml because of the old c++ standard (<C++11).
+  ///
+  /// Alloc temp string space for XML parsing. RapidXml support only
+  /// the non-const data type. Because of this reason, we should alloc char
+  /// array dynamically using new/delete.
+  std::shared_ptr<char> temp(new char[line.length() + 1],
+                             std::default_delete<char []>());
+  strcpy(temp.get(), line.c_str());
+
+  rapidxml::xml_document<> doc;
+  doc.parse<0>(temp.get());
+  auto* config = doc.first_node("Execution_Parameter_Set");
+
+  if (config) {
+    XML_deserialize(config);
+  } else {
+    std::cerr << "Error in the SSD configuration file!" << std::endl;
+    std::cout << "Using MQSim's default configuration." << std::endl;
+  }
+}
+
+void
+Execution_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter) const
+{
+  xmlwriter.Write_open_tag("Execution_Parameter_Set");
 
   Host_Configuration.XML_serialize(xmlwriter);
   SSD_Device_Configuration.XML_serialize(xmlwriter);
@@ -17,24 +82,19 @@ void Execution_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)
   xmlwriter.Write_close_tag();
 }
 
-void Execution_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
+void
+Execution_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
 {
-  try
-  {
-    for (auto param = node->first_node(); param; param = param->next_sibling())
-    {
+  try {
+    for (auto param = node->first_node(); param; param = param->next_sibling()) {
       if (strcmp(param->name(), "Host_Parameter_Set") == 0)
-      {
         Host_Configuration.XML_deserialize(param);
-      }
+
       else if (strcmp(param->name(), "Device_Parameter_Set") == 0)
-      {
         SSD_Device_Configuration.XML_deserialize(param);
-      }
+
     }
-  }
-  catch (...)
-  {
-    PRINT_ERROR("Error in the Execution_Parameter_Set!")
+  } catch (...) {
+    throw mqsim_error("Error in the Execution_Parameter_Set!");
   }
 }

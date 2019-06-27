@@ -11,7 +11,9 @@
 
 #include <string>
 
+#include "../../utils/Exception.h"
 #include "../../utils/InlineTools.h"
+#include "../../utils/StringTools.h"
 
 // ======================================
 // Enumerators and its string converters.
@@ -25,21 +27,21 @@ force_inline std::string
 to_string(SSD_Components::Flash_Scheduling_Type type)
 {
   switch (type) {
-    case SSD_Components::Flash_Scheduling_Type::OUT_OF_ORDER: return "OUT_OF_ORDER";
-    case SSD_Components::Flash_Scheduling_Type::FLIN:         return "FLIN";
+  case SSD_Components::Flash_Scheduling_Type::OUT_OF_ORDER: return "OUT_OF_ORDER";
+  case SSD_Components::Flash_Scheduling_Type::FLIN:         return "FLIN";
   }
 }
 
 force_inline SSD_Components::Flash_Scheduling_Type
 to_flash_scheduling_type(std::string v)
 {
-  std::transform(v.begin(), v.end(), v.begin(), ::toupper);
+  Utils::to_upper(v);
 
   if (v == "OUT_OR_ORDER") return SSD_Components::Flash_Scheduling_Type::OUT_OF_ORDER;
   // Currently FLIN Scheduling type had been all commented out!
   // else if ("FLIN")         return SSD_Components::Flash_Scheduling_Type::FLIN;
 
-  throw std::logic_error("Unknown transaction scheduling type specified in the SSD configuration file");
+  throw mqsim_error("Unknown transaction scheduling type specified in the SSD configuration file");
 }
 
 #endif /* Predefined include guard __MQSim__TSU_Defs__ */

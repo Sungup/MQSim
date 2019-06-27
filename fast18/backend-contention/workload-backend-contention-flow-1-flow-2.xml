@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="us-ascii"?>
 <MQSim_IO_Scenarios>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -24,8 +24,8 @@
 				 <Intensity>32768</Intensity>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -47,10 +47,10 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -72,8 +72,8 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -95,10 +95,10 @@
 				 <Average_No_of_Reqs_in_Queue>4</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -120,8 +120,8 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -143,10 +143,10 @@
 				 <Average_No_of_Reqs_in_Queue>8</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -168,8 +168,8 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -191,10 +191,10 @@
 				 <Average_No_of_Reqs_in_Queue>16</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -216,8 +216,8 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -239,10 +239,10 @@
 				 <Average_No_of_Reqs_in_Queue>32</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -264,8 +264,8 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -287,10 +287,10 @@
 				 <Average_No_of_Reqs_in_Queue>64</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -312,8 +312,8 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -335,10 +335,10 @@
 				 <Average_No_of_Reqs_in_Queue>128</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 	<IO_Scenario>
-		<IO_Flow_Parameter_Set_Synthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -360,8 +360,8 @@
 				 <Average_No_of_Reqs_in_Queue>2</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
-		<IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
+		<IOFlowParameterSetSynthetic>
 				 <Priority_Class>HIGH</Priority_Class>
 				 <Device_Level_Data_Caching_Mode>WRITE_CACHE</Device_Level_Data_Caching_Mode>
 				 <Channel_IDs>0,1,2,3,4,5,6,7</Channel_IDs>
@@ -383,6 +383,6 @@
 				 <Average_No_of_Reqs_in_Queue>256</Average_No_of_Reqs_in_Queue>
 				 <Stop_Time>10000000000</Stop_Time>
 				 <Total_Requests_To_Generate>0</Total_Requests_To_Generate>
-		</IO_Flow_Parameter_Set_Synthetic>
+		</IOFlowParameterSetSynthetic>
 	</IO_Scenario>
 </MQSim_IO_Scenarios>

@@ -2,21 +2,30 @@
 #define EXECUTION_PARAMETER_SET_H
 
 #include <vector>
-#include "Parameter_Set_Base.h"
+#include "params/ParameterSetBase.h"
 #include "Device_Parameter_Set.h"
-#include "IO_Flow_Parameter_Set.h"
+#include "params/IOFlowParameterSet.h"
 #include "Host_Parameter_Set.h"
 
 // TODO Remove static features
 
-class Execution_Parameter_Set : public Parameter_Set_Base
+class Execution_Parameter_Set : public ParameterSetBase
 {
 public:
-  static Host_Parameter_Set Host_Configuration;
-  static Device_Parameter_Set SSD_Device_Configuration;
+  Host_Parameter_Set Host_Configuration;
+  Device_Parameter_Set SSD_Device_Configuration;
 
-  void XML_serialize(Utils::XmlWriter& xmlwriter);
-  void XML_deserialize(rapidxml::xml_node<> *node);
+private:
+  void __dump_config_params(const std::string& file_path) const;
+
+public:
+  Execution_Parameter_Set() = default;
+  explicit Execution_Parameter_Set(const std::string& file_path);
+
+  void load_config_params(const std::string& file_path);
+
+  void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
+  void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
 
 #endif

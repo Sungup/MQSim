@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -58,7 +59,23 @@ to_bool(std::string v)
 {
   Utils::to_upper(v);
 
-  return v == "TRUE";
+  return v != "FALSE";
+}
+
+template <typename T>
+force_inline std::string
+join_vector(const std::vector<T>& v, const char* seperator = ",")
+{
+  std::stringstream ss;
+
+  const char* sp = "";
+
+  for (auto& item : v) {
+    ss << sp << item;
+    sp = seperator;
+  }
+
+  return ss.str();
 }
 
 #endif

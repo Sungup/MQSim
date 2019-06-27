@@ -24,9 +24,9 @@ set(MQSIM_EXEC_SOURCES
     exec/Host_Parameter_Set.h
     exec/Host_System.cpp
     exec/Host_System.h
-    exec/IO_Flow_Parameter_Set.cpp
-    exec/IO_Flow_Parameter_Set.h
-    exec/Parameter_Set_Base.h
+    exec/params/IOFlowParameterSet.cpp
+    exec/params/IOFlowParameterSet.h
+    exec/params/ParameterSetBase.h
     exec/SSD_Device.cpp
     exec/SSD_Device.h)
 

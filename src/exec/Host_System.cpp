@@ -26,7 +26,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
   Simulator->AddObject(this->Link);
 
   //Create IO flows
-  LHA_type address_range_per_flow = ssd_host_interface->Get_max_logical_sector_address() / parameters->IO_Flow_Definitions.size();
+  // LHA_type address_range_per_flow = ssd_host_interface->Get_max_logical_sector_address() / parameters->IO_Flow_Definitions.size();
   for (uint16_t flow_id = 0; flow_id < parameters->IO_Flow_Definitions.size(); flow_id++)
   {
     Host_Components::IO_Flow_Base* io_flow = NULL;
@@ -46,7 +46,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
     {
     case Flow_Type::SYNTHETIC:
     {
-      IO_Flow_Parameter_Set_Synthetic* flow_param = (IO_Flow_Parameter_Set_Synthetic*)parameters->IO_Flow_Definitions[flow_id];
+      IOFlowParameterSetSynthetic* flow_param = (IOFlowParameterSetSynthetic*)parameters->IO_Flow_Definitions[flow_id].get();
       if (flow_param->Working_Set_Percentage > 100 || flow_param->Working_Set_Percentage < 1)
         flow_param->Working_Set_Percentage = 100;
       io_flow = new Host_Components::IO_Flow_Synthetic(this->ID() + ".IO_Flow.Synth.No_" + std::to_string(flow_id), flow_id,
@@ -64,7 +64,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
     }
     case Flow_Type::TRACE:
     {
-      IO_Flow_Parameter_Set_Trace_Based * flow_param = (IO_Flow_Parameter_Set_Trace_Based*)parameters->IO_Flow_Definitions[flow_id];
+      IOFlowParameterSetTraceBased * flow_param = (IOFlowParameterSetTraceBased*)parameters->IO_Flow_Definitions[flow_id].get();
       io_flow = new Host_Components::IO_Flow_Trace_Based(this->ID() + ".IO_Flow.Trace." + flow_param->File_Path, flow_id,
         Utils::Logical_Address_Partitioning_Unit::Start_lha_available_to_flow(flow_id), Utils::Logical_Address_Partitioning_Unit::End_lha_available_to_flow(flow_id),
         FLOW_ID_TO_Q_ID(flow_id), nvme_sq_size, nvme_cq_size,

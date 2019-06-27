@@ -44,9 +44,9 @@ force_inline std::string
 to_string(Utils::Address_Distribution_Type v)
 {
   switch (v) {
-    case Utils::Address_Distribution_Type::STREAMING:      return "STREAMING";
-    case Utils::Address_Distribution_Type::RANDOM_HOTCOLD: return "RANDOM_HOTCOLD";
-    case Utils::Address_Distribution_Type::RANDOM_UNIFORM: return "RANDOM_UNIFORM";
+  case Utils::Address_Distribution_Type::STREAMING:      return "STREAMING";
+  case Utils::Address_Distribution_Type::RANDOM_HOTCOLD: return "RANDOM_HOTCOLD";
+  case Utils::Address_Distribution_Type::RANDOM_UNIFORM: return "RANDOM_UNIFORM";
   }
 }
 
@@ -54,8 +54,8 @@ force_inline std::string
 to_string(Utils::Request_Size_Distribution_Type v)
 {
   switch (v) {
-    case Utils::Request_Size_Distribution_Type::FIXED:  return "FIXED";
-    case Utils::Request_Size_Distribution_Type::NORMAL: return "NORMAL";
+  case Utils::Request_Size_Distribution_Type::FIXED:  return "FIXED";
+  case Utils::Request_Size_Distribution_Type::NORMAL: return "NORMAL";
   }
 }
 
@@ -63,8 +63,8 @@ force_inline std::string
 to_string(Utils::Workload_Type v)
 {
   switch (v) {
-    case Utils::Workload_Type::SYNTHETIC:   return "SYNTHETIC";
-    case Utils::Workload_Type::TRACE_BASED: return "TRACE_BASED";
+  case Utils::Workload_Type::SYNTHETIC:   return "SYNTHETIC";
+  case Utils::Workload_Type::TRACE_BASED: return "TRACE_BASED";
   }
 }
 
@@ -72,8 +72,8 @@ force_inline std::string
 to_string(Utils::Request_Generator_Type v)
 {
   switch (v) {
-    case Utils::Request_Generator_Type::BANDWIDTH:   return "BANDWIDTH";
-    case Utils::Request_Generator_Type::QUEUE_DEPTH: return "QUEUE_DEPTH";
+  case Utils::Request_Generator_Type::BANDWIDTH:   return "BANDWIDTH";
+  case Utils::Request_Generator_Type::QUEUE_DEPTH: return "QUEUE_DEPTH";
   }
 }
 

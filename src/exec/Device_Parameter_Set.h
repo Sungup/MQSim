@@ -12,12 +12,12 @@
 #include "../ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.h"
 #include "../ssd/mapping/AddressMappingUnitDefs.h"
 #include "../nvm_chip/NVM_Types.h"
-#include "Parameter_Set_Base.h"
+#include "params/ParameterSetBase.h"
 #include "Flash_Parameter_Set.h"
 
 // TODO Remove static features
 
-class Device_Parameter_Set : public Parameter_Set_Base
+class Device_Parameter_Set : public ParameterSetBase
 {
 public:
   static int Seed;//Seed for random number generation (used in device's random number generators)
@@ -59,8 +59,9 @@ public:
   static uint32_t Chip_No_Per_Channel;
   static SSD_Components::ONFI_Protocol Flash_Comm_Protocol;
   static Flash_Parameter_Set Flash_Parameters;
-  void XML_serialize(Utils::XmlWriter& xmlwriter);
-  void XML_deserialize(rapidxml::xml_node<> *node);
+
+  void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
+  void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
 
 #endif // !DEVICE_PARAMETER_SET_H

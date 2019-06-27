@@ -8,9 +8,9 @@ sim_time_type Host_Parameter_Set::SATA_Processing_Delay;//The overall hardware a
 bool Host_Parameter_Set::Enable_ResponseTime_Logging = false;
 sim_time_type Host_Parameter_Set::ResponseTime_Logging_Period_Length = 400000;//nanoseconds
 std::string Host_Parameter_Set::Input_file_path;
-std::vector<IO_Flow_Parameter_Set*> Host_Parameter_Set::IO_Flow_Definitions;
+IOFlowScenario Host_Parameter_Set::IO_Flow_Definitions;
 
-void Host_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)
+void Host_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
   std::string tmp;
   tmp = "Host_Parameter_Set";
@@ -64,7 +64,7 @@ void Host_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
       {
         std::string val = param->value();
         std::transform(val.begin(), val.end(), val.begin(), ::toupper);
-        Enable_ResponseTime_Logging = (val.compare("FALSE") == 0 ? false : true);
+        Enable_ResponseTime_Logging = val != "FALSE";
       }
       else if (strcmp(param->name(), "ResponseTime_Logging_Period_Length") == 0)
       {

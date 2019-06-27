@@ -44,7 +44,7 @@ uint32_t Device_Parameter_Set::Chip_No_Per_Channel = 4;
 SSD_Components::ONFI_Protocol Device_Parameter_Set::Flash_Comm_Protocol = SSD_Components::ONFI_Protocol::NVDDR2;
 Flash_Parameter_Set Device_Parameter_Set::Flash_Parameters;
 
-void Device_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)
+void Device_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
   std::string tmp;
   tmp = "Device_Parameter_Set";

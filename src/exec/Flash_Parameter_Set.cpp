@@ -23,7 +23,7 @@ uint32_t Flash_Parameter_Set::Page_Capacity = 8192;//Flash page capacity in byte
 uint32_t Flash_Parameter_Set::Page_Metadat_Capacity = 1872;//Flash page capacity in bytes
 
 
-void Flash_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter)
+void Flash_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
   std::string tmp;
   tmp = "Flash_Parameter_Set";

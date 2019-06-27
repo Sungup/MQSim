@@ -4,6 +4,15 @@
 
 using namespace Utils;
 
+XmlWriter::XmlWriter(const std::string& file_name)
+  : indent(0),
+    openTags(0),
+    openElements(0)
+{
+  if (!Open(file_name))
+    throw mqsim_error("Cannot open file to write");
+}
+
 bool
 XmlWriter::exists(const std::string& file_name)
 {
