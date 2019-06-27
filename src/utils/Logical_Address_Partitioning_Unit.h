@@ -7,10 +7,12 @@
 #include "../ssd/interface/Host_Interface_Defs.h"
 #include "InlineTools.h"
 
-/* MQSim requires the logical address space of the SSD device to be partitioned among the concurrent flows.
-In fact, two different storage traces may access the same logical address, but this logical address
-should not be assumed to be identical when the traces are executed together.
-*/
+/**
+ * MQSim requires the logical address space of the SSD device to be partitioned
+ * among the concurrent flows. In fact, two different storage traces may access
+ * the same logical address, but this logical address should not be assumed to
+ * be identical when the traces are executed together.
+ */
 
 // TODO Remove static features
 

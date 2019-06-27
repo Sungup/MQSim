@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="us-ascii"?>
-<Execution_Parameter_Set>
+<ExecParameterSet>
 	<Host_Parameter_Set>
 			 <PCIe_Lane_Bandwidth>1.00000</PCIe_Lane_Bandwidth>
 			 <PCIe_Lane_Count>4</PCIe_Lane_Count>
@@ -46,7 +46,7 @@
 			 <Channel_Transfer_Rate>333</Channel_Transfer_Rate>
 			 <Chip_No_Per_Channel>4</Chip_No_Per_Channel>
 			 <Flash_Comm_Protocol>NVDDR2</Flash_Comm_Protocol>
-		<Flash_Parameter_Set>
+		<FlashParameterSet>
 				 <Flash_Technology>MLC</Flash_Technology>
 				 <CMD_Suspension_Support>ERASE</CMD_Suspension_Support>
 				 <Page_Read_Latency_LSB>75000</Page_Read_Latency_LSB>
@@ -64,7 +64,7 @@
 				 <Block_No_Per_Plane>2048</Block_No_Per_Plane>
 				 <Page_No_Per_Block>256</Page_No_Per_Block>
 				 <Page_Capacity>8192</Page_Capacity>
-				 <Page_Metadat_Capacity>448</Page_Metadat_Capacity>
-		</Flash_Parameter_Set>
+				 <Page_Metadata_Capacity>448</Page_Metadata_Capacity>
+		</FlashParameterSet>
 	</Device_Parameter_Set>
-</Execution_Parameter_Set>
+</ExecParameterSet>

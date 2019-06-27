@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "params/ParameterSetBase.h"
-#include "params/IOFlowParameterSet.h"
+#include "params/IOFlowParamSet.h"
 
 // TODO Remove static features
 

@@ -20,8 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\exec\Device_Parameter_Set.cpp" />
-    <ClCompile Include="src\exec\Execution_Parameter_Set.cpp" />
-    <ClCompile Include="src\exec\Flash_Parameter_Set.cpp" />
+    <ClCompile Include="src\exec\ExecParameterSet.cpp" />
+    <ClCompile Include="src\exec\FlashParameterSet.cpp" />
     <ClCompile Include="src\exec\Host_Parameter_Set.cpp" />
     <ClCompile Include="src\exec\Host_System.cpp" />
     <ClCompile Include="src\exec\IO_Flow_Parameter_Set.cpp" />
@@ -83,8 +83,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\exec\Device_Parameter_Set.h" />
-    <ClInclude Include="src\exec\Execution_Parameter_Set.h" />
-    <ClInclude Include="src\exec\Flash_Parameter_Set.h" />
+    <ClInclude Include="src\exec\ExecParameterSet.h" />
+    <ClInclude Include="src\exec\FlashParameterSet.h" />
     <ClInclude Include="src\exec\Host_Parameter_Set.h" />
     <ClInclude Include="src\exec\Host_System.h" />
     <ClInclude Include="src\exec\IO_Flow_Parameter_Set.h" />

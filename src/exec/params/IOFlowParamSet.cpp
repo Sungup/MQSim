@@ -1,4 +1,4 @@
-#include "IOFlowParameterSet.h"
+#include "IOFlowParamSet.h"
 #include <algorithm>
 #include <cstring>
 #include <numeric>
@@ -33,10 +33,10 @@ __copy_ids(char* value, std::vector<T>& id_list)
   id_list.assign(ids.begin(), ids.end());
 }
 
-// -------------------------------------
-// IOFlowParameterSet Implementations
-// -------------------------------------
-IOFlowParameterSet::IOFlowParameterSet(Flow_Type type)
+// ------------------------------
+// IOFlowParamSet Implementations
+// ------------------------------
+IOFlowParamSet::IOFlowParamSet(Flow_Type type)
   : ParameterSetBase(),
     Type(type),
     Device_Level_Data_Caching_Mode(SSD_Components::Caching_Mode::WRITE_CACHE),
@@ -49,7 +49,7 @@ IOFlowParameterSet::IOFlowParameterSet(Flow_Type type)
 { }
 
 force_inline void
-IOFlowParameterSet::load_default()
+IOFlowParamSet::_load_default()
 {
   Device_Level_Data_Caching_Mode = SSD_Components::Caching_Mode::WRITE_CACHE;
   Priority_Class = IO_Flow_Priority_Class::HIGH;
@@ -70,7 +70,7 @@ IOFlowParameterSet::load_default()
 // All serialization and deserialization functions should be replaced by a C++
 // reflection implementation
 void
-IOFlowParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
+IOFlowParamSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Priority_Class);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Device_Level_Data_Caching_Mode);
@@ -84,7 +84,7 @@ IOFlowParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
 }
 
 void
-IOFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
+IOFlowParamSet::XML_deserialize(rapidxml::xml_node<> *node)
 {
   try {
     for (auto param = node->first_node(); param; param = param->next_sibling()) {
@@ -112,16 +112,16 @@ IOFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
     }
 
   } catch (...) {
-    throw mqsim_error("Error in IOFlowParameterSet!");
+    throw mqsim_error("Error in IOFlowParamSet!");
   }
 }
 
 
-// ----------------------------------------------
-// IOFlowParameterSetSynthetic Implementation
-// ----------------------------------------------
-IOFlowParameterSetSynthetic::IOFlowParameterSetSynthetic()
-  : IOFlowParameterSet(Flow_Type::SYNTHETIC),
+// ------------------------------------
+// SyntheticFlowParamSet Implementation
+// ------------------------------------
+SyntheticFlowParamSet::SyntheticFlowParamSet()
+  : IOFlowParamSet(Flow_Type::SYNTHETIC),
     Synthetic_Generator_Type(Utils::Request_Generator_Type::QUEUE_DEPTH),
     Address_Distribution(Utils::Address_Distribution_Type::RANDOM_UNIFORM),
     Request_Size_Distribution(Utils::Request_Size_Distribution_Type::FIXED),
@@ -139,8 +139,8 @@ IOFlowParameterSetSynthetic::IOFlowParameterSetSynthetic()
     Total_Requests_To_Generate(0)
 { }
 
-IOFlowParameterSetSynthetic::IOFlowParameterSetSynthetic(int seed)
-  : IOFlowParameterSet(Flow_Type::SYNTHETIC),
+SyntheticFlowParamSet::SyntheticFlowParamSet(int seed)
+  : IOFlowParamSet(Flow_Type::SYNTHETIC),
     Synthetic_Generator_Type(Utils::Request_Generator_Type::QUEUE_DEPTH),
     Address_Distribution(Utils::Address_Distribution_Type::RANDOM_UNIFORM),
     Request_Size_Distribution(Utils::Request_Size_Distribution_Type::FIXED),
@@ -160,8 +160,8 @@ IOFlowParameterSetSynthetic::IOFlowParameterSetSynthetic(int seed)
   load_default(seed);
 }
 
-IOFlowParameterSetSynthetic::IOFlowParameterSetSynthetic(rapidxml::xml_node<>* node)
-  : IOFlowParameterSet(Flow_Type::SYNTHETIC),
+SyntheticFlowParamSet::SyntheticFlowParamSet(rapidxml::xml_node<>* node)
+  : IOFlowParamSet(Flow_Type::SYNTHETIC),
     Synthetic_Generator_Type(Utils::Request_Generator_Type::QUEUE_DEPTH),
     Address_Distribution(Utils::Address_Distribution_Type::RANDOM_UNIFORM),
     Request_Size_Distribution(Utils::Request_Size_Distribution_Type::FIXED),
@@ -182,9 +182,9 @@ IOFlowParameterSetSynthetic::IOFlowParameterSetSynthetic(rapidxml::xml_node<>* n
 }
 
 void
-IOFlowParameterSetSynthetic::load_default(int seed)
+SyntheticFlowParamSet::load_default(int seed)
 {
-  IOFlowParameterSet::load_default();
+  IOFlowParamSet::_load_default();
 
   Working_Set_Percentage = 85;
   Synthetic_Generator_Type = Utils::Request_Generator_Type::QUEUE_DEPTH;
@@ -208,10 +208,10 @@ IOFlowParameterSetSynthetic::load_default(int seed)
 }
 
 void
-IOFlowParameterSetSynthetic::XML_serialize(Utils::XmlWriter& xmlwriter) const
+SyntheticFlowParamSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
-  xmlwriter.Write_open_tag("IOFlowParameterSetSynthetic");
-  IOFlowParameterSet::XML_serialize(xmlwriter);
+  xmlwriter.Write_open_tag("SyntheticFlowParamSet");
+  IOFlowParamSet::XML_serialize(xmlwriter);
 
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Working_Set_Percentage);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Synthetic_Generator_Type);
@@ -233,9 +233,9 @@ IOFlowParameterSetSynthetic::XML_serialize(Utils::XmlWriter& xmlwriter) const
 }
 
 void
-IOFlowParameterSetSynthetic::XML_deserialize(rapidxml::xml_node<> *node)
+SyntheticFlowParamSet::XML_deserialize(rapidxml::xml_node<> *node)
 {
-  IOFlowParameterSet::XML_deserialize(node);
+  IOFlowParamSet::XML_deserialize(node);
 
   try {
     for (auto param = node->first_node(); param; param = param->next_sibling()) {
@@ -287,23 +287,23 @@ IOFlowParameterSetSynthetic::XML_deserialize(rapidxml::xml_node<> *node)
     }
 
   } catch (...) {
-    throw mqsim_error("Error in IOFlowParameterSetSynthetic!");
+    throw mqsim_error("Error in SyntheticFlowParamSet!");
   }
 }
 
-// -------------------------------------------------
-// Constructor for IOFlowParameterSetTraceBased
-// -------------------------------------------------
-IOFlowParameterSetTraceBased::IOFlowParameterSetTraceBased()
-  : IOFlowParameterSet(Flow_Type::TRACE),
+// -------------------------------------
+// Constructor for TraceFlowParameterSet
+// -------------------------------------
+TraceFlowParameterSet::TraceFlowParameterSet()
+  : IOFlowParamSet(Flow_Type::TRACE),
     File_Path(),
     Percentage_To_Be_Executed(100),
     Relay_Count(1),
     Time_Unit(Trace_Time_Unit::NANOSECOND)
 { }
 
-IOFlowParameterSetTraceBased::IOFlowParameterSetTraceBased(rapidxml::xml_node<>* node)
-  : IOFlowParameterSet(Flow_Type::TRACE),
+TraceFlowParameterSet::TraceFlowParameterSet(rapidxml::xml_node<>* node)
+  : IOFlowParamSet(Flow_Type::TRACE),
     File_Path(),
     Percentage_To_Be_Executed(100),
     Relay_Count(1),
@@ -313,10 +313,10 @@ IOFlowParameterSetTraceBased::IOFlowParameterSetTraceBased(rapidxml::xml_node<>*
 }
 
 void
-IOFlowParameterSetTraceBased::XML_serialize(Utils::XmlWriter& xmlwriter) const
+TraceFlowParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
-  xmlwriter.Write_open_tag("IOFlowParameterSetTraceBased");
-  IOFlowParameterSet::XML_serialize(xmlwriter);
+  xmlwriter.Write_open_tag("TraceFlowParameterSet");
+  IOFlowParamSet::XML_serialize(xmlwriter);
 
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, File_Path);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Percentage_To_Be_Executed);
@@ -326,9 +326,9 @@ IOFlowParameterSetTraceBased::XML_serialize(Utils::XmlWriter& xmlwriter) const
   xmlwriter.Write_close_tag();
 }
 
-void IOFlowParameterSetTraceBased::XML_deserialize(rapidxml::xml_node<> *node)
+void TraceFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 {
-  IOFlowParameterSet::XML_deserialize(node);
+  IOFlowParamSet::XML_deserialize(node);
 
   try {
     for (auto param = node->first_node(); param; param = param->next_sibling()) {
@@ -346,7 +346,7 @@ void IOFlowParameterSetTraceBased::XML_deserialize(rapidxml::xml_node<> *node)
 
     }
   } catch (...) {
-    throw mqsim_error("Error in IOFlowParameterSetTraceBased!");
+    throw mqsim_error("Error in TraceFlowParameterSet!");
 
   }
 }

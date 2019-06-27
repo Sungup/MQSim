@@ -1,31 +1,32 @@
-find_package(Boost)
+find_package(Boost COMPONENTS program_options REQUIRED)
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
 else (Boost_FOUND)
     message(FATAL_ERROR "Boost library doesn't exist in this system!!")
 endif (Boost_FOUND)
 
-find_package(RapidJSON)
-if (RapidJSON_FOUND)
-    include_directories(${RAPIDJSON_INCLUDE_DIRS})
-else (RapidJSON_FOUND)
-    message(FATAL_ERROR "RapidJSON doesn't exist in this system!!")
-endif (RapidJSON_FOUND)
-
+# RapidJSON corrently not in use until
+#
+# find_package(RapidJSON)
+# if (RapidJSON_FOUND)
+#     include_directories(${RAPIDJSON_INCLUDE_DIRS})
+# else (RapidJSON_FOUND)
+#     message(FATAL_ERROR "RapidJSON doesn't exist in this system!!")
+# endif (RapidJSON_FOUND)
 
 set(MQSIM_EXEC_SOURCES
     exec/Device_Parameter_Set.cpp
     exec/Device_Parameter_Set.h
-    exec/Execution_Parameter_Set.cpp
-    exec/Execution_Parameter_Set.h
-    exec/Flash_Parameter_Set.cpp
-    exec/Flash_Parameter_Set.h
+    exec/params/ExecParameterSet.cpp
+    exec/params/ExecParameterSet.h
+    exec/params/FlashParameterSet.cpp
+    exec/params/FlashParameterSet.h
     exec/Host_Parameter_Set.cpp
     exec/Host_Parameter_Set.h
     exec/Host_System.cpp
     exec/Host_System.h
-    exec/params/IOFlowParameterSet.cpp
-    exec/params/IOFlowParameterSet.h
+    exec/params/IOFlowParamSet.cpp
+    exec/params/IOFlowParamSet.h
     exec/params/ParameterSetBase.h
     exec/SSD_Device.cpp
     exec/SSD_Device.h)
@@ -100,6 +101,7 @@ set(MQSIM_SSD_SOURCES
     ssd/dcm/Data_Cache_Manager_Flash_Advanced.h
     ssd/dcm/Data_Cache_Manager_Flash_Simple.cpp
     ssd/dcm/Data_Cache_Manager_Flash_Simple.h
+    ssd/dcm/DataCacheDefs.h
     ssd/fbm/Flash_Block_Manager.cpp
     ssd/fbm/Flash_Block_Manager.h
     ssd/fbm/Flash_Block_Manager_Base.cpp
@@ -111,6 +113,7 @@ set(MQSIM_SSD_SOURCES
     ssd/gc_and_wl/GC_and_WL_Unit_Base.h
     ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.cpp
     ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.h
+    ssd/gc_and_wl/GCandWLUnitDefs.h
     ssd/interface/Host_Interface_Base.cpp
     ssd/interface/Host_Interface_Base.h
     ssd/interface/Host_Interface_Defs.h
@@ -118,6 +121,7 @@ set(MQSIM_SSD_SOURCES
     ssd/interface/Host_Interface_NVMe.h
     ssd/interface/Host_Interface_SATA.cpp
     ssd/interface/Host_Interface_SATA.h
+    ssd/interface/HostInterfaceHandler.h
     ssd/NVM_Channel_Base.h
     ssd/NVM_Firmware.cpp
     ssd/NVM_Firmware.h
@@ -150,7 +154,7 @@ set(MQSIM_SSD_SOURCES
     ssd/tsu/TSU_OutofOrder.cpp
     ssd/tsu/TSU_OutofOrder.h
     ssd/request/User_Request.cpp
-    ssd/request/User_Request.h ssd/interface/HostInterfaceHandler.h ssd/gc_and_wl/GCandWLUnitDefs.h)
+    ssd/request/User_Request.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp
@@ -172,7 +176,7 @@ set(MQSIM_UTILS_SOURCES
     utils/StringTools.h
     utils/Workload_Statistics.h
     utils/XMLWriter.cpp
-    utils/XMLWriter.h ssd/dcm/DataCacheDefs.h)
+    utils/XMLWriter.h)
 
 add_executable(MQSim
                main.cpp

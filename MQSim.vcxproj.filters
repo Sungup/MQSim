@@ -34,10 +34,10 @@
     <ClCompile Include="src\exec\Device_Parameter_Set.cpp">
       <Filter>exec</Filter>
     </ClCompile>
-    <ClCompile Include="src\exec\Execution_Parameter_Set.cpp">
+    <ClCompile Include="src\exec\ExecParameterSet.cpp">
       <Filter>exec</Filter>
     </ClCompile>
-    <ClCompile Include="src\exec\Flash_Parameter_Set.cpp">
+    <ClCompile Include="src\exec\FlashParameterSet.cpp">
       <Filter>exec</Filter>
     </ClCompile>
     <ClCompile Include="src\exec\Host_Parameter_Set.cpp">
@@ -216,10 +216,10 @@
     <ClInclude Include="src\exec\Device_Parameter_Set.h">
       <Filter>exec</Filter>
     </ClInclude>
-    <ClInclude Include="src\exec\Execution_Parameter_Set.h">
+    <ClInclude Include="src\exec\ExecParameterSet.h">
       <Filter>exec</Filter>
     </ClInclude>
-    <ClInclude Include="src\exec\Flash_Parameter_Set.h">
+    <ClInclude Include="src\exec\FlashParameterSet.h">
       <Filter>exec</Filter>
     </ClInclude>
     <ClInclude Include="src\exec\Host_Parameter_Set.h">

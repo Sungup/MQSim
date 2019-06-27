@@ -17,18 +17,11 @@
 
 enum class Flow_Type { SYNTHETIC, TRACE };
 
-// --------------------------------
-// IOFlowParameterSet Definition
-// --------------------------------
-class IOFlowParameterSet : public ParameterSetBase
-{
-protected:
-  void load_default();
-
+// -------------------------
+// IOFlowParamSet Definition
+// -------------------------
+class IOFlowParamSet : public ParameterSetBase {
 public:
-  explicit IOFlowParameterSet(Flow_Type type);
-  ~IOFlowParameterSet() override = default;
-
   const Flow_Type Type;
 
   SSD_Components::Caching_Mode Device_Level_Data_Caching_Mode;
@@ -48,19 +41,25 @@ public:
   // performed
   uint32_t Initial_Occupancy_Percentage;
 
+protected:
+  void _load_default();
+
+public:
+  explicit IOFlowParamSet(Flow_Type type);
+  ~IOFlowParamSet() override = default;
+
   void XML_serialize(Utils::XmlWriter& xmlwrite) const override;
   void XML_deserialize(rapidxml::xml_node<> *node) override;
 };
 
-typedef std::shared_ptr<IOFlowParameterSet> IOFlowParameterSetPtr;
+typedef std::shared_ptr<IOFlowParamSet> IOFlowParameterSetPtr;
 typedef std::vector<IOFlowParameterSetPtr>     IOFlowScenario;
 typedef std::vector<IOFlowScenario>            IOFlowScenariosList;
 
-// ------------------------------------------
-// IOFlowParameterSetSynthetic Definition
-// ------------------------------------------
-class IOFlowParameterSetSynthetic : public IOFlowParameterSet
-{
+// --------------------------------
+// SyntheticFlowParamSet Definition
+// --------------------------------
+class SyntheticFlowParamSet : public IOFlowParamSet {
 public:
   Utils::Request_Generator_Type         Synthetic_Generator_Type;
   Utils::Address_Distribution_Type      Address_Distribution;
@@ -101,9 +100,10 @@ public:
   // Total_Requests_To_Generate to decide when to stop generating I/O requests
   uint32_t Total_Requests_To_Generate;
 
-  IOFlowParameterSetSynthetic();
-  explicit IOFlowParameterSetSynthetic(int seed);
-  explicit IOFlowParameterSetSynthetic(rapidxml::xml_node<> *node);
+public:
+  SyntheticFlowParamSet();
+  explicit SyntheticFlowParamSet(int seed);
+  explicit SyntheticFlowParamSet(rapidxml::xml_node<> *node);
 
   void load_default(int seed);
 
@@ -111,19 +111,19 @@ public:
   void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
 
-// --------------------------------------------
-// IOFlowParameterSetTraceBased Definition
-// --------------------------------------------
-class IOFlowParameterSetTraceBased : public IOFlowParameterSet
-{
+// --------------------------------
+// TraceFlowParameterSet Definition
+// --------------------------------
+class TraceFlowParameterSet : public IOFlowParamSet {
 public:
   std::string File_Path;
   int Percentage_To_Be_Executed;
   int Relay_Count; 
   Trace_Time_Unit Time_Unit;
 
-  IOFlowParameterSetTraceBased();
-  explicit IOFlowParameterSetTraceBased(rapidxml::xml_node<> *node);
+public:
+  TraceFlowParameterSet();
+  explicit TraceFlowParameterSet(rapidxml::xml_node<> *node);
 
   void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
   void XML_deserialize(rapidxml::xml_node<> *node) final;

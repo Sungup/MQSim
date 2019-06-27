@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "InlineTools.h"
+
 namespace Utils
 {
   class Helper_Functions

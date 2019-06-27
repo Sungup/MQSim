@@ -16,7 +16,7 @@
 #include "../host/PCIe_Switch.h"
 #include "../nvm_chip/NVM_Types.h"
 #include "Device_Parameter_Set.h"
-#include "params/IOFlowParameterSet.h"
+#include "params/IOFlowParamSet.h"
 #include "../utils/Workload_Statistics.h"
 
 /*********************************************************************************************************

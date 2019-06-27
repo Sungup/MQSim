@@ -26,22 +26,27 @@ namespace SSD_Components {
 force_inline std::string
 to_string(SSD_Components::Flash_Scheduling_Type type)
 {
+  namespace sc = SSD_Components;
+
   switch (type) {
-  case SSD_Components::Flash_Scheduling_Type::OUT_OF_ORDER: return "OUT_OF_ORDER";
-  case SSD_Components::Flash_Scheduling_Type::FLIN:         return "FLIN";
+  case sc::Flash_Scheduling_Type::OUT_OF_ORDER: return "OUT_OF_ORDER";
+  case sc::Flash_Scheduling_Type::FLIN:         return "FLIN";
   }
 }
 
 force_inline SSD_Components::Flash_Scheduling_Type
 to_flash_scheduling_type(std::string v)
 {
+  namespace sc = SSD_Components;
+
   Utils::to_upper(v);
 
-  if (v == "OUT_OR_ORDER") return SSD_Components::Flash_Scheduling_Type::OUT_OF_ORDER;
+  if (v == "OUT_OR_ORDER") return sc::Flash_Scheduling_Type::OUT_OF_ORDER;
   // Currently FLIN Scheduling type had been all commented out!
-  // else if ("FLIN")         return SSD_Components::Flash_Scheduling_Type::FLIN;
+  // else if ("FLIN")         return sc::Flash_Scheduling_Type::FLIN;
 
-  throw mqsim_error("Unknown transaction scheduling type specified in the SSD configuration file");
+  throw mqsim_error("Unknown transaction scheduling type specified in the SSD "
+                    "configuration file");
 }
 
 #endif /* Predefined include guard __MQSim__TSU_Defs__ */

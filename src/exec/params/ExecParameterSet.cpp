@@ -1,9 +1,9 @@
-#include "Execution_Parameter_Set.h"
+#include "ExecParameterSet.h"
 
 #include <fstream>
 
 force_inline void
-Execution_Parameter_Set::__dump_config_params(const std::string& file_path) const
+ExecParameterSet::__dump_config_params(const std::string& file_path) const
 {
   std::cout << "Using MQSim's default configuration." << std::endl
             << "Writing the default configuration parameters to the expected "
@@ -16,7 +16,7 @@ Execution_Parameter_Set::__dump_config_params(const std::string& file_path) cons
   std::cout << "[====================] Done!" << std::endl;
 }
 
-Execution_Parameter_Set::Execution_Parameter_Set(const std::string& file_path)
+ExecParameterSet::ExecParameterSet(const std::string& file_path)
   : Host_Configuration(),
     SSD_Device_Configuration()
 {
@@ -24,7 +24,7 @@ Execution_Parameter_Set::Execution_Parameter_Set(const std::string& file_path)
 }
 
 void
-Execution_Parameter_Set::load_config_params(const std::string& file_path)
+ExecParameterSet::load_config_params(const std::string& file_path)
 {
   std::ifstream ssd_config_file;
   ssd_config_file.open(file_path);
@@ -61,7 +61,7 @@ Execution_Parameter_Set::load_config_params(const std::string& file_path)
 
   rapidxml::xml_document<> doc;
   doc.parse<0>(temp.get());
-  auto* config = doc.first_node("Execution_Parameter_Set");
+  auto* config = doc.first_node("ExecParameterSet");
 
   if (config) {
     XML_deserialize(config);
@@ -72,9 +72,9 @@ Execution_Parameter_Set::load_config_params(const std::string& file_path)
 }
 
 void
-Execution_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter) const
+ExecParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
-  xmlwriter.Write_open_tag("Execution_Parameter_Set");
+  xmlwriter.Write_open_tag("ExecParameterSet");
 
   Host_Configuration.XML_serialize(xmlwriter);
   SSD_Device_Configuration.XML_serialize(xmlwriter);
@@ -83,7 +83,7 @@ Execution_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter) const
 }
 
 void
-Execution_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
+ExecParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 {
   try {
     for (auto param = node->first_node(); param; param = param->next_sibling()) {
@@ -95,6 +95,6 @@ Execution_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
 
     }
   } catch (...) {
-    throw mqsim_error("Error in the Execution_Parameter_Set!");
+    throw mqsim_error("Error in the ExecParameterSet!");
   }
 }

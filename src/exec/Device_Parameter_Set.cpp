@@ -42,7 +42,7 @@ uint32_t Device_Parameter_Set::Flash_Channel_Width = 1;//Channel width in byte
 uint32_t Device_Parameter_Set::Channel_Transfer_Rate = 300;//MT/s
 uint32_t Device_Parameter_Set::Chip_No_Per_Channel = 4;
 SSD_Components::ONFI_Protocol Device_Parameter_Set::Flash_Comm_Protocol = SSD_Components::ONFI_Protocol::NVDDR2;
-Flash_Parameter_Set Device_Parameter_Set::Flash_Parameters;
+FlashParameterSet Device_Parameter_Set::Flash_Parameters;
 
 void Device_Parameter_Set::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
@@ -397,7 +397,7 @@ void Device_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
       {
         std::string val = param->value();
         std::transform(val.begin(), val.end(), val.begin(), ::toupper);
-        Enabled_Preconditioning = (val.compare("FALSE") == 0 ? false : true);
+        Enabled_Preconditioning = to_bool(param->value());
       }
       else if (strcmp(param->name(), "Memory_Type") == 0)
       {
@@ -429,23 +429,11 @@ void Device_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
       }
       else if (strcmp(param->name(), "Caching_Mechanism") == 0)
       {
-        std::string val = param->value();
-        std::transform(val.begin(), val.end(), val.begin(), ::toupper);
-        if (strcmp(val.c_str(), "SIMPLE") == 0)
-          Caching_Mechanism = SSD_Components::Caching_Mechanism::SIMPLE;
-        else if (strcmp(val.c_str(), "ADVANCED") == 0)
-          Caching_Mechanism = SSD_Components::Caching_Mechanism::ADVANCED;
-        else PRINT_ERROR("Unknown data caching mechanism specified in the SSD configuration file")
+        Caching_Mechanism = to_cacheing_mechanism(param->value());
       }
       else if (strcmp(param->name(), "Data_Cache_Sharing_Mode") == 0)
       {
-        std::string val = param->value();
-        std::transform(val.begin(), val.end(), val.begin(), ::toupper);
-        if (strcmp(val.c_str(), "SHARED") == 0)
-          Data_Cache_Sharing_Mode = SSD_Components::Cache_Sharing_Mode::SHARED;
-        else if (strcmp(val.c_str(), "EQUAL_PARTITIONING") == 0)
-          Data_Cache_Sharing_Mode = SSD_Components::Cache_Sharing_Mode::EQUAL_PARTITIONING;
-        else PRINT_ERROR("Unknown data cache sharing mode specified in the SSD configuration file")
+        Data_Cache_Sharing_Mode = to_cache_sharing_mode(param->value());
       }
       else if (strcmp(param->name(), "Data_Cache_Capacity") == 0)
       {
@@ -684,7 +672,7 @@ void Device_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
           Flash_Comm_Protocol = SSD_Components::ONFI_Protocol::NVDDR2;
         else PRINT_ERROR("Unknown flash communication protocol type specified in the SSD configuration file")
       }
-      else if (strcmp(param->name(), "Flash_Parameter_Set") == 0)
+      else if (strcmp(param->name(), "FlashParameterSet") == 0)
       {
         Flash_Parameters.XML_deserialize(param);
       }

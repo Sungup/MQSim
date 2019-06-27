@@ -46,7 +46,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
     {
     case Flow_Type::SYNTHETIC:
     {
-      IOFlowParameterSetSynthetic* flow_param = (IOFlowParameterSetSynthetic*)parameters->IO_Flow_Definitions[flow_id].get();
+      SyntheticFlowParamSet* flow_param = (SyntheticFlowParamSet*)parameters->IO_Flow_Definitions[flow_id].get();
       if (flow_param->Working_Set_Percentage > 100 || flow_param->Working_Set_Percentage < 1)
         flow_param->Working_Set_Percentage = 100;
       io_flow = new Host_Components::IO_Flow_Synthetic(this->ID() + ".IO_Flow.Synth.No_" + std::to_string(flow_id), flow_id,
@@ -64,7 +64,7 @@ Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_re
     }
     case Flow_Type::TRACE:
     {
-      IOFlowParameterSetTraceBased * flow_param = (IOFlowParameterSetTraceBased*)parameters->IO_Flow_Definitions[flow_id].get();
+      TraceFlowParameterSet * flow_param = (TraceFlowParameterSet*)parameters->IO_Flow_Definitions[flow_id].get();
       io_flow = new Host_Components::IO_Flow_Trace_Based(this->ID() + ".IO_Flow.Trace." + flow_param->File_Path, flow_id,
         Utils::Logical_Address_Partitioning_Unit::Start_lha_available_to_flow(flow_id), Utils::Logical_Address_Partitioning_Unit::End_lha_available_to_flow(flow_id),
         FLOW_ID_TO_Q_ID(flow_id), nvme_sq_size, nvme_cq_size,

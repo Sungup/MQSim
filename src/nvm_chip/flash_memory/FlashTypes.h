@@ -4,15 +4,82 @@
 #include <cstdint>
 #include <vector>
 #include "../../sim/Sim_Defs.h"
+#include "../../utils/Exception.h"
+#include "../../utils/StringTools.h"
+#include "../../utils/InlineTools.h"
 #include "../NVM_Types.h"
 
 namespace NVM
 {
   namespace FlashMemory
   {
-    enum class Command_Suspension_Mode { NONE, PROGRAM, PROGRAM_ERASE, ERASE };
+    enum class Command_Suspension_Mode {
+      NONE,
+      PROGRAM,
+      PROGRAM_ERASE,
+      ERASE
+    };
   }
 }
+
+enum class Flash_Technology_Type {
+  SLC = 1,
+  MLC = 2,
+  TLC = 3
+};
+
+force_inline std::string
+to_string(NVM::FlashMemory::Command_Suspension_Mode mode)
+{
+  namespace nf = NVM::FlashMemory;
+
+  switch (mode) {
+  case nf::Command_Suspension_Mode::NONE:          return "NONE";
+  case nf::Command_Suspension_Mode::PROGRAM:       return "PROGRAM";
+  case nf::Command_Suspension_Mode::PROGRAM_ERASE: return "PROGRAM_ERASE";
+  case nf::Command_Suspension_Mode::ERASE:         return "ERASE";
+  }
+}
+
+force_inline std::string
+to_string(Flash_Technology_Type type)
+{
+  switch (type) {
+  case Flash_Technology_Type::SLC: return "SLC";
+  case Flash_Technology_Type::MLC: return "MLC";
+  case Flash_Technology_Type::TLC: return "TLC";
+  }
+}
+
+force_inline NVM::FlashMemory::Command_Suspension_Mode
+to_command_suspension_mode(std::string v)
+{
+  namespace nf = NVM::FlashMemory;
+
+  Utils::to_upper(v);
+
+  if (v == "NONE")          return nf::Command_Suspension_Mode::NONE;
+  if (v == "PROGRAM")       return nf::Command_Suspension_Mode::PROGRAM;
+  if (v == "PROGRAM_ERASE") return nf::Command_Suspension_Mode::PROGRAM_ERASE;
+  if (v == "ERASE")         return nf::Command_Suspension_Mode::ERASE;
+
+  throw mqsim_error("Unknown command suspension mode specified in the input"
+                    " file");
+}
+
+force_inline Flash_Technology_Type
+to_flash_type(std::string v)
+{
+  Utils::to_upper(v);
+
+  if (v == "SLC") return Flash_Technology_Type::SLC;
+  if (v == "MLC") return Flash_Technology_Type::MLC;
+  if (v == "TLC") return Flash_Technology_Type::TLC;
+
+  throw mqsim_error("Unknown flash technology type specified in the input"
+                    " file");
+}
+
 
 typedef uint64_t page_status_type;
 #define FULL_PROGRAMMED_PAGE 0xffffffffffffffffULL
@@ -36,8 +103,6 @@ typedef std::vector<ChannelIDs> StreamChannelIDs;
 typedef std::vector<ChipIDs>    StreamChipIDs;
 typedef std::vector<DieIDs>     StreamDieIDs;
 typedef std::vector<PlaneIDs>   StreamPlaneIDs;
-
-enum class Flash_Technology_Type { SLC = 1, MLC = 2, TLC = 3 };
 
 #define FREE_PAGE 0x0000000000000000ULL
 #define NO_LPA 0xffffffffffffffffULL

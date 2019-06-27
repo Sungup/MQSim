@@ -5,7 +5,7 @@
 #include <cstring>
 #include <numeric>
 #include "ssd/SSD_Defs.h"
-#include "exec/Execution_Parameter_Set.h"
+#include "exec/params/ExecParameterSet.h"
 #include "exec/SSD_Device.h"
 #include "exec/Host_System.h"
 #include "utils/rapidxml/rapidxml.hpp"
@@ -13,7 +13,10 @@
 
 using namespace std;
 
-void command_line_args(char* argv[], string& input_file_path, string& workload_file_path)
+force_inline void
+command_line_args(char* argv[],
+                  string& input_file_path,
+                  string& workload_file_path)
 {
 
   for (int arg_cntr = 1; arg_cntr < 5; arg_cntr++)
@@ -23,22 +26,20 @@ void command_line_args(char* argv[], string& input_file_path, string& workload_f
     char file_path_switch[] = "-i";
     if (arg.compare(0, strlen(file_path_switch), file_path_switch) == 0) {
       input_file_path.assign(argv[++arg_cntr]);
-      //cout << input_file_path << endl;
       continue;
     }
 
     char workload_path_switch[] = "-w";
     if (arg.compare(0, strlen(workload_path_switch), workload_path_switch) == 0) {
       workload_file_path.assign(argv[++arg_cntr]);
-      //cout << workload_file_path << endl;
       continue;
     }
   }
 }
 
 force_inline void
-dump_workload_definitions(const std::string& file_path,
-                          IOFlowScenariosList& io_scenarios)
+__dump_workload_definitions(const std::string& file_path,
+                            IOFlowScenariosList& io_scenarios)
 {
 
   std::cout << "Using MQSim's default workload definitions." << std::endl
@@ -46,8 +47,8 @@ dump_workload_definitions(const std::string& file_path,
             << "workload definition file." << std::endl;
 
   IOFlowScenario scenario;
-  scenario.push_back(std::make_shared<IOFlowParameterSetSynthetic>(12344));
-  scenario.push_back(std::make_shared<IOFlowParameterSetSynthetic>(6533));
+  scenario.push_back(std::make_shared<SyntheticFlowParamSet>(12344));
+  scenario.push_back(std::make_shared<SyntheticFlowParamSet>(6533));
 
   io_scenarios.push_back(scenario);
 
@@ -72,8 +73,8 @@ dump_workload_definitions(const std::string& file_path,
 }
 
 force_inline void
-read_workload_definitions(const string& workload_defs_file_path,
-                          IOFlowScenariosList& io_scenarios)
+__read_workload_definitions(const string& workload_defs_file_path,
+                            IOFlowScenariosList& io_scenarios)
 {
   ifstream workload_defs_file;
   workload_defs_file.open(workload_defs_file_path.c_str());
@@ -82,7 +83,7 @@ read_workload_definitions(const string& workload_defs_file_path,
     std::cerr << "The specified workload definition file does not exist!"
               << std::endl;
 
-    dump_workload_definitions(workload_defs_file_path, io_scenarios);
+    __dump_workload_definitions(workload_defs_file_path, io_scenarios);
     return;
   }
 
@@ -94,7 +95,7 @@ read_workload_definitions(const string& workload_defs_file_path,
 
   /// 2. Check default flag option in file
   if (line == "USE_INTERNAL_PARAMS") {
-    dump_workload_definitions(workload_defs_file_path, io_scenarios);
+    __dump_workload_definitions(workload_defs_file_path, io_scenarios);
     return;
   }
 
@@ -112,33 +113,34 @@ read_workload_definitions(const string& workload_defs_file_path,
   auto* scenarios = doc.first_node("MQSim_IO_Scenarios");
 
   if (scenarios) {
-    for (auto node = scenarios->first_node("IO_Scenario"); node ; node = node->next_sibling("IO_Scenario")) {
+    for (auto node = scenarios->first_node("IO_Scenario");
+         node ;
+         node = node->next_sibling("IO_Scenario")) {
+      IOFlowScenario scene;
 
-      IOFlowScenario scenario;
+      for (auto flow = node->first_node(); flow; flow = flow->next_sibling()) {
+        if (!strcmp(flow->name(), "SyntheticFlowParamSet"))
+          scene.emplace_back(std::make_shared<SyntheticFlowParamSet>(flow));
 
-      for (auto flow_def = node->first_node(); flow_def; flow_def = flow_def->next_sibling()) {
-        if (!strcmp(flow_def->name(), "IOFlowParameterSetSynthetic"))
-          scenario.emplace_back(std::make_shared<IOFlowParameterSetSynthetic>(flow_def));
-
-        else if (!strcmp(flow_def->name(), "IOFlowParameterSetTraceBased"))
-          scenario.emplace_back(std::make_shared<IOFlowParameterSetTraceBased>(flow_def));
+        else if (!strcmp(flow->name(), "TraceFlowParameterSet"))
+          scene.emplace_back(std::make_shared<TraceFlowParameterSet>(flow));
       }
 
-      if (!scenario.empty())
-        io_scenarios.push_back(scenario);
+      if (!scene.empty())
+        io_scenarios.push_back(scene);
     }
   }
   else
   {
     std::cerr << "Error in the workload definition file!" << endl;
 
-    dump_workload_definitions(workload_defs_file_path, io_scenarios);
+    __dump_workload_definitions(workload_defs_file_path, io_scenarios);
     return;
   }
 
-  // Last of all, if scenario is empty, fill the default scenario in io_scenarios.
+  // Last of all, if scenario is empty, insert default io scenarios.
   if (io_scenarios.empty())
-    dump_workload_definitions(workload_defs_file_path, io_scenarios);
+    __dump_workload_definitions(workload_defs_file_path, io_scenarios);
 
 }
 
@@ -175,19 +177,21 @@ void print_help()
 int main(int argc, char* argv[])
 {
   string ssd_config_file_path, workload_defs_file_path;
-  if (argc != 5)
-  {
-    // MQSim expects 2 arguments: 1) the path to the SSD configuration definition file, and 2) the path to the workload definition file
+
+  if (argc != 5) {
+    // MQSim expects 2 arguments:
+    //  1) the path to the SSD configuration definition file, and
+    //  2) the path to the workload definition file
     print_help();
     return 1;
   }
 
   command_line_args(argv, ssd_config_file_path, workload_defs_file_path);
 
-  Execution_Parameter_Set exec_params(ssd_config_file_path);
+  ExecParameterSet exec_params(ssd_config_file_path);
   IOFlowScenariosList io_scenarios;
 
-  read_workload_definitions(workload_defs_file_path, io_scenarios);
+  __read_workload_definitions(workload_defs_file_path, io_scenarios);
 
   int s_no = 0;
   for (auto& io_scen : io_scenarios) {
