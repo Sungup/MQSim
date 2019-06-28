@@ -12,6 +12,7 @@
 #include <string>
 
 #include "../../utils/Exception.h"
+#include "../../utils/EnumTools.h"
 #include "../../utils/InlineTools.h"
 #include "../../utils/StringTools.h"
 
@@ -26,24 +27,24 @@ namespace SSD_Components {
 force_inline std::string
 to_string(SSD_Components::Flash_Scheduling_Type type)
 {
-  namespace sc = SSD_Components;
+  using namespace SSD_Components;
 
   switch (type) {
-  case sc::Flash_Scheduling_Type::OUT_OF_ORDER: return "OUT_OF_ORDER";
-  case sc::Flash_Scheduling_Type::FLIN:         return "FLIN";
+  case ENUM_TO_STR(Flash_Scheduling_Type, OUT_OF_ORDER);
+  case ENUM_TO_STR(Flash_Scheduling_Type, FLIN);
   }
 }
 
 force_inline SSD_Components::Flash_Scheduling_Type
 to_scheduling_policy(std::string v)
 {
-  namespace sc = SSD_Components;
+  using namespace SSD_Components;
 
   Utils::to_upper(v);
 
-  if (v == "OUT_OR_ORDER") return sc::Flash_Scheduling_Type::OUT_OF_ORDER;
+  STR_TO_ENUM(Flash_Scheduling_Type, OUT_OF_ORDER);
   // Currently FLIN Scheduling type had been all commented out!
-  // else if ("FLIN")         return sc::Flash_Scheduling_Type::FLIN;
+  // STR_TO_ENUM(Flash_Scheduling_Type, FLIN);
 
   throw mqsim_error("Unknown transaction scheduling type specified in the SSD "
                     "configuration file");

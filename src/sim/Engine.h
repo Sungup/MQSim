@@ -11,7 +11,6 @@
 
 #define Simulator MQSimEngine::Engine::Instance()
 
-// Remove static features if possible
 namespace MQSimEngine {
   class Engine
   {
@@ -34,7 +33,10 @@ namespace MQSimEngine {
 
     static Engine* Instance();
     sim_time_type Time() const;
-    SimEvent* Register_sim_event(sim_time_type fireTime, Sim_Object* targetObject, void* parameters = nullptr, int type = 0);
+    SimEvent* Register_sim_event(sim_time_type fireTime,
+                                 Sim_Object* targetObject,
+                                 void* parameters = nullptr,
+                                 int type = 0);
     void Ignore_sim_event(SimEvent*);
     void Reset();
     void AddObject(Sim_Object* obj);

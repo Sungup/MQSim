@@ -228,9 +228,10 @@ DeviceParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
     }
 
   } catch (...) {
-    PRINT_ERROR("Error in DeviceParameterSet!")
+    throw mqsim_error("Error in DeviceParameterSet!");
   }
 
   if(Overprovisioning_Ratio < 0.05)
-    PRINT_MESSAGE("The specified overprovisioning ratio is too small. The simluation may not run correctly.")
+    throw mqsim_error("The specified overprovisioning ratio is too small. "
+                      "The simluation may not run correctly.");
 }
