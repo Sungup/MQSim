@@ -2,7 +2,7 @@
 #define EVENT_TREE_H
 
 #include "Sim_Defs.h"
-#include "Sim_Event.h"
+#include "SimEvent.h"
 
 // TODO Remove static features if possible
 
@@ -14,8 +14,8 @@ namespace MQSimEngine
     // key provided by the calling class
     sim_time_type Key;
     // the data or value associated with the key
-    Sim_Event* FirstSimEvent;
-    Sim_Event* LastSimEvent;
+    SimEvent* FirstSimEvent;
+    SimEvent* LastSimEvent;
     // color - used to balance the tree
     /*RED = 0 , BLACK = 1;*/
     int Color;
@@ -45,13 +45,13 @@ namespace MQSimEngine
     int Count;
     //  sentinelNode is convenient way of indicating a leaf node.
     static EventTreeNode* SentinelNode;
-    void Add(sim_time_type key, Sim_Event* data);
+    void Add(sim_time_type key, SimEvent* data);
     void RotateLeft(EventTreeNode* x);
     void RotateRight(EventTreeNode* x);
-    Sim_Event* GetData(sim_time_type key);
-    void Insert_sim_event(Sim_Event* data);
+    SimEvent* GetData(sim_time_type key);
+    void Insert_sim_event(SimEvent* data);
     sim_time_type Get_min_key();
-    Sim_Event* Get_min_value();
+    SimEvent* Get_min_value();
     EventTreeNode* Get_min_node();
     void Remove(sim_time_type key);
     void Remove(EventTreeNode* node);

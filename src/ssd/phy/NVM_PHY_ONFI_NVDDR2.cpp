@@ -514,7 +514,7 @@ void copy_read_data_to_transaction(NVM_Transaction_Flash_RD* read_transaction, N
   }
 }
 
-void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::Sim_Event* ev)
+void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 {
   auto* dieBKE = (DieBookKeepingEntry*)ev->Parameters;
   flash_channel_ID_type channel_id = dieBKE->__active_transactions.front()->Address.ChannelID;

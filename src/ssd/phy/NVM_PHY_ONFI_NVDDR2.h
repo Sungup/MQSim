@@ -171,7 +171,7 @@ namespace SSD_Components
                                               const void* status_info) final;
 
     /// 3. Override from Sim_Object
-    void Execute_simulator_event(MQSimEngine::Sim_Event*) final;
+    void Execute_simulator_event(MQSimEngine::SimEvent*) final;
 
     /// 4. Non-override functions
     NVM_Transaction_Flash* Is_chip_busy_with_stream(NVM_Transaction_Flash* transaction);

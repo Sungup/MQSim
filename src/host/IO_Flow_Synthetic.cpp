@@ -205,7 +205,7 @@ namespace Host_Components
 
   void IO_Flow_Synthetic::Validate_simulation_config() {}
 
-  void IO_Flow_Synthetic::Execute_simulator_event(MQSimEngine::Sim_Event* event)
+  void IO_Flow_Synthetic::Execute_simulator_event(MQSimEngine::SimEvent* event)
   {
     if (generator_type == Utils::Request_Generator_Type::BANDWIDTH)
     {

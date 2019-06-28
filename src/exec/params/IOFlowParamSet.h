@@ -5,17 +5,19 @@
 #include <string>
 #include <vector>
 
-#include "../../utils/DistributionTypes.h"
-
+#include "../../host/ASCII_Trace_Definition.h"
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
 #include "../../ssd/dcm/DataCacheDefs.h"
 #include "../../ssd/interface/Host_Interface_Defs.h"
-#include "../../host/IO_Flow_Synthetic.h"
-#include "../../host/IO_Flow_Trace_Based.h"
+#include "../../utils/DistributionTypes.h"
 #include "../../utils/Workload_Statistics.h"
+
 #include "ParameterSetBase.h"
 
-enum class Flow_Type { SYNTHETIC, TRACE };
+enum class Flow_Type {
+  SYNTHETIC,
+  TRACE
+};
 
 // -------------------------
 // IOFlowParamSet Definition
@@ -52,9 +54,9 @@ public:
   void XML_deserialize(rapidxml::xml_node<> *node) override;
 };
 
-typedef std::shared_ptr<IOFlowParamSet> IOFlowParameterSetPtr;
-typedef std::vector<IOFlowParameterSetPtr>     IOFlowScenario;
-typedef std::vector<IOFlowScenario>            IOFlowScenariosList;
+typedef std::shared_ptr<IOFlowParamSet>    IOFlowParameterSetPtr;
+typedef std::vector<IOFlowParameterSetPtr> IOFlowScenario;
+typedef std::vector<IOFlowScenario>        IOFlowScenariosList;
 
 // --------------------------------
 // SyntheticFlowParamSet Definition

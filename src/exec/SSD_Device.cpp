@@ -27,7 +27,7 @@ __build_id_list(uint32_t count)
   return id_list;
 }
 
-SSD_Device::SSD_Device(Device_Parameter_Set& params, IOFlowScenario& io_flows)
+SSD_Device::SSD_Device(DeviceParameterSet& params, IOFlowScenario& io_flows)
   : MQSimEngine::Sim_Object("SSDDevice"),
     Preconditioning_required(params.Enabled_Preconditioning),
     Memory_Type(params.Memory_Type),

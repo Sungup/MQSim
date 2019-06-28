@@ -13,4 +13,5 @@ cmake-build-*/
 *.diff
 samples/config/*/*_scenario_*.xml
 samples/result/
+samples/debug/*_scenario_*.xml
 temp/

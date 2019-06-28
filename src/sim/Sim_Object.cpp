@@ -25,5 +25,5 @@ Sim_Object::Setup_triggers()
 }
 
 void
-Sim_Object::Execute_simulator_event(MQSimEngine::Sim_Event* /* event */)
+Sim_Object::Execute_simulator_event(MQSimEngine::SimEvent* /* event */)
 { /* Default don't do anything */ }

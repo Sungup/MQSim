@@ -2,7 +2,7 @@
 #define FLASH_CHIP_H
 
 #include "../../sim/Sim_Defs.h"
-#include "../../sim/Sim_Event.h"
+#include "../../sim/SimEvent.h"
 #include "../../sim/Engine.h"
 #include "../../sim/Sim_Reporter.h"
 #include "../NVM_Chip.h"
@@ -148,7 +148,7 @@ namespace NVM
       void Start_simulation();
       void Validate_simulation_config();
       void Setup_triggers();
-      void Execute_simulator_event(MQSimEngine::Sim_Event*);
+      void Execute_simulator_event(MQSimEngine::SimEvent*);
       void Connect_to_chip_ready_signal(ChipReadySignalHandlerType);
       sim_time_type Get_command_execution_latency(command_code_type CMDCode, flash_page_ID_type pageID)
       {

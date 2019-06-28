@@ -31,7 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\exec\Device_Parameter_Set.cpp">
+    <ClCompile Include="src\exec\DeviceParameterSet.cpp">
       <Filter>exec</Filter>
     </ClCompile>
     <ClCompile Include="src\exec\ExecParameterSet.cpp">
@@ -40,7 +40,7 @@
     <ClCompile Include="src\exec\FlashParameterSet.cpp">
       <Filter>exec</Filter>
     </ClCompile>
-    <ClCompile Include="src\exec\Host_Parameter_Set.cpp">
+    <ClCompile Include="src\exec\HostParameterSet.cpp">
       <Filter>exec</Filter>
     </ClCompile>
     <ClCompile Include="src\exec\Host_System.cpp">
@@ -213,7 +213,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\exec\Device_Parameter_Set.h">
+    <ClInclude Include="src\exec\DeviceParameterSet.h">
       <Filter>exec</Filter>
     </ClInclude>
     <ClInclude Include="src\exec\ExecParameterSet.h">
@@ -222,7 +222,7 @@
     <ClInclude Include="src\exec\FlashParameterSet.h">
       <Filter>exec</Filter>
     </ClInclude>
-    <ClInclude Include="src\exec\Host_Parameter_Set.h">
+    <ClInclude Include="src\exec\HostParameterSet.h">
       <Filter>exec</Filter>
     </ClInclude>
     <ClInclude Include="src\exec\Host_System.h">
@@ -300,7 +300,7 @@
     <ClInclude Include="src\sim\Sim_Defs.h">
       <Filter>sim</Filter>
     </ClInclude>
-    <ClInclude Include="src\sim\Sim_Event.h">
+    <ClInclude Include="src\sim\SimEvent.h">
       <Filter>sim</Filter>
     </ClInclude>
     <ClInclude Include="src\sim\Sim_Object.h">

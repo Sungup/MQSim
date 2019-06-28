@@ -67,7 +67,7 @@ namespace SSD_Components
 
   void TSU_OutOfOrder::Validate_simulation_config() {}
 
-  void TSU_OutOfOrder::Execute_simulator_event(MQSimEngine::Sim_Event* event) {}
+  void TSU_OutOfOrder::Execute_simulator_event(MQSimEngine::SimEvent* event) {}
 
   void TSU_OutOfOrder::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
   {
@@ -125,57 +125,54 @@ namespace SSD_Components
     opened_scheduling_reqs--;
     if (opened_scheduling_reqs > 0)
       return;
-    if (opened_scheduling_reqs < 0)
-      PRINT_ERROR("TSU_OutOfOrder: Illegal status!");
 
-    if (transaction_receive_slots.size() == 0)
+    // TSU_OutOfOrder: Illegal status!
+    assert(opened_scheduling_reqs >= 0);
+
+    if (transaction_receive_slots.empty())
       return;
 
-    for(std::list<NVM_Transaction_Flash*>::iterator it = transaction_receive_slots.begin();
-      it != transaction_receive_slots.end(); it++)
-      switch ((*it)->Type)
+    for (auto transaction : transaction_receive_slots) {
+      auto& address = transaction->Address;
+      switch (transaction->Type)
       {
       case Transaction_Type::READ:
-        switch ((*it)->Source)
+        switch (transaction->Source)
         {
         case Transaction_Source_Type::CACHE:
         case Transaction_Source_Type::USERIO:
-          UserReadTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+          UserReadTRQueue[address.ChannelID][address.ChipID].push_back(transaction);
           break;
         case Transaction_Source_Type::MAPPING:
-          MappingReadTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+          MappingReadTRQueue[address.ChannelID][address.ChipID].push_back(transaction);
           break;
         case Transaction_Source_Type::GC_WL:
-          GCReadTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+          GCReadTRQueue[address.ChannelID][address.ChipID].push_back(transaction);
           break;
-        default:
-          PRINT_ERROR("TSU_OutOfOrder: unknown source type for a read transaction!")
         }
         break;
       case Transaction_Type::WRITE:
-        switch ((*it)->Source)
+        switch (transaction->Source)
         {
         case Transaction_Source_Type::CACHE:
         case Transaction_Source_Type::USERIO:
-          UserWriteTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+          UserWriteTRQueue[address.ChannelID][address.ChipID].push_back(transaction);
           break;
         case Transaction_Source_Type::MAPPING:
-          MappingWriteTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+          MappingWriteTRQueue[address.ChannelID][address.ChipID].push_back(transaction);
           break;
         case Transaction_Source_Type::GC_WL:
-          GCWriteTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+          GCWriteTRQueue[address.ChannelID][address.ChipID].push_back(transaction);
           break;
-        default:
-          PRINT_ERROR("TSU_OutOfOrder: unknown source type for a write transaction!")
         }
         break;
       case Transaction_Type::ERASE:
-        GCEraseTRQueue[(*it)->Address.ChannelID][(*it)->Address.ChipID].push_back((*it));
+        GCEraseTRQueue[address.ChannelID][address.ChipID].push_back(transaction);
         break;
       default:
         break;
       }
-
+    }
 
     for (flash_channel_ID_type channelID = 0; channelID < channel_count; channelID++)
     {
@@ -186,18 +183,19 @@ namespace SSD_Components
   
   bool TSU_OutOfOrder::service_read_transaction(const NVM::FlashMemory::Flash_Chip& chip)
   {
-    Flash_Transaction_Queue *sourceQueue1 = NULL, *sourceQueue2 = NULL;
+    Flash_Transaction_Queue *sourceQueue1 = nullptr, *sourceQueue2 = nullptr;
 
-    if (MappingReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)//Flash transactions that are related to FTL mapping data have the highest priority
-    {
+    if (!MappingReadTRQueue[chip.ChannelID][chip.ChipID].empty()) {
+      //Flash transactions that are related to FTL mapping data have the highest priority
       sourceQueue1 = &MappingReadTRQueue[chip.ChannelID][chip.ChipID];
+
       if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip) && GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         sourceQueue2 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
       else if (UserReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         sourceQueue2 = &UserReadTRQueue[chip.ChannelID][chip.ChipID];
     }
-    else if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
-    {
+    else if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip)) {
+      //If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
       if (GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {
         sourceQueue1 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
@@ -273,7 +271,7 @@ namespace SSD_Components
         it++;
       }
 
-      if (sourceQueue2 != NULL && transaction_dispatch_slots.size() < plane_no_per_die)
+      if (sourceQueue2 != nullptr && transaction_dispatch_slots.size() < plane_no_per_die)
         for (Flash_Transaction_Queue::iterator it = sourceQueue2->begin(); it != sourceQueue2->end();)
         {
           if ((*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
@@ -301,7 +299,7 @@ namespace SSD_Components
 
   bool TSU_OutOfOrder::service_write_transaction(const NVM::FlashMemory::Flash_Chip& chip)
   {
-    Flash_Transaction_Queue *sourceQueue1 = NULL, *sourceQueue2 = NULL;
+    Flash_Transaction_Queue *sourceQueue1 = nullptr, *sourceQueue2 = nullptr;
 
     if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
     {
@@ -357,7 +355,7 @@ namespace SSD_Components
 
       for (Flash_Transaction_Queue::iterator it = sourceQueue1->begin(); it != sourceQueue1->end(); )
       {
-        if (((NVM_Transaction_Flash_WR*)*it)->RelatedRead == NULL && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
+        if (((NVM_Transaction_Flash_WR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
         {
           if (planeVector == 0 || (*it)->Address.PageID == pageID)//Check for identical pages when running multiplane command
           {
@@ -371,10 +369,10 @@ namespace SSD_Components
         it++;
       }
 
-      if (sourceQueue2 != NULL)
+      if (sourceQueue2 != nullptr)
         for (Flash_Transaction_Queue::iterator it = sourceQueue2->begin(); it != sourceQueue2->end(); )
         {
-          if (((NVM_Transaction_Flash_WR*)*it)->RelatedRead == NULL && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
+          if (((NVM_Transaction_Flash_WR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
           {
             if (planeVector == 0 || (*it)->Address.PageID == pageID)//Check for identical pages when running multiplane command
             {

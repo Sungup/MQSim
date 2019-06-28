@@ -32,7 +32,7 @@ namespace MQSimEngine
   /// key is object that implements IComparable interface
   /// performance tip: change to use use int type (such as the hashcode)
   ///</summary>
-  void EventTree::Add(sim_time_type key, Sim_Event* data)
+  void EventTree::Add(sim_time_type key, SimEvent* data)
   {
     // traverse tree - find where node belongs
     // create new node
@@ -221,7 +221,7 @@ namespace MQSimEngine
   /// GetData
   /// Gets the data object associated with the specified key
   ///<summary>
-  Sim_Event* EventTree::GetData(sim_time_type key)
+  SimEvent* EventTree::GetData(sim_time_type key)
   {
     EventTreeNode* treeNode = rbTree;     // begin at root
     // traverse tree until node is found
@@ -240,7 +240,7 @@ namespace MQSimEngine
     return NULL;
   }
 
-  void EventTree::Insert_sim_event(Sim_Event* event)
+  void EventTree::Insert_sim_event(SimEvent* event)
   {
     if (event->Fire_time < Engine::Instance()->Time())
       PRINT_ERROR("Illegal request to register a simulation event before Now!")
@@ -278,7 +278,7 @@ namespace MQSimEngine
   /// Get_min_value
   /// Returns the object having the minimum key value
   ///<summary>
-  Sim_Event* EventTree::Get_min_value()
+  SimEvent* EventTree::Get_min_value()
   {
     //      return GetData(Get_min_key());
     return Get_min_node()->FirstSimEvent;

@@ -903,7 +903,7 @@ namespace SSD_Components
   }
 
   void FTL::Start_simulation() {}
-  void FTL::Execute_simulator_event(MQSimEngine::Sim_Event*) {}
+  void FTL::Execute_simulator_event(MQSimEngine::SimEvent*) {}
 
   LPA_type FTL::Convert_host_logical_address_to_device_address(LHA_type lha)
   {

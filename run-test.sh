@@ -59,7 +59,7 @@ function __run_sample() {
 
   for __FLOW in ${__SAMPLE_HOME}/flow-[0-9]*.xml; do
     echo "[run]     ${PROJECT_BUILD_HOME}/bin/MQSim -i ${__SAMPLE_SSD_CONF} -w ${__FLOW}";
-    ${PROJECT_BUILD_HOME}/bin/MQSim -i ${__SAMPLE_SSD_CONF} -w ${__FLOW} > /dev/null;
+    ${PROJECT_BUILD_HOME}/bin/MQSim -i ${__SAMPLE_SSD_CONF} -w ${__FLOW} | grep "Total simulation time";
   done;
 
   mkdir -p ${__RESULT_HOME};

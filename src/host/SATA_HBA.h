@@ -44,7 +44,7 @@ namespace Host_Components
     ~SATA_HBA();
     void Start_simulation();
     void Validate_simulation_config();
-    void Execute_simulator_event(MQSimEngine::Sim_Event*);
+    void Execute_simulator_event(MQSimEngine::SimEvent*);
     void Submit_io_request(Host_IO_Request* request);
     void SATA_consume_io_request(Completion_Queue_Entry* cqe);
     Submission_Queue_Entry* Read_ncq_entry(uint64_t address);

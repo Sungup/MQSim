@@ -9,6 +9,8 @@ Engine* Engine::_instance = nullptr;
 
 void Engine::Reset()
 {
+  __pool.destroy_all();
+
   _EventList->Clear();
   _ObjectList.clear();
   _sim_time = 0;
@@ -62,14 +64,9 @@ void Engine::Start_simulation()
   for (auto& obj : _ObjectList)
     obj.second->Start_simulation();
 
-  Sim_Event* ev = nullptr;
-
-  while (true) {
-    if (_EventList->Count == 0 || stop)
-      break;
-
+  while (!stop && _EventList->Count > 0) {
     EventTreeNode* minNode = _EventList->Get_min_node();
-    ev = minNode->FirstSimEvent;
+    auto* ev = minNode->FirstSimEvent;
 
     _sim_time = ev->Fire_time;
 
@@ -77,10 +74,10 @@ void Engine::Start_simulation()
       if(!ev->Ignore)
         ev->Target_sim_object->Execute_simulator_event(ev);
 
-      Sim_Event* consumed_event = ev;
+      SimEvent* consumed_event = ev;
       ev = ev->Next_event;
 
-      delete consumed_event;
+      consumed_event->release();
     }
 
     _EventList->Remove(minNode);
@@ -92,7 +89,7 @@ void Engine::Stop_simulation()
   stop = true;
 }
 
-void Engine::Ignore_sim_event(Sim_Event* ev)
+void Engine::Ignore_sim_event(SimEvent* ev)
 {
   ev->Ignore = true;
 }

@@ -51,7 +51,7 @@ namespace Host_Components
 
   void PCIe_Link::Validate_simulation_config() {}
 
-  void PCIe_Link::Execute_simulator_event(MQSimEngine::Sim_Event* event)
+  void PCIe_Link::Execute_simulator_event(MQSimEngine::SimEvent* event)
   {
     PCIe_Message* message = NULL;
     PCIe_Destination_Type destination = (PCIe_Destination_Type)(intptr_t)event->Parameters;

@@ -4,7 +4,7 @@
 #include <vector>
 #include <list>
 #include <map>
-#include "../../sim/Sim_Event.h"
+#include "../../sim/SimEvent.h"
 #include "Host_Interface_Base.h"
 #include "../request/User_Request.h"
 #include "Host_Interface_Defs.h"
@@ -89,7 +89,7 @@ namespace SSD_Components
       uint64_t submission_queue_base_address, uint64_t completion_queue_base_address);
     void Start_simulation() final;
     void Validate_simulation_config() final;
-    void Execute_simulator_event(MQSimEngine::Sim_Event*) final;
+    void Execute_simulator_event(MQSimEngine::SimEvent*) final;
     uint16_t Get_submission_queue_depth();
     uint16_t Get_completion_queue_depth();
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) final;

@@ -8,7 +8,7 @@
 #include "../utils/StringTools.h"
 #include "../utils/Logical_Address_Partitioning_Unit.h"
 
-Host_System::Host_System(Host_Parameter_Set* parameters, bool preconditioning_required, SSD_Components::Host_Interface_Base* ssd_host_interface):
+Host_System::Host_System(HostParameterSet* parameters, bool preconditioning_required, SSD_Components::Host_Interface_Base* ssd_host_interface):
   MQSimEngine::Sim_Object("Host"), preconditioning_required(preconditioning_required)
 {
   Simulator->AddObject(this);
@@ -155,7 +155,7 @@ void Host_System::Validate_simulation_config()
     PRINT_ERROR("No SSD is connected to the host system")
 }
 
-void Host_System::Execute_simulator_event(MQSimEngine::Sim_Event* event) {}
+void Host_System::Execute_simulator_event(MQSimEngine::SimEvent* event) {}
 
 void Host_System::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
 {

@@ -1,9 +1,9 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-#include<cstdint>
-#include<string>
-#include<iostream>
+#include <cstdint>
+#include <string>
+#include <iostream>
 
 typedef uint64_t sim_time_type;
 typedef uint16_t stream_id_type;

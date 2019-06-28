@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 #include "Sim_Defs.h"
+#include "SimEvent.h"
 #include "EventTree.h"
 #include "Sim_Object.h"
 
@@ -25,14 +26,16 @@ namespace MQSimEngine {
     bool stop;
     bool started;
 
+    SimEventPool __pool;
+
   public:
     Engine();
     ~Engine();
 
     static Engine* Instance();
     sim_time_type Time() const;
-    Sim_Event* Register_sim_event(sim_time_type fireTime, Sim_Object* targetObject, void* parameters = nullptr, int type = 0);
-    void Ignore_sim_event(Sim_Event*);
+    SimEvent* Register_sim_event(sim_time_type fireTime, Sim_Object* targetObject, void* parameters = nullptr, int type = 0);
+    void Ignore_sim_event(SimEvent*);
     void Reset();
     void AddObject(Sim_Object* obj);
     Sim_Object* GetObject(const sim_object_id_type& object_id);
@@ -67,13 +70,13 @@ namespace MQSimEngine {
     return _instance;
   }
 
-  force_inline Sim_Event*
+  force_inline SimEvent*
   Engine::Register_sim_event(sim_time_type fireTime,
                              Sim_Object* targetObject,
                              void* parameters,
                              int type)
   {
-    auto* ev = new Sim_Event(fireTime, targetObject, parameters, type);
+    auto* ev = __pool.construct(fireTime, targetObject, parameters, type);
 
     PRINT_DEBUG("RegisterEvent " << fireTime << " " << targetObject)
 

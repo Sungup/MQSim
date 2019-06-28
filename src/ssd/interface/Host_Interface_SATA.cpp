@@ -308,7 +308,7 @@ namespace SSD_Components
 
   void Host_Interface_SATA::Start_simulation() {}
 
-  void Host_Interface_SATA::Execute_simulator_event(MQSimEngine::Sim_Event* /* event */) {}
+  void Host_Interface_SATA::Execute_simulator_event(MQSimEngine::SimEvent* /* event */) {}
 
   void Host_Interface_SATA::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
   {

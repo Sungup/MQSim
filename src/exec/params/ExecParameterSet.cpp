@@ -87,10 +87,10 @@ ExecParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 {
   try {
     for (auto param = node->first_node(); param; param = param->next_sibling()) {
-      if (strcmp(param->name(), "Host_Parameter_Set") == 0)
+      if (strcmp(param->name(), "HostParameterSet") == 0)
         Host_Configuration.XML_deserialize(param);
 
-      else if (strcmp(param->name(), "Device_Parameter_Set") == 0)
+      else if (strcmp(param->name(), "DeviceParameterSet") == 0)
         SSD_Device_Configuration.XML_deserialize(param);
 
     }

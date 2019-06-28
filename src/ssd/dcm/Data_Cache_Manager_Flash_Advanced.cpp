@@ -484,7 +484,7 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NVM_Transaction_
 }
 
 void
-Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::Sim_Event* ev)
+Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 {
   auto eventType = (Data_Cache_Simulation_Event_Type)ev->Type;
   auto transfer_info = (Memory_Transfer_Info*)ev->Parameters;

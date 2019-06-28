@@ -11,18 +11,18 @@
 #include "../host/IO_Flow_Base.h"
 #include "../host/Host_IO_Request.h"
 #include "../ssd/interface/Host_Interface_Base.h"
-#include "Host_Parameter_Set.h"
+#include "params/HostParameterSet.h"
 #include "SSD_Device.h"
 #include "../utils/Workload_Statistics.h"
 
 class Host_System : public MQSimEngine::Sim_Object
 {
 public:
-  Host_System(Host_Parameter_Set* parameters, bool preconditioning_required, SSD_Components::Host_Interface_Base* ssd_host_interface);
+  Host_System(HostParameterSet* parameters, bool preconditioning_required, SSD_Components::Host_Interface_Base* ssd_host_interface);
   ~Host_System();
   void Start_simulation();
   void Validate_simulation_config();
-  void Execute_simulator_event(MQSimEngine::Sim_Event* event);
+  void Execute_simulator_event(MQSimEngine::SimEvent* event);
   void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
 
   void Attach_ssd_device(SSD_Device* ssd_device);

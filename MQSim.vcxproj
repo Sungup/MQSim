@@ -19,10 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\exec\Device_Parameter_Set.cpp" />
+    <ClCompile Include="src\exec\DeviceParameterSet.cpp" />
     <ClCompile Include="src\exec\ExecParameterSet.cpp" />
     <ClCompile Include="src\exec\FlashParameterSet.cpp" />
-    <ClCompile Include="src\exec\Host_Parameter_Set.cpp" />
+    <ClCompile Include="src\exec\HostParameterSet.cpp" />
     <ClCompile Include="src\exec\Host_System.cpp" />
     <ClCompile Include="src\exec\IO_Flow_Parameter_Set.cpp" />
     <ClCompile Include="src\exec\SSD_Device.cpp" />
@@ -82,10 +82,10 @@
     <ClCompile Include="src\utils\XMLWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\exec\Device_Parameter_Set.h" />
+    <ClInclude Include="src\exec\DeviceParameterSet.h" />
     <ClInclude Include="src\exec\ExecParameterSet.h" />
     <ClInclude Include="src\exec\FlashParameterSet.h" />
-    <ClInclude Include="src\exec\Host_Parameter_Set.h" />
+    <ClInclude Include="src\exec\HostParameterSet.h" />
     <ClInclude Include="src\exec\Host_System.h" />
     <ClInclude Include="src\exec\IO_Flow_Parameter_Set.h" />
     <ClInclude Include="src\exec\Parameter_Set_Base.h" />
@@ -116,7 +116,7 @@
     <ClInclude Include="src\sim\Engine.h" />
     <ClInclude Include="src\sim\EventTree.h" />
     <ClInclude Include="src\sim\Sim_Defs.h" />
-    <ClInclude Include="src\sim\Sim_Event.h" />
+    <ClInclude Include="src\sim\SimEvent.h" />
     <ClInclude Include="src\sim\Sim_Object.h" />
     <ClInclude Include="src\sim\Sim_Reporter.h" />
     <ClInclude Include="src\ssd\Address_Mapping_Unit_Base.h" />

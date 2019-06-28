@@ -1,4 +1,5 @@
 #include "IOFlowParamSet.h"
+
 #include <algorithm>
 #include <cstring>
 #include <numeric>
@@ -115,7 +116,6 @@ IOFlowParamSet::XML_deserialize(rapidxml::xml_node<> *node)
     throw mqsim_error("Error in IOFlowParamSet!");
   }
 }
-
 
 // ------------------------------------
 // SyntheticFlowParamSet Implementation
@@ -326,7 +326,8 @@ TraceFlowParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
   xmlwriter.Write_close_tag();
 }
 
-void TraceFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
+void
+TraceFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 {
   IOFlowParamSet::XML_deserialize(node);
 

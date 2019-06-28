@@ -68,7 +68,7 @@ namespace NVM
     
     void Flash_Chip::Setup_triggers() { MQSimEngine::Sim_Object::Setup_triggers(); }
     
-    void Flash_Chip::Execute_simulator_event(MQSimEngine::Sim_Event* ev)
+    void Flash_Chip::Execute_simulator_event(MQSimEngine::SimEvent* ev)
     {
       Chip_Sim_Event_Type eventType = (Chip_Sim_Event_Type)ev->Type;
       Flash_Command* command = (Flash_Command*)ev->Parameters;

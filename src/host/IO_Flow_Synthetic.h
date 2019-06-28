@@ -25,7 +25,7 @@ namespace Host_Components
     void SATA_consume_io_request(Host_IO_Request*);
     void Start_simulation();
     void Validate_simulation_config();
-    void Execute_simulator_event(MQSimEngine::Sim_Event*);
+    void Execute_simulator_event(MQSimEngine::SimEvent*);
 
     void get_stats(Utils::Workload_Statistics& stats,
                    const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,

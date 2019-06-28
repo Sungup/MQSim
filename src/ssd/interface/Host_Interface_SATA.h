@@ -75,7 +75,7 @@ namespace SSD_Components
     uint16_t Get_ncq_depth();
     void Start_simulation();
     void Validate_simulation_config();
-    void Execute_simulator_event(MQSimEngine::Sim_Event*);
+    void Execute_simulator_event(MQSimEngine::SimEvent*);
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
   private:
     uint16_t ncq_depth;

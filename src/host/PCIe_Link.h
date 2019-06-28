@@ -4,7 +4,7 @@
 #include "queue"
 #include "../sim/Sim_Defs.h"
 #include "../sim/Sim_Object.h"
-#include "../sim/Sim_Event.h"
+#include "../sim/SimEvent.h"
 #include "PCIe_Message.h"
 #include "PCIe_Root_Complex.h"
 #include "PCIe_Switch.h"
@@ -26,7 +26,7 @@ namespace Host_Components
     void Deliver(PCIe_Message*);
     void Start_simulation();
     void Validate_simulation_config();
-    void Execute_simulator_event(MQSimEngine::Sim_Event*);
+    void Execute_simulator_event(MQSimEngine::SimEvent*);
     void Set_root_complex(PCIe_Root_Complex*);
     void Set_pcie_switch(PCIe_Switch*);
   private:

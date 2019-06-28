@@ -93,7 +93,7 @@ namespace SSD_Components
                                       uint32_t back_pressure_buffer_max_depth);
     ~Data_Cache_Manager_Flash_Advanced() final;
 
-    void Execute_simulator_event(MQSimEngine::Sim_Event* ev) final;
+    void Execute_simulator_event(MQSimEngine::SimEvent* ev) final;
     void Setup_triggers() final;
     void Do_warmup(const std::vector<Utils::Workload_Statistics*>& workload_stats) final;
 

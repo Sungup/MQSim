@@ -1,7 +1,7 @@
 #ifndef SSD_DEFS_H
 #define SSD_DEFS_H
 
-#include<cstdint>
+#include <cstdint>
 #include <string>
 #include "../sim/Sim_Defs.h"
 #include "../nvm_chip/flash_memory/FlashTypes.h"

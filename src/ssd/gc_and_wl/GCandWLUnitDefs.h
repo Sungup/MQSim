@@ -9,6 +9,10 @@
 #ifndef __MQSim__GCandWLUnitDefs__
 #define __MQSim__GCandWLUnitDefs__
 
+#include "../../utils/EnumTools.h"
+#include "../../utils/InlineTools.h"
+#include "../../utils/StringTools.h"
+
 namespace SSD_Components {
   enum class GC_Block_Selection_Policy_Type {
     GREEDY,
@@ -36,6 +40,39 @@ namespace SSD_Components {
      */
     FIFO
   };
+}
+
+force_inline std::string
+to_string(SSD_Components::GC_Block_Selection_Policy_Type policy)
+{
+  using namespace SSD_Components;
+
+  switch (policy) {
+  case ENUM_TO_STR(GC_Block_Selection_Policy_Type, GREEDY);
+  case ENUM_TO_STR(GC_Block_Selection_Policy_Type, RGA);
+  case ENUM_TO_STR(GC_Block_Selection_Policy_Type, RANDOM);
+  case ENUM_TO_STR(GC_Block_Selection_Policy_Type, RANDOM_P);
+  case ENUM_TO_STR(GC_Block_Selection_Policy_Type, RANDOM_PP);
+  case ENUM_TO_STR(GC_Block_Selection_Policy_Type, FIFO);
+  }
+}
+
+force_inline SSD_Components::GC_Block_Selection_Policy_Type
+to_gc_block_selection_policy(std::string v)
+{
+  using namespace SSD_Components;
+
+  Utils::to_upper(v);
+
+  STR_TO_ENUM(GC_Block_Selection_Policy_Type, GREEDY);
+  STR_TO_ENUM(GC_Block_Selection_Policy_Type, RGA);
+  STR_TO_ENUM(GC_Block_Selection_Policy_Type, RANDOM);
+  STR_TO_ENUM(GC_Block_Selection_Policy_Type, RANDOM_P);
+  STR_TO_ENUM(GC_Block_Selection_Policy_Type, RANDOM_PP);
+  STR_TO_ENUM(GC_Block_Selection_Policy_Type, FIFO);
+
+  throw mqsim_error("Unknown GC block selection policy specified in the SSD "
+                    "configuration file");
 }
 
 #endif /* Predefined include guard __MQSim__GCandWLUnitDefs__ */

@@ -58,21 +58,25 @@ namespace SSD_Components
 
   inline void Input_Stream_Manager_NVMe::Handle_new_arrived_request(User_Request* request)
   {
-    ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Submission_head_informed_to_host++;
-    if (((Input_Stream_NVMe*)input_streams[request->Stream_id])->Submission_head_informed_to_host == ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Submission_queue_size)//Circular queue implementation
-      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Submission_head_informed_to_host = 0;
+    auto* stream = (Input_Stream_NVMe*)input_streams[request->Stream_id];
+
+    stream->Submission_head_informed_to_host++;
+
+    if (stream->Submission_head_informed_to_host == stream->Submission_queue_size)//Circular queue implementation
+      stream->Submission_head_informed_to_host = 0;
+
     if (request->Type == UserRequestType::READ)
     {
-      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Waiting_user_requests.push_back(request);
-      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->STAT_rd_requests++;
+      stream->Waiting_user_requests.push_back(request);
+      stream->STAT_rd_requests++;
       segment_user_request(request);
 
       ((Host_Interface_NVMe*)host_interface)->broadcast_user_request_arrival_signal(request);
     }
     else//This is a write request
     {
-      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Waiting_user_requests.push_back(request);
-      ((Input_Stream_NVMe*)input_streams[request->Stream_id])->STAT_wr_requests++;
+      stream->Waiting_user_requests.push_back(request);
+      stream->STAT_wr_requests++;
       ((Host_Interface_NVMe*)host_interface)->request_fetch_unit->Fetch_write_data(request);
     }
   }
@@ -389,7 +393,7 @@ namespace SSD_Components
   
   void Host_Interface_NVMe::Start_simulation() {}
 
-  void Host_Interface_NVMe::Execute_simulator_event(MQSimEngine::Sim_Event* /* event */) {}
+  void Host_Interface_NVMe::Execute_simulator_event(MQSimEngine::SimEvent* /* event */) {}
 
   uint16_t Host_Interface_NVMe::Get_submission_queue_depth()
   {

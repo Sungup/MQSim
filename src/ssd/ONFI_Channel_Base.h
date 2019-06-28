@@ -2,11 +2,11 @@
 #define ONFI_CHANNEL_BASE_H
 
 #include "../nvm_chip/flash_memory/Flash_Chip.h"
+#include "ONFIChannelDefs.h"
 #include "NVM_Channel_Base.h"
 
 namespace SSD_Components
 {
-  enum class ONFI_Protocol {NVDDR2};
   class ONFI_Channel_Base : public NVM_Channel_Base
   {
   public:

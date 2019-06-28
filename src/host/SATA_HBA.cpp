@@ -38,7 +38,7 @@ namespace Host_Components
   void SATA_HBA::Validate_simulation_config()
   {}
 
-  void SATA_HBA::Execute_simulator_event(MQSimEngine::Sim_Event* event)
+  void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
   {
     auto sim = Simulator;
     switch ((HBA_Sim_Events)event->Type)

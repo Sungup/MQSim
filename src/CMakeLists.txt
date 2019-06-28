@@ -15,14 +15,14 @@ endif (Boost_FOUND)
 # endif (RapidJSON_FOUND)
 
 set(MQSIM_EXEC_SOURCES
-    exec/Device_Parameter_Set.cpp
-    exec/Device_Parameter_Set.h
+    exec/params/DeviceParameterSet.cpp
+    exec/params/DeviceParameterSet.h
     exec/params/ExecParameterSet.cpp
     exec/params/ExecParameterSet.h
     exec/params/FlashParameterSet.cpp
     exec/params/FlashParameterSet.h
-    exec/Host_Parameter_Set.cpp
-    exec/Host_Parameter_Set.h
+    exec/params/HostParameterSet.cpp
+    exec/params/HostParameterSet.h
     exec/Host_System.cpp
     exec/Host_System.h
     exec/params/IOFlowParamSet.cpp
@@ -75,7 +75,7 @@ set(MQSIM_SIM_SOURCES
     sim/EventTree.cpp
     sim/EventTree.h
     sim/Sim_Defs.h
-    sim/Sim_Event.h
+    sim/SimEvent.h
     sim/Sim_Object.h
     sim/Sim_Object.cpp
     sim/Sim_Reporter.h
@@ -154,7 +154,7 @@ set(MQSIM_SSD_SOURCES
     ssd/tsu/TSU_OutofOrder.cpp
     ssd/tsu/TSU_OutofOrder.h
     ssd/request/User_Request.cpp
-    ssd/request/User_Request.h)
+    ssd/request/User_Request.h ssd/ONFIChannelDefs.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp
@@ -176,7 +176,7 @@ set(MQSIM_UTILS_SOURCES
     utils/StringTools.h
     utils/Workload_Statistics.h
     utils/XMLWriter.cpp
-    utils/XMLWriter.h)
+    utils/XMLWriter.h utils/ObjectPool.h utils/EnumTools.h)
 
 add_executable(MQSim
                main.cpp

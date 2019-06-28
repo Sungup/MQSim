@@ -5,7 +5,7 @@
 #include <list>
 #include<cstdint>
 #include "../sim/Sim_Defs.h"
-#include "../sim/Sim_Event.h"
+#include "../sim/SimEvent.h"
 #include "../sim/Engine.h"
 #include "../nvm_chip/flash_memory/FlashTypes.h"
 #include "../nvm_chip/flash_memory/Flash_Chip.h"

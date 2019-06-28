@@ -2,14 +2,13 @@
 #define SIMULATOR_OBJECT_H
 
 #include <string>
-#include "Sim_Event.h"
+#include "SimEvent.h"
 #include "Sim_Reporter.h"
 
 #include "../utils/InlineTools.h"
 
 namespace MQSimEngine
 {
-  class Sim_Event;
   class Sim_Object : public Sim_Reporter
   {
   private:
@@ -36,7 +35,7 @@ namespace MQSimEngine
     // triggering events from other objects
     virtual void Setup_triggers();
 
-    virtual void Execute_simulator_event(Sim_Event* event);
+    virtual void Execute_simulator_event(SimEvent* event);
      
   };
 

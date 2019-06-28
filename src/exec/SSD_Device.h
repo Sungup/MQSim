@@ -15,7 +15,7 @@
 #include "../ssd/NVM_Channel_Base.h"
 #include "../host/PCIe_Switch.h"
 #include "../nvm_chip/NVM_Types.h"
-#include "Device_Parameter_Set.h"
+#include "params/DeviceParameterSet.h"
 #include "params/IOFlowParamSet.h"
 #include "../utils/Workload_Statistics.h"
 
@@ -47,7 +47,7 @@ public:
   std::vector<SSD_Components::NVM_Channel_Base*> Channels;
 
 public:
-  SSD_Device(Device_Parameter_Set& parameters, IOFlowScenario& io_flows);
+  SSD_Device(DeviceParameterSet& parameters, IOFlowScenario& io_flows);
   ~SSD_Device() final;
 
   void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) final;

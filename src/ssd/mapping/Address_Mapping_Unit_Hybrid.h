@@ -17,7 +17,7 @@ namespace SSD_Components
     void Setup_triggers();
     void Start_simulation();
     void Validate_simulation_config();
-    void Execute_simulator_event(MQSimEngine::Sim_Event*);
+    void Execute_simulator_event(MQSimEngine::SimEvent*);
 
     void Allocate_address_for_preconditioning(const stream_id_type stream_id, std::map<LPA_type, page_status_type>& lpa_list, std::vector<double>& steady_state_distribution);
     int Bring_to_CMT_for_preconditioning(stream_id_type stream_id, LPA_type lpa);

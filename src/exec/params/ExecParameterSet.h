@@ -2,17 +2,16 @@
 #define EXECUTION_PARAMETER_SET_H
 
 #include <vector>
-#include "ParameterSetBase.h"
-#include "../Device_Parameter_Set.h"
-#include "IOFlowParamSet.h"
-#include "../Host_Parameter_Set.h"
 
-// TODO Remove static features
+#include "DeviceParameterSet.h"
+#include "HostParameterSet.h"
+#include "IOFlowParamSet.h"
+#include "ParameterSetBase.h"
 
 class ExecParameterSet : public ParameterSetBase {
 public:
-  Host_Parameter_Set Host_Configuration;
-  Device_Parameter_Set SSD_Device_Configuration;
+  HostParameterSet Host_Configuration;
+  DeviceParameterSet SSD_Device_Configuration;
 
 private:
   void __dump_config_params(const std::string& file_path) const;

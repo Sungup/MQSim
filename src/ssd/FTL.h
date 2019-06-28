@@ -33,7 +33,7 @@ namespace SSD_Components
     void Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats);
     void Validate_simulation_config();
     void Start_simulation();
-    void Execute_simulator_event(MQSimEngine::Sim_Event*);
+    void Execute_simulator_event(MQSimEngine::SimEvent*);
     LPA_type Convert_host_logical_address_to_device_address(LHA_type lha);
     page_status_type Find_NVM_subunit_access_bitmap(LHA_type lha);
     Address_Mapping_Unit_Base* Address_Mapping_Unit;

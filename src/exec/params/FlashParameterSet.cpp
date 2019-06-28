@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <string.h>
+
 #include "../../sim/Engine.h"
 
 FlashParameterSet::FlashParameterSet()
@@ -25,7 +26,8 @@ FlashParameterSet::FlashParameterSet()
     Page_Metadata_Capacity(1872)
 { }
 
-void FlashParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
+void
+FlashParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
 {
   xmlwriter.Write_open_tag("FlashParameterSet");
 
@@ -58,7 +60,8 @@ void FlashParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
   xmlwriter.Write_close_tag();
 }
 
-void FlashParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
+void
+FlashParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 {
   try {
     for (auto param = node->first_node();

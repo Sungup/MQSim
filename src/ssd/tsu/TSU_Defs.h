@@ -35,7 +35,7 @@ to_string(SSD_Components::Flash_Scheduling_Type type)
 }
 
 force_inline SSD_Components::Flash_Scheduling_Type
-to_flash_scheduling_type(std::string v)
+to_scheduling_policy(std::string v)
 {
   namespace sc = SSD_Components;
 
