@@ -3,36 +3,75 @@
 
 #include "FlashTypes.h"
 
-namespace NVM
-{
-  namespace FlashMemory
-  {
-    
-    struct PageMetadata
-    {
-      //page_status_type Status;
+namespace NVM {
+  namespace FlashMemory {
+    // ------------------
+    // PageMetadata Class
+    // ------------------
+    class PageMetadata {
+    public:
+      // TODO Hide member variable
       LPA_type LPA;
-      //stream_id_type SourceStreamID;
+      // page_status_type Status;
+      // stream_id_type SourceStreamID;
+
+    public:
+      PageMetadata();
+
+      void update(const PageMetadata& metadata);
     };
 
+    force_inline
+    PageMetadata::PageMetadata()
+      : LPA(NO_LPA)
+    {
+      // Currently not in use.
+      //
+      // Status = FREE_PAGE;
+      // SourceStreamID = NO_STREAM;
+    }
+
+    force_inline void
+    PageMetadata::update(const PageMetadata& metadata)
+    {
+      LPA = metadata.LPA;
+
+      // Status = metadata.Status;
+      // SourceStreamID = metadata.SourceStreamID;
+    }
+
+    // ----------
+    // Page Class
+    // ----------
     class Page {
     public:
-      Page()
-      {
-        //Metadata.Status = FREE_PAGE;
-        Metadata.LPA = NO_LPA;
-        //Metadata.SourceStreamID = NO_STREAM;
-      };
+      // TODO Hide member variable
       PageMetadata Metadata;
-      void Write_metadata(const PageMetadata& metadata)
-      {
-        this->Metadata.LPA = metadata.LPA;
-      }
-      void Read_metadata(PageMetadata& metadata)
-      {
-        metadata.LPA = this->Metadata.LPA;
-      }
+
+    public:
+      Page();
+
+      void Write_metadata(const PageMetadata& metadata);
+      void Read_metadata(PageMetadata& metadata) const;
     };
+
+    force_inline
+    Page::Page()
+      : Metadata()
+    { }
+
+    force_inline void
+    Page::Write_metadata(const PageMetadata& metadata)
+    {
+      Metadata.update(metadata);
+    }
+
+    force_inline void
+    Page::Read_metadata(PageMetadata& metadata) const
+    {
+      metadata.update(Metadata);
+    }
+
   }
 }
 

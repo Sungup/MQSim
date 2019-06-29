@@ -4,6 +4,7 @@ project(MQSim)
 set(CMAKE_CXX_STANDARD 11)
 
 option(FORCE_INLINE "User force inline functions on compile time" On)
+option(BLOCK_ERASE_HISTO "Gathering block erase histogram" Off)
 
 # Set the default output path
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
@@ -23,6 +24,10 @@ endif (NOT CMAKE_BUILD_TYPE)
 if (FORCE_INLINE)
   set(CMAKE_CXX_FLAGS "-DUSE_FORCE_INLINE ${CMAKE_CXX_FLAGS}")
 endif (FORCE_INLINE)
+
+if (BLOCK_ERASE_HISTO)
+  set(CMAKE_CXX_FLAGS "-DGATHER_BLOCK_ERASE_HISTO ${CMAKE_CXX_FLAGS}")
+endif (BLOCK_ERASE_HISTO)
 
 # Debug Flags
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

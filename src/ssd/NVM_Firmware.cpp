@@ -1,12 +1,12 @@
 #include "NVM_Firmware.h"
 
-namespace SSD_Components
-{
-  NVM_Firmware::NVM_Firmware(const sim_object_id_type& id, Data_Cache_Manager_Base* data_cache_manager)
-    : MQSimEngine::Sim_Object(id), Data_cache_manager(data_cache_manager)
-  {
-  }
+#include "FTL.h"
 
-  void NVM_Firmware::Validate_simulation_config()
-  {}
+using namespace SSD_Components;
+
+NvmFirmwarePtr
+SSD_Components::build_firmware(const sim_object_id_type& id,
+                               const DeviceParameterSet& params)
+{
+  return std::make_shared<FTL>(id, params);
 }

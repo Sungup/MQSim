@@ -4,6 +4,32 @@
 #include <string.h>
 
 #include "../../sim/Engine.h"
+#include "../../ssd/SSD_Defs.h"
+
+force_inline void
+FlashParameterSet::__update_rw_lat()
+{
+  int bits_per_cell = static_cast<int>(Flash_Technology);
+
+  auto& rd_lat = const_cast<LatencyList&>(read_latencies);
+  auto& wr_lat = const_cast<LatencyList&>(write_latencies);
+
+  rd_lat.clear(); wr_lat.clear();
+  rd_lat.reserve(bits_per_cell); wr_lat.reserve(bits_per_cell);
+
+  rd_lat.emplace_back(Page_Read_Latency_LSB);
+  wr_lat.emplace_back(Page_Program_Latency_LSB);
+
+  if (2 < bits_per_cell) {
+    rd_lat.emplace_back(Page_Read_Latency_CSB);
+    wr_lat.emplace_back(Page_Program_Latency_CSB);
+  }
+
+  if (1 < bits_per_cell) {
+    rd_lat.emplace_back(Page_Read_Latency_MSB);
+    wr_lat.emplace_back(Page_Program_Latency_MSB);
+  }
+}
 
 FlashParameterSet::FlashParameterSet()
   : Flash_Technology(Flash_Technology_Type::MLC),
@@ -23,8 +49,13 @@ FlashParameterSet::FlashParameterSet()
     Block_No_Per_Plane(2048),
     Page_No_Per_Block(256),
     Page_Capacity(8192),
-    Page_Metadata_Capacity(1872)
-{ }
+    Page_Metadata_Capacity(1872),
+    read_latencies(),
+    write_latencies(),
+    __page_size_in_sector(Page_Capacity / SECTOR_SIZE_IN_BYTE)
+{
+  __update_rw_lat();
+}
 
 void
 FlashParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
@@ -126,4 +157,7 @@ FlashParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
     throw mqsim_error("Error in the FlashParameterSet!");
 
   }
+
+  __update_rw_lat();
+  __page_size_in_sector = Page_Capacity / SECTOR_SIZE_IN_BYTE;
 }

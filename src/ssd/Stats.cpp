@@ -4,24 +4,18 @@
 
 using namespace SSD_Components;
 
+#ifdef GATHER_BLOCK_ERASE_HISTO
 force_inline BlockEraseHisto
-__make_block_erase_histo(uint32_t blocks_per_plane,
-                         uint32_t pages_per_block,
-                         uint32_t max_allowed_erase_count)
+__make_block_erase_histo(const FlashParameterSet& params)
 {
-  BlockEraseHisto histo(max_allowed_erase_count, 0);
-  histo[0] =  blocks_per_plane * pages_per_block;
+  BlockEraseHisto histo(params.Block_PE_Cycles_Limit, 0);
+  histo[0] =  params.Block_No_Per_Plane * params.Page_No_Per_Block;
 
   return histo;
 }
+#endif
 
-Stats::Stats(uint32_t channel_no,
-             uint32_t chip_no_per_channel,
-             uint32_t die_no_per_chip,
-             uint32_t plane_no_per_die,
-             uint32_t block_no_per_plane,
-             uint32_t page_no_per_block,
-             uint32_t max_allowed_block_erase_count)
+Stats::Stats(const DeviceParameterSet& params)
   : IssuedReadCMD(0),
     IssuedCopybackReadCMD(0),
     IssuedInterleaveReadCMD(0),
@@ -65,23 +59,23 @@ Stats::Stats(uint32_t channel_no,
     Total_wl_executions(0),
     Total_page_movements_for_gc(0),
     Total_page_movements_for_wl(0),
-    Total_gc_executions_per_stream { 0, },
-    Total_wl_executions_per_stream { 0, },
-    Total_gc_page_movements_per_stream { 0, },
-    Total_wl_page_movements_per_stream { 0, },
+#ifdef GATHER_BLOCK_ERASE_HISTO
     Block_erase_histogram(
-      channel_no,
+      params.Flash_Channel_Count,
       BlockEraseHistoOnChannel(
-        chip_no_per_channel,
+        params.Chip_No_Per_Channel,
         BlockEraseHistoOnChip(
-          die_no_per_chip,
+          params.Flash_Parameters.Die_No_Per_Chip,
           BlockEraseHistoOnDie(
-            plane_no_per_die,
-            __make_block_erase_histo(block_no_per_plane,
-                                     page_no_per_block,
-                                     max_allowed_block_erase_count)
+            params.Flash_Parameters.Plane_No_Per_Die,
+            __make_block_erase_histo(params.Flash_Parameters)
           )
         )
       )
-    )
+    ),
+#endif
+    Total_gc_executions_per_stream { 0, },
+    Total_wl_executions_per_stream { 0, },
+    Total_gc_page_movements_per_stream { 0, },
+    Total_wl_page_movements_per_stream { 0, }
 { }

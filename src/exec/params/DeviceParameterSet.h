@@ -17,7 +17,7 @@ class DeviceParameterSet : public ParameterSetBase {
 public:
   // Seed for random number generation
   // (used in device's random number generators)
-  int Seed;
+  mutable int Seed;
   bool Enabled_Preconditioning;
   NVM::NVM_Type Memory_Type;
   HostInterface_Types HostInterface_Type;
@@ -104,8 +104,16 @@ public:
   DeviceParameterSet();
   ~DeviceParameterSet() override = default;
 
+  int gen_seed() const;
+
   void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
   void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
+
+force_inline int
+DeviceParameterSet::gen_seed() const
+{
+  return Seed++;
+}
 
 #endif // !DEVICE_PARAMETER_SET_H

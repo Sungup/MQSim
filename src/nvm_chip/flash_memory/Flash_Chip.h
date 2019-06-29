@@ -1,6 +1,7 @@
 #ifndef FLASH_CHIP_H
 #define FLASH_CHIP_H
 
+#include "../../exec/params/FlashParameterSet.h"
 #include "../../sim/Sim_Defs.h"
 #include "../../sim/SimEvent.h"
 #include "../../sim/Engine.h"
@@ -61,12 +62,14 @@ namespace NVM
       Flash_Technology_Type flash_technology;
       Internal_Status status;
       uint32_t idleDieNo;
-      Die** Dies;
       uint32_t die_no;
-      uint32_t plane_no_in_die;                  //indicate how many planes in a die
-      uint32_t block_no_in_plane;                //indicate how many blocks in a plane
       uint32_t page_no_per_block;                 //indicate how many pages in a block
-      sim_time_type *_readLatency, *_programLatency, _eraseLatency;
+      std::vector<Die> Dies;
+
+      const sim_time_type* _readLatency;
+      const sim_time_type* _programLatency;
+      sim_time_type _eraseLatency;
+
       sim_time_type _suspendProgramLatency, _suspendEraseLatency;
       sim_time_type _RBSignalDelayRead, _RBSignalDelayWrite, _RBSignalDelayErase;
       sim_time_type lastTransferStart;
@@ -83,13 +86,14 @@ namespace NVM
       void broadcast_ready_signal(Flash_Command* command);
 
     public:
-      Flash_Chip(const sim_object_id_type&, flash_channel_ID_type channelID, flash_chip_ID_type localChipID,
-        Flash_Technology_Type flash_technology, 
-        uint32_t dieNo, uint32_t PlaneNoPerDie, uint32_t Block_no_per_plane, uint32_t Page_no_per_block,
-        sim_time_type *readLatency, sim_time_type *programLatency, sim_time_type eraseLatency,
-        sim_time_type suspendProgramLatency, sim_time_type suspendEraseLatency,
-        sim_time_type commProtocolDelayRead = 20, sim_time_type commProtocolDelayWrite = 0, sim_time_type commProtocolDelayErase = 0);
-      ~Flash_Chip();
+      Flash_Chip(const sim_object_id_type&,
+                 const FlashParameterSet& param,
+                 flash_channel_ID_type channelID,
+                 flash_chip_ID_type localChipID,
+                 sim_time_type commProtocolDelayRead = 20,
+                 sim_time_type commProtocolDelayWrite = 0,
+                 sim_time_type commProtocolDelayErase = 0);
+      ~Flash_Chip() final = default;
 
       void StartCMDXfer()
       {
@@ -107,42 +111,42 @@ namespace NVM
       {
         auto sim = Simulator;
 
-        this->STAT_totalXferTime += (sim->Time() - this->lastTransferStart);
+        STAT_totalXferTime += (sim->Time() - lastTransferStart);
 
-        if (this->idleDieNo != die_no)
+        if (idleDieNo != die_no)
           STAT_totalOverlappedXferExecTime += (sim->Time() - lastTransferStart);
 
-        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (sim->Time() - lastTransferStart);
+        Dies[command->Address[0].DieID].STAT_TotalXferTime += (sim->Time() - lastTransferStart);
 
         start_command_execution(command);
 
-        this->lastTransferStart = INVALID_TIME;
+        lastTransferStart = INVALID_TIME;
       }
       void EndCMDDataInXfer(Flash_Command* command)//End transferring write data of a group of multi-plane transactions to the Flash chip
       {
         auto sim = Simulator;
 
-        this->STAT_totalXferTime += (sim->Time() - this->lastTransferStart);
-        if (this->idleDieNo != die_no)
+        STAT_totalXferTime += (sim->Time() - lastTransferStart);
+        if (idleDieNo != die_no)
           STAT_totalOverlappedXferExecTime += (sim->Time() - lastTransferStart);
-        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (sim->Time() - lastTransferStart);
+        Dies[command->Address[0].DieID].STAT_TotalXferTime += (sim->Time() - lastTransferStart);
 
         start_command_execution(command);
 
-        this->lastTransferStart = INVALID_TIME;
+        lastTransferStart = INVALID_TIME;
       }
       void EndDataOutXfer(Flash_Command* command)
       {
         auto sim = Simulator;
 
-        this->STAT_totalXferTime += (sim->Time() - this->lastTransferStart);
+        STAT_totalXferTime += (sim->Time() - lastTransferStart);
 
-        if (this->idleDieNo != die_no)
+        if (idleDieNo != die_no)
           STAT_totalOverlappedXferExecTime += (sim->Time() - lastTransferStart);
 
-        this->Dies[command->Address[0].DieID]->STAT_TotalXferTime += (sim->Time() - lastTransferStart);
+        Dies[command->Address[0].DieID].STAT_TotalXferTime += (sim->Time() - lastTransferStart);
 
-        this->lastTransferStart = INVALID_TIME;
+        lastTransferStart = INVALID_TIME;
       }
       void Change_memory_status_preconditioning(const NVM_Memory_Address* address, const void* status_info);
       void Start_simulation();
@@ -160,7 +164,7 @@ namespace NVM
         else if (flash_technology == Flash_Technology_Type::TLC)
         {
           //From: Yaakobi et al., "Characterization and Error-Correcting Codes for TLC Flash Memories", ICNC 2012
-          latencyType = (pageID <= 5) ? 0 : ((pageID <= 7) ? 1 : (((pageID - 8) >> 1) % 3));;
+          latencyType = (pageID <= 5) ? 0 : ((pageID <= 7) ? 1 : (((pageID - 8) >> 1U) % 3));;
         }
 
         switch (CMDCode)

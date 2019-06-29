@@ -2,12 +2,25 @@
 
 namespace SSD_Components
 {
-  ONFI_Channel_NVDDR2::ONFI_Channel_NVDDR2(flash_channel_ID_type channelID, uint32_t chipCount, NVM::FlashMemory::Flash_Chip** flashChips, uint32_t ChannelWidth,
-    sim_time_type t_RC, sim_time_type t_DSC,
-    sim_time_type t_DBSY, sim_time_type t_CS, sim_time_type t_RR,
-    sim_time_type t_WB, sim_time_type t_WC, sim_time_type t_ADL, sim_time_type t_CALS,
-    sim_time_type t_DQSRE, sim_time_type t_RPRE, sim_time_type t_RHW, sim_time_type t_CCS,
-    sim_time_type t_WPST, sim_time_type t_WPSTH)
+  ONFI_Channel_NVDDR2::ONFI_Channel_NVDDR2(flash_channel_ID_type channelID,
+                                           uint32_t chipCount,
+                                           NVM::FlashMemory::Flash_Chip** flashChips,
+                                           uint32_t ChannelWidth,
+                                           sim_time_type t_RC,
+                                           sim_time_type t_DSC,
+                                           sim_time_type t_DBSY,
+                                           sim_time_type t_CS,
+                                           sim_time_type t_RR,
+                                           sim_time_type t_WB,
+                                           sim_time_type t_WC,
+                                           sim_time_type t_ADL,
+                                           sim_time_type t_CALS,
+                                           sim_time_type t_DQSRE,
+                                           sim_time_type t_RPRE,
+                                           sim_time_type t_RHW,
+                                           sim_time_type t_CCS,
+                                           sim_time_type t_WPST,
+                                           sim_time_type t_WPSTH)
     : ONFI_Channel_Base(channelID, chipCount, flashChips, ONFI_Protocol::NVDDR2),
     ChannelWidth(ChannelWidth),
     t_RC(t_RC), t_DSC(t_DSC), t_DBSY(t_DBSY), t_CS(t_CS), t_RR(t_RR), t_WB(t_WB), t_WC(t_WC), t_ADL(t_ADL),

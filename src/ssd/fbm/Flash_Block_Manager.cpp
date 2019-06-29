@@ -122,9 +122,13 @@ namespace SSD_Components
     plane_record.Free_pages_count += block.Invalid_page_count;
     plane_record.Invalid_pages_count -= block.Invalid_page_count;
 
+#ifdef GATHER_BLOCK_ERASE_HISTO
     __stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]--;
     block.Erase();
     __stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]++;
+#else
+    block.Erase();
+#endif
     plane_record.Add_to_free_block_pool(block, gc_and_wl_unit->Use_dynamic_wearleveling());
     plane_record.Check_bookkeeping_correctness(block_address);
   }

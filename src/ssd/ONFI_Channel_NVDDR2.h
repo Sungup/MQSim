@@ -14,13 +14,25 @@ namespace SSD_Components
   class ONFI_Channel_NVDDR2 : public ONFI_Channel_Base
   {
   public:
-    ONFI_Channel_NVDDR2(flash_channel_ID_type channelID, uint32_t chipCount, NVM::FlashMemory::Flash_Chip** flashChips, uint32_t ChannelWidth,
-      sim_time_type t_RC = 6, sim_time_type t_DSC = 6,
-      sim_time_type t_DBSY = 500, sim_time_type t_CS = 20, sim_time_type t_RR = 20,
-      sim_time_type t_WB = 100, sim_time_type t_WC = 25, sim_time_type t_ADL = 70, sim_time_type t_CALS = 15,
-      sim_time_type t_DQSRE = 15, sim_time_type t_RPRE = 15, sim_time_type t_RHW = 100, sim_time_type t_CCS = 300,
-      sim_time_type t_WPST = 6, sim_time_type t_WPSTH = 15);
-
+    ONFI_Channel_NVDDR2(flash_channel_ID_type channelID,
+                        uint32_t chipCount,
+                        NVM::FlashMemory::Flash_Chip** flashChips,
+                        uint32_t ChannelWidth,
+                        sim_time_type t_RC = 6,
+                        sim_time_type t_DSC = 6,
+                        sim_time_type t_DBSY = 500,
+                        sim_time_type t_CS = 20,
+                        sim_time_type t_RR = 20,
+                        sim_time_type t_WB = 100,
+                        sim_time_type t_WC = 25,
+                        sim_time_type t_ADL = 70,
+                        sim_time_type t_CALS = 15,
+                        sim_time_type t_DQSRE = 15,
+                        sim_time_type t_RPRE = 15,
+                        sim_time_type t_RHW = 100,
+                        sim_time_type t_CCS = 300,
+                        sim_time_type t_WPST = 6,
+                        sim_time_type t_WPSTH = 15);
 
     sim_time_type TwoUnitDataOutTime; //The DDR delay for two-unit device data out
     sim_time_type ReadCommandTime[5];//Read command transfer time for different number of planes

@@ -14,12 +14,19 @@ namespace NVM
   namespace FlashMemory
   {
     enum class Command_Suspension_Mode {
-      NONE,
-      PROGRAM,
-      PROGRAM_ERASE,
-      ERASE
+      NONE = 0,           // 0b000
+      PROGRAM = 1,        // 0b001
+      ERASE = 2,          // 0b010
+      PROGRAM_ERASE = 3   // 0b011
     };
   }
+}
+
+force_inline bool
+operator&(const NVM::FlashMemory::Command_Suspension_Mode& lhs,
+          const NVM::FlashMemory::Command_Suspension_Mode& rhs)
+{
+  return static_cast<uint8_t>(lhs) & static_cast<uint8_t>(rhs);
 }
 
 enum class Flash_Technology_Type {

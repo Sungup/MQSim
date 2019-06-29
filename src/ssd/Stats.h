@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "SSD_Defs.h"
+#include "../exec/params/DeviceParameterSet.h"
 
 namespace SSD_Components
 {
@@ -72,23 +73,34 @@ namespace SSD_Components
     uint32_t Total_page_movements_for_gc;
     uint32_t Total_page_movements_for_wl;
 
+#ifdef GATHER_BLOCK_ERASE_HISTO
+    BlockEraseHistoOnSSD Block_erase_histogram;
+#endif
+
     std::array<uint32_t, MAX_SUPPORT_STREAMS> Total_gc_executions_per_stream;
     std::array<uint32_t, MAX_SUPPORT_STREAMS> Total_wl_executions_per_stream;
     std::array<uint32_t, MAX_SUPPORT_STREAMS> Total_gc_page_movements_per_stream;
     std::array<uint32_t, MAX_SUPPORT_STREAMS> Total_wl_page_movements_per_stream;
 
-    BlockEraseHistoOnSSD Block_erase_histogram;
-
   public:
-    Stats(uint32_t channel_no,
-          uint32_t chip_no_per_channel,
-          uint32_t die_no_per_chip,
-          uint32_t plane_no_per_die,
-          uint32_t block_no_per_plane,
-          uint32_t page_no_per_block,
-          uint32_t max_allowed_block_erase_count);
+    explicit Stats(const DeviceParameterSet& param);
     ~Stats() = default;
+
+    double avg_page_movement_for_gc() const;
+    double avg_page_movement_for_wl() const;
   };
+
+  force_inline double
+  Stats::avg_page_movement_for_gc() const
+  {
+    return double(Total_page_movements_for_gc) / double(Total_gc_executions);
+  }
+
+  force_inline double
+  Stats::avg_page_movement_for_wl() const
+  {
+    return double(Total_page_movements_for_wl) / double(Total_wl_executions);
+  }
 }
 
 #endif // !STATS_H

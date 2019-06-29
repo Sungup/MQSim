@@ -10,7 +10,7 @@
 #include "../ssd/interface/Host_Interface_NVMe.h"
 #include "../ssd/dcm/Data_Cache_Manager_Base.h"
 #include "../ssd/dcm/Data_Cache_Flash.h"
-#include "../ssd/NVM_Firmware.h"
+#include "../ssd/FTL.h"
 #include "../ssd/phy/NVM_PHY_Base.h"
 #include "../ssd/NVM_Channel_Base.h"
 #include "../host/PCIe_Switch.h"
@@ -31,6 +31,8 @@
 class SSD_Device : public MQSimEngine::Sim_Object
 {
 public:
+  SSD_Components::FTL ftl;
+
   const bool Preconditioning_required;
   const NVM::NVM_Type Memory_Type;
 
@@ -42,7 +44,6 @@ public:
 
   SSD_Components::Host_Interface_Base *Host_interface;
   SSD_Components::Data_Cache_Manager_Base *Cache_manager;
-  SSD_Components::NVM_Firmware* Firmware;
   SSD_Components::NVM_PHY_Base* PHY;
   std::vector<SSD_Components::NVM_Channel_Base*> Channels;
 

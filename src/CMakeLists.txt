@@ -55,9 +55,7 @@ set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/NVM_Chip.h
     nvm_chip/NVM_Memory_Address.h
     nvm_chip/NVM_Types.h
-    nvm_chip/flash_memory/Block.cpp
     nvm_chip/flash_memory/Block.h
-    nvm_chip/flash_memory/Die.cpp
     nvm_chip/flash_memory/Die.h
     nvm_chip/flash_memory/FlashTypes.h
     nvm_chip/flash_memory/Flash_Chip.cpp
@@ -66,7 +64,6 @@ set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/flash_memory/Page.h
     nvm_chip/flash_memory/Physical_Page_Address.cpp
     nvm_chip/flash_memory/Physical_Page_Address.h
-    nvm_chip/flash_memory/Plane.cpp
     nvm_chip/flash_memory/Plane.h)
 
 set(MQSIM_SIM_SOURCES
