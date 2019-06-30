@@ -1,6 +1,7 @@
 #include "DeviceParameterSet.h"
 
 #include <algorithm>
+#include <cstring>
 
 using namespace SSD_Components;
 

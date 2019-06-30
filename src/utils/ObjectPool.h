@@ -81,7 +81,10 @@ namespace Utils {
   // ------------------------
   template <class T>
   class ObjectItem : public T, public ObjectItemBase {
-    friend class std::allocator< ObjectItem<T> >;
+    friend class std::allocator< Utils::ObjectItem<T> >;
+    
+    // for the linux based working environments
+    friend class __gnu_cxx::new_allocator< Utils::ObjectItem<T> >;
 
   protected:
     template <typename... _Args>

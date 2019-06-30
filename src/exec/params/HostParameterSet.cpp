@@ -1,5 +1,7 @@
 #include "HostParameterSet.h"
 
+#include <cstring>
+
 HostParameterSet::HostParameterSet()
   : PCIe_Lane_Bandwidth(0.4),
     PCIe_Lane_Count(4),

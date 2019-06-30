@@ -1,5 +1,6 @@
 #include "ExecParameterSet.h"
 
+#include <cstring>
 #include <fstream>
 
 force_inline void
