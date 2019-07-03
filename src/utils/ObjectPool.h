@@ -84,7 +84,9 @@ namespace Utils {
     friend class std::allocator< Utils::ObjectItem<T> >;
     
     // for the linux based working environments
+#ifdef linux
     friend class __gnu_cxx::new_allocator< Utils::ObjectItem<T> >;
+#endif
 
   protected:
     template <typename... _Args>

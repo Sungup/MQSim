@@ -196,6 +196,8 @@ namespace NVM
       void connect_to_chip_ready_signal(ChipReadySignalHandlerBase& handler);
     };
 
+    typedef std::vector<Flash_Chip> FlashChipList;
+
     force_inline void
     Flash_Chip::connect_to_chip_ready_signal(ChipReadySignalHandlerBase& handler)
     {

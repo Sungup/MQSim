@@ -301,8 +301,8 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
 
   /*If this is not a die-interleaved command execution, and the channel is already busy,
   * then something illegarl is happening*/
-  if (target_channel->GetStatus() == BusChannelStatus::BUSY && chipBKE->OngoingDieCMDTransfers.size() == 0)
-    PRINT_ERROR("Bus " << target_channel->ChannelID << ": starting communication on a busy flash channel!");
+  if (target_channel->GetStatus() == BusChannelStatus::BUSY && chipBKE->OngoingDieCMDTransfers.empty())
+    throw mqsim_error("Bus " + std::to_string(target_channel->ChannelID) + ": starting communication on a busy flash channel!");
 
   sim_time_type suspendTime = 0;
   if (!dieBKE->free())
@@ -324,7 +324,7 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
       }
       targetChip->Suspend(transaction_list.front()->Address.DieID);
       dieBKE->PrepareSuspend();
-      if (chipBKE->OngoingDieCMDTransfers.size())
+      if (!chipBKE->OngoingDieCMDTransfers.empty())
         chipBKE->PrepareSuspend();
     }
     else PRINT_ERROR("Read suspension is not supported!")
@@ -332,13 +332,11 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
 
   dieBKE->__free = false;
   dieBKE->__active_cmd = new NVM::FlashMemory::Flash_Command();
-  for (std::list<NVM_Transaction_Flash*>::iterator it = transaction_list.begin();
-    it != transaction_list.end(); it++)
-  {
-    dieBKE->__active_transactions.push_back(*it);
-    dieBKE->__active_cmd->Address.push_back((*it)->Address);
+  for (auto tr: transaction_list) {
+    dieBKE->__active_transactions.push_back(tr);
+    dieBKE->__active_cmd->Address.push_back(tr->Address);
     NVM::FlashMemory::PageMetadata metadata;
-    metadata.LPA = (*it)->LPA;
+    metadata.LPA = tr->LPA;
     dieBKE->__active_cmd->Meta_data.push_back(metadata);
   }
 
@@ -359,22 +357,20 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
       PRINT_DEBUG("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << transaction_list.front()->Address.DieID << ": Sending multi-plane read command to chip for LPA: " << transaction_list.front()->LPA)
     }
 
-    for (std::list<NVM_Transaction_Flash*>::iterator it = transaction_list.begin();
-      it != transaction_list.end(); it++)
-      (*it)->STAT_transfer_time += target_channel->ReadCommandTime[transaction_list.size()];
+    for (auto tr: transaction_list)
+      tr->STAT_transfer_time += target_channel->ReadCommandTime[transaction_list.size()];
 
-    if (chipBKE->OngoingDieCMDTransfers.size() == 0)
+    if (chipBKE->OngoingDieCMDTransfers.empty())
     {
       targetChip->StartCMDXfer();
       chipBKE->Status = ChipStatus::CMD_IN;
       chipBKE->Last_transfer_finish_time = sim->Time() + suspendTime + target_channel->ReadCommandTime[transaction_list.size()];
-      sim->Register_sim_event(sim->Time() + suspendTime + target_channel->ReadCommandTime[transaction_list.size()], this,
-        dieBKE, (int)NVDDR2_SimEventType::READ_CMD_ADDR_TRANSFERRED);
+      sim->Register_sim_event(chipBKE->Last_transfer_finish_time, this, dieBKE, (int)NVDDR2_SimEventType::READ_CMD_ADDR_TRANSFERRED);
     }
     else
     {
       dieBKE->__die_interleaved_time = suspendTime + target_channel->ReadCommandTime[transaction_list.size()];
-      chipBKE->Last_transfer_finish_time += suspendTime + target_channel->ReadCommandTime[transaction_list.size()];
+      chipBKE->Last_transfer_finish_time += dieBKE->__die_interleaved_time;
     }
     chipBKE->OngoingDieCMDTransfers.push(dieBKE);
 
@@ -399,24 +395,23 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
 
       sim_time_type data_transfer_time = 0;
 
-      for (std::list<NVM_Transaction_Flash*>::iterator it = transaction_list.begin();
-        it != transaction_list.end(); it++) {
-        (*it)->STAT_transfer_time += target_channel->ProgramCommandTime[transaction_list.size()] + NVDDR2DataInTransferTime((*it)->Data_and_metadata_size_in_byte, target_channel);
-        data_transfer_time += NVDDR2DataInTransferTime((*it)->Data_and_metadata_size_in_byte, target_channel);
+      for (auto tr: transaction_list) {
+        auto tr_transfer_time = NVDDR2DataInTransferTime(tr->Data_and_metadata_size_in_byte, target_channel);
+
+        tr->STAT_transfer_time += target_channel->ProgramCommandTime[transaction_list.size()] + tr_transfer_time;
+        data_transfer_time += tr_transfer_time;
       }
-      if (chipBKE->OngoingDieCMDTransfers.size() == 0)
-      {
+
+      if (chipBKE->OngoingDieCMDTransfers.empty()) {
         targetChip->StartCMDDataInXfer();
         chipBKE->Status = ChipStatus::CMD_DATA_IN;
         chipBKE->Last_transfer_finish_time = sim->Time() + suspendTime + target_channel->ProgramCommandTime[transaction_list.size()] + data_transfer_time;
-        sim->Register_sim_event(sim->Time() + suspendTime + target_channel->ProgramCommandTime[transaction_list.size()] + data_transfer_time,
-          this, dieBKE, (int)NVDDR2_SimEventType::PROGRAM_CMD_ADDR_DATA_TRANSFERRED);
-      }
-      else
-      {
+        sim->Register_sim_event(chipBKE->Last_transfer_finish_time, this, dieBKE, (int)NVDDR2_SimEventType::PROGRAM_CMD_ADDR_DATA_TRANSFERRED);
+      } else {
         dieBKE->__die_interleaved_time = suspendTime + target_channel->ProgramCommandTime[transaction_list.size()] + data_transfer_time;
-        chipBKE->Last_transfer_finish_time += suspendTime + target_channel->ProgramCommandTime[transaction_list.size()] + data_transfer_time;
+        chipBKE->Last_transfer_finish_time += dieBKE->__die_interleaved_time;
       }
+
       chipBKE->OngoingDieCMDTransfers.push(dieBKE);
 
       dieBKE->__expected_finish_time = chipBKE->Last_transfer_finish_time + targetChip->Get_command_execution_latency(dieBKE->__active_cmd->CommandCode, dieBKE->__active_cmd->Address[0].PageID);
@@ -434,22 +429,19 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
         dieBKE->__active_cmd->CommandCode = CMD_READ_PAGE_COPYBACK_MULTIPLANE;
       }
 
-      for (std::list<NVM_Transaction_Flash*>::iterator it = transaction_list.begin();
-        it != transaction_list.end(); it++)
-        (*it)->STAT_transfer_time += target_channel->ReadCommandTime[transaction_list.size()];
-      if (chipBKE->OngoingDieCMDTransfers.size() == 0)
-      {
+      for (auto tr: transaction_list)
+        tr->STAT_transfer_time += target_channel->ReadCommandTime[transaction_list.size()];
+
+      if (chipBKE->OngoingDieCMDTransfers.empty()) {
         targetChip->StartCMDXfer();
         chipBKE->Status = ChipStatus::CMD_IN;
         chipBKE->Last_transfer_finish_time = sim->Time() + suspendTime + target_channel->ReadCommandTime[transaction_list.size()];
-        sim->Register_sim_event(sim->Time() + suspendTime + target_channel->ReadCommandTime[transaction_list.size()], this,
-          dieBKE, (int)NVDDR2_SimEventType::READ_CMD_ADDR_TRANSFERRED);
-      }
-      else
-      {
+        sim->Register_sim_event(chipBKE->Last_transfer_finish_time, this, dieBKE, (int)NVDDR2_SimEventType::READ_CMD_ADDR_TRANSFERRED);
+      } else {
         dieBKE->__die_interleaved_time = suspendTime + target_channel->ReadCommandTime[transaction_list.size()];
-        chipBKE->Last_transfer_finish_time += suspendTime + target_channel->ReadCommandTime[transaction_list.size()];
+        chipBKE->Last_transfer_finish_time += dieBKE->__die_interleaved_time;
       }
+
       chipBKE->OngoingDieCMDTransfers.push(dieBKE);
 
       dieBKE->__expected_finish_time = chipBKE->Last_transfer_finish_time + targetChip->Get_command_execution_latency(dieBKE->__active_cmd->CommandCode, dieBKE->__active_cmd->Address[0].PageID);
@@ -469,21 +461,20 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
       dieBKE->__active_cmd->CommandCode = CMD_ERASE_BLOCK_MULTIPLANE;
     }
 
-    for (std::list<NVM_Transaction_Flash*>::iterator it = transaction_list.begin();
-      it != transaction_list.end(); it++)
-      (*it)->STAT_transfer_time += target_channel->EraseCommandTime[transaction_list.size()];
-    if (chipBKE->OngoingDieCMDTransfers.size() == 0)
+    for (auto tr : transaction_list)
+      tr->STAT_transfer_time += target_channel->EraseCommandTime[transaction_list.size()];
+
+    if (chipBKE->OngoingDieCMDTransfers.empty())
     {
       targetChip->StartCMDXfer();
       chipBKE->Status = ChipStatus::CMD_IN;
       chipBKE->Last_transfer_finish_time = sim->Time() + suspendTime + target_channel->EraseCommandTime[transaction_list.size()];
-      sim->Register_sim_event(sim->Time() + suspendTime + target_channel->EraseCommandTime[transaction_list.size()],
-        this, dieBKE, (int)NVDDR2_SimEventType::ERASE_SETUP_COMPLETED);
+      sim->Register_sim_event(chipBKE->Last_transfer_finish_time, this, dieBKE, (int)NVDDR2_SimEventType::ERASE_SETUP_COMPLETED);
     }
     else
     {
       dieBKE->__die_interleaved_time = suspendTime + target_channel->EraseCommandTime[transaction_list.size()];
-      chipBKE->Last_transfer_finish_time += suspendTime + target_channel->EraseCommandTime[transaction_list.size()];
+      chipBKE->Last_transfer_finish_time += dieBKE->__die_interleaved_time;
     }
     chipBKE->OngoingDieCMDTransfers.push(dieBKE);
 
@@ -500,10 +491,12 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
 
 void NVM_PHY_ONFI_NVDDR2::Change_memory_status_preconditioning(const NVM::NVM_Memory_Address* address, const void* status_info)
 {
-  channels[((NVM::FlashMemory::Physical_Page_Address*)address)->ChannelID]->Chips[((NVM::FlashMemory::Physical_Page_Address*)address)->ChipID]->Change_memory_status_preconditioning(address, status_info);
+  auto* addr = (NVM::FlashMemory::Physical_Page_Address*) address;
+  channels[addr->ChannelID]->Chips[addr->ChipID]->Change_memory_status_preconditioning(address, status_info);
 }
 
-void copy_read_data_to_transaction(NVM_Transaction_Flash_RD* read_transaction, NVM::FlashMemory::Flash_Command* command)
+force_inline void
+copy_read_data_to_transaction(NVM_Transaction_Flash_RD* read_transaction, NVM::FlashMemory::Flash_Command* command)
 {
   int i = 0;
   for (auto &address : command->Address)
@@ -533,7 +526,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
       tr->STAT_execution_time = dieBKE->__expected_finish_time - sim->Time();
     chipBKE->OngoingDieCMDTransfers.pop();
     chipBKE->No_of_active_dies++;
-    if (chipBKE->OngoingDieCMDTransfers.size() > 0)
+    if (!chipBKE->OngoingDieCMDTransfers.empty())
     {
       perform_interleaved_cmd_data_transfer(*targetChip, *chipBKE->OngoingDieCMDTransfers.front());
       return;
@@ -551,7 +544,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
       tr->STAT_execution_time = dieBKE->__expected_finish_time - sim->Time();
     chipBKE->OngoingDieCMDTransfers.pop();
     chipBKE->No_of_active_dies++;
-    if (chipBKE->OngoingDieCMDTransfers.size() > 0)
+    if (!chipBKE->OngoingDieCMDTransfers.empty())
     {
       perform_interleaved_cmd_data_transfer(*targetChip, *chipBKE->OngoingDieCMDTransfers.front());
       return;
@@ -570,7 +563,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
       tr->STAT_execution_time = dieBKE->__expected_finish_time - sim->Time();
     chipBKE->OngoingDieCMDTransfers.pop();
     chipBKE->No_of_active_dies++;
-    if (chipBKE->OngoingDieCMDTransfers.size() > 0)
+    if (!chipBKE->OngoingDieCMDTransfers.empty())
     {
       perform_interleaved_cmd_data_transfer(*targetChip, *chipBKE->OngoingDieCMDTransfers.front());
       return;
@@ -590,14 +583,13 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 #endif
     broadcastTransactionServicedSignal(dieBKE->__active_transfer);
 
-    for (std::list<NVM_Transaction_Flash*>::iterator it = dieBKE->__active_transactions.begin();
-      it != dieBKE->__active_transactions.end(); it++)
+    for (auto it = dieBKE->__active_transactions.begin(); it != dieBKE->__active_transactions.end(); it++)
       if ((*it) == dieBKE->__active_transfer) {
         dieBKE->__active_transactions.erase(it);
         break;
       }
     dieBKE->__active_transfer = nullptr;
-    if (dieBKE->__active_transactions.size() == 0)
+    if (dieBKE->__active_transactions.empty())
       dieBKE->ClearCommand();
 
     chipBKE->WaitingReadTXCount--;
@@ -618,7 +610,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 
   /* Copyback requests are prioritized over other type of requests since they need very short transfer time.
   In addition, they are just used for GC purpose. */
-  if (WaitingCopybackWrites[channel_id].size() > 0)
+  if (!WaitingCopybackWrites[channel_id].empty())
   {
     DieBookKeepingEntry* waitingBKE = WaitingCopybackWrites[channel_id].front();
     targetChip = channels[channel_id]->Chips[waitingBKE->__active_transactions.front()->Address.ChipID];
@@ -649,27 +641,27 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
     channels[channel_id]->SetStatus(BusChannelStatus::BUSY, targetChip);
     return;
   }
-  else if (WaitingMappingRead_TX[channel_id].size() > 0)
+  else if (!WaitingMappingRead_TX[channel_id].empty())
   {
-    NVM_Transaction_Flash_RD* waitingTR = (NVM_Transaction_Flash_RD*)WaitingMappingRead_TX[channel_id].front();
+    auto* waitingTR = (NVM_Transaction_Flash_RD*)WaitingMappingRead_TX[channel_id].front();
     WaitingMappingRead_TX[channel_id].pop_front();
     transfer_read_data_from_chip(bookKeepingTable[channel_id][waitingTR->Address.ChipID],
                                  bookKeepingTable[channel_id][waitingTR->Address.ChipID].Die_book_keeping_records[waitingTR->Address.DieID],
                                  waitingTR);
     return;
   }
-  else if (WaitingReadTX[channel_id].size() > 0)
+  else if (!WaitingReadTX[channel_id].empty())
   {
-    NVM_Transaction_Flash_RD* waitingTR = (NVM_Transaction_Flash_RD*)WaitingReadTX[channel_id].front();
+    auto* waitingTR = (NVM_Transaction_Flash_RD*)WaitingReadTX[channel_id].front();
     WaitingReadTX[channel_id].pop_front();
     transfer_read_data_from_chip(bookKeepingTable[channel_id][waitingTR->Address.ChipID],
                                  bookKeepingTable[channel_id][waitingTR->Address.ChipID].Die_book_keeping_records[waitingTR->Address.DieID],
                                  waitingTR);
     return;
   }
-  else if (WaitingGCRead_TX[channel_id].size() > 0)
+  else if (!WaitingGCRead_TX[channel_id].empty())
   {
-    NVM_Transaction_Flash_RD* waitingTR = (NVM_Transaction_Flash_RD*)WaitingGCRead_TX[channel_id].front();
+    auto* waitingTR = (NVM_Transaction_Flash_RD*)WaitingGCRead_TX[channel_id].front();
     WaitingGCRead_TX[channel_id].pop_front();
     transfer_read_data_from_chip(bookKeepingTable[channel_id][waitingTR->Address.ChipID],
                                  bookKeepingTable[channel_id][waitingTR->Address.ChipID].Die_book_keeping_records[waitingTR->Address.DieID],
@@ -805,8 +797,8 @@ NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip
   case CMD_ERASE_BLOCK_MULTIPLANE:
     PRINT_DEBUG("Chip " << chip->ChannelID << ", " << chip->ChipID << ": finished erase command")
 
-    for (auto it = dieBKE.__active_transactions.begin(); it != dieBKE.__active_transactions.end(); it++)
-      broadcastTransactionServicedSignal(*it);
+    for (auto* tr : dieBKE.__active_transactions)
+      broadcastTransactionServicedSignal(tr);
 
     dieBKE.__active_transactions.clear();
     dieBKE.ClearCommand();
@@ -816,9 +808,9 @@ NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip
       chipBKE.Status = ChipStatus::IDLE;
 
     //Since the time required to send the resume command is very small, we ignore it
-    if (chipBKE.Status == ChipStatus::IDLE)
-      if (chipBKE.HasSuspend)
-        send_resume_command_to_chip(chip, chipBKE);
+    if (chipBKE.Status == ChipStatus::IDLE && chipBKE.HasSuspend)
+      send_resume_command_to_chip(chip, chipBKE);
+
     break;
   default:
     break;

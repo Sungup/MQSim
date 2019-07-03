@@ -302,20 +302,27 @@ __PDWC_map(LPA_type lpn, const PlaneAllocator::AddressInfo& in)
 // ===========================
 // Plane Allocator Constructor
 // ===========================
-PlaneAllocator::PlaneAllocator(flash_channel_ID_type* channel_ids,
-                               flash_chip_ID_type*    chip_ids,
-                               flash_die_ID_type*     die_ids,
-                               flash_plane_ID_type*   plane_ids,
-                               uint16_t channel_no,
-                               uint16_t chip_no,
-                               uint16_t die_no,
-                               uint16_t plane_no,
+force_inline
+PlaneAllocator::AddressInfo::AddressInfo(uint16_t channel,
+                                         uint16_t chip,
+                                         uint16_t die,
+                                         uint16_t plane)
+  : channel(channel),
+    chip(chip),
+    die(die),
+    plane(plane)
+{ }
+
+PlaneAllocator::PlaneAllocator(const ChannelIDs& channel_ids,
+                               const ChipIDs&    chip_ids,
+                               const DieIDs&     die_ids,
+                               const PlaneIDs&   plane_ids,
                                Flash_Plane_Allocation_Scheme_Type scheme)
-  : __channel_ids(channel_ids, &channel_ids[channel_no]),
-    __chip_ids(chip_ids, &chip_ids[chip_no]),
-    __die_ids(die_ids, &die_ids[die_no]),
-    __plane_ids(plane_ids, &plane_ids[plane_no]),
-    __structure{channel_no, chip_no, die_no, plane_no}
+  : __channel_ids(channel_ids.begin(), channel_ids.end()),
+    __chip_ids(chip_ids.begin(), chip_ids.end()),
+    __die_ids(die_ids.begin(), die_ids.end()),
+    __plane_ids(plane_ids.begin(), plane_ids.end()),
+    __structure(channel_ids.size(), chip_ids.size(), die_ids.size(), plane_ids.size())
 {
   switch (scheme) {
     // Channel First

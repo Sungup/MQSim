@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 option(FORCE_INLINE "User force inline functions on compile time" On)
 option(BLOCK_ERASE_HISTO "Gathering block erase histogram" Off)
+option(SKIP_EXCEPTION_CHECK "Skip exception status check in logic" On)
 
 # Set the default output path
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
@@ -22,19 +23,23 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 if (FORCE_INLINE)
-  set(CMAKE_CXX_FLAGS "-DUSE_FORCE_INLINE ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-DUSE_FORCE_INLINE=1 ${CMAKE_CXX_FLAGS}")
 endif (FORCE_INLINE)
 
 if (BLOCK_ERASE_HISTO)
   set(CMAKE_CXX_FLAGS "-DGATHER_BLOCK_ERASE_HISTO ${CMAKE_CXX_FLAGS}")
 endif (BLOCK_ERASE_HISTO)
 
+if (NOT SKIP_EXCEPTION_CHECK)
+  set(CMAKE_CXX_FLAGS "-DRUN_EXCEPTION_CHECK=1 ${CMAKE_CXX_FLAGS}")
+endif (NOT SKIP_EXCEPTION_CHECK)
+
 # Debug Flags
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS "-ggdb3 -O0 -DDEBUG ${CMAKE_CXX_FLAGS}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Profile")
   # Remove -pg flags becuase of Mojave
-  set(CMAKE_CXX_FLAGS "-ggdb3 -O0 -DPROFILE ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-ggdb3 -O3 -DPROFILE ${CMAKE_CXX_FLAGS}")
   # set(CMAKE_CXX_FLAGS "-ggdb3 -pg -O0 -DPROFILE ${CMAKE_CXX_FLAGS}")
   # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
   # set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
@@ -43,5 +48,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Profile")
 else (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS "-O3 ${CMAKE_CXX_FLAGS}")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+message(${CMAKE_CXX_FLAGS})
 
 add_subdirectory(src)

@@ -12,7 +12,7 @@
 #include "../ssd/dcm/Data_Cache_Flash.h"
 #include "../ssd/FTL.h"
 #include "../ssd/phy/NVM_PHY_Base.h"
-#include "../ssd/NVM_Channel_Base.h"
+#include "../ssd/ONFI_Channel_Base.h"
 #include "../host/PCIe_Switch.h"
 #include "../nvm_chip/NVM_Types.h"
 #include "params/DeviceParameterSet.h"
@@ -45,7 +45,7 @@ public:
   SSD_Components::Host_Interface_Base *Host_interface;
   SSD_Components::Data_Cache_Manager_Base *Cache_manager;
   SSD_Components::NVM_PHY_Base* PHY;
-  std::vector<SSD_Components::NVM_Channel_Base*> Channels;
+  std::vector<SSD_Components::ONFI_Channel_Base*> Channels;
 
 public:
   SSD_Device(DeviceParameterSet& parameters, IOFlowScenario& io_flows);

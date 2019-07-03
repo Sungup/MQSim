@@ -29,28 +29,29 @@ namespace SSD_Components
       uint16_t chip;
       uint16_t die;
       uint16_t plane;
+
+      AddressInfo(uint16_t channel,
+                  uint16_t chip,
+                  uint16_t die,
+                  uint16_t plane);
     };
 
   typedef AddressInfo (*AllocScheme)(LPA_type lpn, const AddressInfo& in);
 
   private:
-    std::vector<flash_channel_ID_type> __channel_ids;
-    std::vector<flash_chip_ID_type>    __chip_ids;
-    std::vector<flash_die_ID_type>     __die_ids;
-    std::vector<flash_plane_ID_type>   __plane_ids;
+    const ChannelIDs __channel_ids;
+    const ChipIDs    __chip_ids;
+    const DieIDs     __die_ids;
+    const PlaneIDs   __plane_ids;
 
     const AddressInfo __structure;
     AllocScheme __alloc;
 
   public:
-    PlaneAllocator(flash_channel_ID_type* channel_ids,
-                   flash_chip_ID_type*    chip_ids,
-                   flash_die_ID_type*     die_ids,
-                   flash_plane_ID_type*   plane_ids,
-                   uint16_t channel_no,
-                   uint16_t chip_no,
-                   uint16_t die_no,
-                   uint16_t plane_no,
+    PlaneAllocator(const ChannelIDs& channel_ids,
+                   const ChipIDs&    chip_ids,
+                   const DieIDs&     die_ids,
+                   const PlaneIDs&   plane_ids,
                    Flash_Plane_Allocation_Scheme_Type scheme);
 
     void operator()(NVM::FlashMemory::Physical_Page_Address& target,

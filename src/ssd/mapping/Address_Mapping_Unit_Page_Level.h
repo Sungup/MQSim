@@ -25,7 +25,10 @@ namespace SSD_Components
   {
     MPPN_type MPPN;
     data_timestamp_type TimeStamp;
+
+    GTDEntryType();
   };
+
   struct CMTSlotType
   {
     PPA_type PPA;
@@ -35,11 +38,14 @@ namespace SSD_Components
     std::list<std::pair<LPA_type, CMTSlotType*>>::iterator listPtr;//used for fast implementation of LRU
     stream_id_type Stream_id;
   };
+
   struct GMTEntryType//Entry type for the Global Mapping Table
   {
     PPA_type PPA;
     uint64_t WrittenStateBitmap;
     data_timestamp_type TimeStamp;
+
+    GMTEntryType();
   };
   
   class Cached_Mapping_Table
@@ -80,35 +86,36 @@ namespace SSD_Components
                          uint32_t no_of_translation_entries_per_page,
                          Cached_Mapping_Table* CMT,
                          Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
-                         flash_channel_ID_type* channel_ids,
-                         uint32_t channel_no,
-                         flash_chip_ID_type* chip_ids,
-                         uint32_t chip_no,
-                         flash_die_ID_type* die_ids,
-                         uint32_t die_no,
-                         flash_plane_ID_type* plane_ids,
-                         uint32_t plane_no,
+                         const ChannelIDs& channel_ids,
+                         const ChipIDs& chip_ids,
+                         const DieIDs& die_ids,
+                         const PlaneIDs& plane_ids,
                          PPA_type total_physical_sectors_no,
                          LHA_type total_logical_sectors_no,
                          uint32_t sectors_no_per_page);
     ~AddressMappingDomain();
 
+    LHA_type max_logical_sector_address;
+    uint32_t Translation_entries_per_page;
+    LPA_type Total_logical_pages_no;
+    PPA_type Total_physical_pages_no;
+    MVPN_type Total_translation_pages_no;
 
     /*Stores the mapping of Virtual Translation Page Number (MVPN) to Physical Translation Page Number (MPPN).
     * It is always kept in volatile memory.*/
-    GTDEntryType* GlobalTranslationDirectory;
+    std::vector<GTDEntryType> GlobalTranslationDirectory;
+
+    /*The logical to physical address mapping of all data pages that is implemented based on the DFTL (Gupta et al., ASPLOS 2009(
+    * proposal. It is always stored in non-volatile flash memory.*/
+    std::vector<GMTEntryType> GlobalMappingTable;
 
     /*The cached mapping table that is implemented based on the DFLT (Gupta et al., ASPLOS 2009) proposal.
     * It is always stored in volatile memory.*/
     uint32_t CMT_entry_size;
-    uint32_t Translation_entries_per_page;
     Cached_Mapping_Table* CMT;
     uint32_t No_of_inserted_entries_in_preconditioning;
 
 
-    /*The logical to physical address mapping of all data pages that is implemented based on the DFTL (Gupta et al., ASPLOS 2009(
-    * proposal. It is always stored in non-volatile flash memory.*/
-    GMTEntryType* GlobalMappingTable;
     void Update_mapping_info(const bool ideal_mapping, const stream_id_type stream_id, const LPA_type lpa, const PPA_type ppa, const page_status_type page_status_bitmap);
     page_status_type Get_page_status(const bool ideal_mapping, const stream_id_type stream_id, const LPA_type lpa);
     PPA_type Get_ppa(const bool ideal_mapping, const stream_id_type stream_id, const LPA_type lpa);
@@ -127,21 +134,19 @@ namespace SSD_Components
     std::set<MVPN_type> MVPN_read_transactions_waiting_behind_barrier;
     std::set<MVPN_type> MVPN_write_transaction_waiting_behind_barrier;
 
-    PlaneAllocator plane_allocate;
-    Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme;
-    flash_channel_ID_type* Channel_ids;
+    ChannelIDs Channel_ids;
+    ChipIDs    Chip_ids;
+    DieIDs     Die_ids;
+    PlaneIDs   Plane_ids;
+
     uint32_t Channel_no;
-    flash_chip_ID_type* Chip_ids;
     uint32_t Chip_no;
-    flash_die_ID_type* Die_ids;
     uint32_t Die_no;
-    flash_plane_ID_type* Plane_ids;
     uint32_t Plane_no;
 
-    LHA_type max_logical_sector_address;
-    LPA_type Total_logical_pages_no;
-    PPA_type Total_physical_pages_no;
-    MVPN_type Total_translation_pages_no;
+    PlaneAllocator plane_allocate;
+    Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme;
+
   };
 
   class Address_Mapping_Unit_Page_Level : public Address_Mapping_Unit_Base
@@ -192,14 +197,30 @@ namespace SSD_Components
                           NVM::FlashMemory::Physical_Page_Address& address);
 
   public:
-    Address_Mapping_Unit_Page_Level(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI* flash_controller, Flash_Block_Manager_Base* block_manager,
-      Stats& stats, bool ideal_mapping_table, uint32_t cmt_capacity_in_byte, Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
-      uint32_t ConcurrentStreamNo,
-      uint32_t ChannelCount, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
-      std::vector<std::vector<flash_channel_ID_type>> stream_channel_ids, std::vector<std::vector<flash_chip_ID_type>> stream_chip_ids,
-      std::vector<std::vector<flash_die_ID_type>> stream_die_ids, std::vector<std::vector<flash_plane_ID_type>> stream_plane_ids,
-      uint32_t Block_no_per_plane, uint32_t Page_no_per_block, uint32_t SectorsPerPage, uint32_t PageSizeInBytes,
-      double Overprovisioning_ratio, CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED, bool fold_large_addresses = true);
+    Address_Mapping_Unit_Page_Level(const sim_object_id_type& id,
+                                    FTL* ftl,
+                                    NVM_PHY_ONFI* flash_controller,
+                                    Flash_Block_Manager_Base* block_manager,
+                                    Stats& stats,
+                                    bool ideal_mapping_table,
+                                    uint32_t cmt_capacity_in_byte,
+                                    Flash_Plane_Allocation_Scheme_Type PlaneAllocationScheme,
+                                    uint32_t ConcurrentStreamNo,
+                                    uint32_t ChannelCount,
+                                    uint32_t chip_no_per_channel,
+                                    uint32_t DieNoPerChip,
+                                    uint32_t PlaneNoPerDie,
+                                    const StreamChannelIDs& stream_channel_ids,
+                                    const StreamChipIDs& stream_chip_ids,
+                                    const StreamDieIDs& stream_die_ids,
+                                    const StreamPlaneIDs& stream_plane_ids,
+                                    uint32_t Block_no_per_plane,
+                                    uint32_t Page_no_per_block,
+                                    uint32_t SectorsPerPage,
+                                    uint32_t PageSizeInBytes,
+                                    double Overprovisioning_ratio,
+                                    CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED,
+                                    bool fold_large_addresses = true);
     ~Address_Mapping_Unit_Page_Level() final;
 
     // --------------------------

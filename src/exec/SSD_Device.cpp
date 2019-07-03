@@ -27,6 +27,28 @@ __build_id_list(uint32_t count)
   return id_list;
 }
 
+force_inline NVM::FlashMemory::FlashChipList
+__build_chips_on_channel(const DeviceParameterSet& params,
+                         const sim_object_id_type& id,
+                         uint32_t channel)
+{
+  using namespace NVM::FlashMemory;
+
+  auto id_form = id + ".Channel." + std::to_string(channel) + ".Chip.";
+
+  FlashChipList chips;
+
+  for (uint32_t chip = 0; chip < params.Chip_No_Per_Channel; ++chip) {
+    chips.emplace_back(id_form + std::to_string(chip),
+                       params.Flash_Parameters,
+                       channel, chip);
+
+    Simulator->AddObject(&chips.back());
+  }
+
+  return chips;
+}
+
 SSD_Device::SSD_Device(DeviceParameterSet& params, IOFlowScenario& io_flows)
   : MQSimEngine::Sim_Object("SSDDevice"),
     ftl(ID() + ".FTL", params),
@@ -59,7 +81,6 @@ SSD_Device::SSD_Device(DeviceParameterSet& params, IOFlowScenario& io_flows)
     }
 
     channels[channel_cntr] = new SSD_Components::ONFI_Channel_NVDDR2(channel_cntr,
-                                                                     params.Chip_No_Per_Channel,
                                                                      chips,
                                                                      params.Flash_Channel_Width,
                                                                      (sim_time_type)((double)1000 / params.Channel_Transfer_Rate) * 2,
@@ -178,20 +199,47 @@ SSD_Device::SSD_Device(DeviceParameterSet& params, IOFlowScenario& io_flows)
   switch (params.Address_Mapping)
   {
   case SSD_Components::Flash_Address_Mapping_Type::PAGE_LEVEL:
-    amu = new SSD_Components::Address_Mapping_Unit_Page_Level(ftl.ID() + ".AddressMappingUnit", &ftl, (SSD_Components::NVM_PHY_ONFI*) PHY,
-      fbm, ftl.get_stats_reference(), params.Ideal_Mapping_Table, params.CMT_Capacity, params.Plane_Allocation_Scheme, stream_count,
-      params.Flash_Channel_Count, params.Chip_No_Per_Channel, params.Flash_Parameters.Die_No_Per_Chip, params.Flash_Parameters.Plane_No_Per_Die,
-      flow_channel_id_assignments, flow_chip_id_assignments, flow_die_id_assignments, flow_plane_id_assignments,
-      params.Flash_Parameters.Block_No_Per_Plane, params.Flash_Parameters.Page_No_Per_Block,
-      params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, params.Flash_Parameters.Page_Capacity, params.Overprovisioning_Ratio,
+    amu = new SSD_Components::Address_Mapping_Unit_Page_Level(ftl.ID() + ".AddressMappingUnit",
+                                                              &ftl,
+                                                              (SSD_Components::NVM_PHY_ONFI*) PHY,
+                                                              fbm,
+                                                              ftl.get_stats_reference(),
+                                                              params.Ideal_Mapping_Table,
+                                                              params.CMT_Capacity,
+                                                              params.Plane_Allocation_Scheme,
+                                                              stream_count,
+                                                              params.Flash_Channel_Count,
+                                                              params.Chip_No_Per_Channel,
+                                                              params.Flash_Parameters.Die_No_Per_Chip,
+                                                              params.Flash_Parameters.Plane_No_Per_Die,
+                                                              flow_channel_id_assignments,
+                                                              flow_chip_id_assignments,
+                                                              flow_die_id_assignments,
+                                                              flow_plane_id_assignments,
+                                                              params.Flash_Parameters.Block_No_Per_Plane,
+                                                              params.Flash_Parameters.Page_No_Per_Block,
+                                                              params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE,
+                                                              params.Flash_Parameters.Page_Capacity,
+                                                              params.Overprovisioning_Ratio,
       params.CMT_Sharing_Mode);
     break;
   case SSD_Components::Flash_Address_Mapping_Type::HYBRID:
-    amu = new SSD_Components::Address_Mapping_Unit_Hybrid(ftl.ID() + ".AddressMappingUnit", &ftl, (SSD_Components::NVM_PHY_ONFI*) PHY,
-      fbm, ftl.get_stats_reference(), params.Ideal_Mapping_Table, stream_count,
-      params.Flash_Channel_Count, params.Chip_No_Per_Channel, params.Flash_Parameters.Die_No_Per_Chip,
-      params.Flash_Parameters.Plane_No_Per_Die, params.Flash_Parameters.Block_No_Per_Plane, params.Flash_Parameters.Page_No_Per_Block,
-      params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, params.Flash_Parameters.Page_Capacity, params.Overprovisioning_Ratio);
+    amu = new SSD_Components::Address_Mapping_Unit_Hybrid(ftl.ID() + ".AddressMappingUnit",
+                                                          &ftl,
+                                                          (SSD_Components::NVM_PHY_ONFI*) PHY,
+                                                          fbm,
+                                                          ftl.get_stats_reference(),
+                                                          params.Ideal_Mapping_Table,
+                                                          stream_count,
+                                                          params.Flash_Channel_Count,
+                                                          params.Chip_No_Per_Channel,
+                                                          params.Flash_Parameters.Die_No_Per_Chip,
+                                                          params.Flash_Parameters.Plane_No_Per_Die,
+                                                          params.Flash_Parameters.Block_No_Per_Plane,
+                                                          params.Flash_Parameters.Page_No_Per_Block,
+                                                          params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE,
+                                                          params.Flash_Parameters.Page_Capacity,
+                                                          params.Overprovisioning_Ratio);
     break;
   default:
     throw std::invalid_argument("No implementation is available fo the secified address mapping strategy");

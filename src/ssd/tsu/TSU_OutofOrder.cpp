@@ -185,6 +185,21 @@ namespace SSD_Components
   {
     Flash_Transaction_Queue *sourceQueue1 = nullptr, *sourceQueue2 = nullptr;
 
+    /// Priority
+    /// 1. MappingReadTRQueue is not empty
+    ///    1) GC_and_WL_Unit is urgent and GCReadTRQueue is not empty.
+    ///    2) User Read Queue is not empty.
+    /// 2. GCandWLUnit is in urgent mode.
+    ///    1) GCReadTRQueue is not empty.
+    ///    2) GCWriteTRQueue is not empty. --> Read service stop
+    ///    3) GCEraseTRQueue is not empty. --> Read service stop
+    ///    4) Select User Read Queue
+    ///    5) No Read Transaction
+    /// 3. Others
+    ///    1) UserReadTRQueue is not empty
+    ///    2) UserWriteTRQueue is not empty --> Read service stop
+    ///    3) GCReadTRQueue is not empty
+    ///    4) No Read Transaction
     if (!MappingReadTRQueue[chip.ChannelID][chip.ChipID].empty()) {
       //Flash transactions that are related to FTL mapping data have the highest priority
       sourceQueue1 = &MappingReadTRQueue[chip.ChannelID][chip.ChipID];
@@ -225,6 +240,9 @@ namespace SSD_Components
       else return false;
     }
 
+    /// Currently following chip status check routine always fall into return
+    /// false except IDLE status. Commented break phrase has been added by
+    /// sungup at 2019.07.02. Is this right procedure?
     bool suspensionRequired = false;
     ChipStatus cs = _NVMController->GetChipStatus(chip);
     switch (cs)
@@ -237,12 +255,14 @@ namespace SSD_Components
       if (_NVMController->Expected_finish_time(chip) - Simulator->Time() < writeReasonableSuspensionTimeForRead)
         return false;
       suspensionRequired = true;
+      // break;
     case ChipStatus::ERASING:
       if (!eraseSuspensionEnabled || _NVMController->HasSuspendedCommand(chip))
         return false;
       if (_NVMController->Expected_finish_time(chip) - Simulator->Time() < eraseReasonableSuspensionTimeForRead)
         return false;
       suspensionRequired = true;
+      // break;
     default:
       return false;
     }
@@ -255,14 +275,14 @@ namespace SSD_Components
       transaction_dispatch_slots.clear();
       planeVector = 0;
 
-      for (Flash_Transaction_Queue::iterator it = sourceQueue1->begin(); it != sourceQueue1->end();)
+      for (auto it = sourceQueue1->begin(); it != sourceQueue1->end();)
       {
-        if ((*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
+        if ((*it)->Address.DieID == dieID && !(planeVector & 1U << (*it)->Address.PlaneID))
         {
           if (planeVector == 0 || (*it)->Address.PageID == pageID)//Check for identical pages when running multiplane command
           {
             (*it)->SuspendRequired = suspensionRequired;
-            planeVector |= 1 << (*it)->Address.PlaneID;
+            planeVector |= 1U << (*it)->Address.PlaneID;
             transaction_dispatch_slots.push_back(*it);
             sourceQueue1->remove(it++);
             continue;
@@ -272,14 +292,14 @@ namespace SSD_Components
       }
 
       if (sourceQueue2 != nullptr && transaction_dispatch_slots.size() < plane_no_per_die)
-        for (Flash_Transaction_Queue::iterator it = sourceQueue2->begin(); it != sourceQueue2->end();)
+        for (auto it = sourceQueue2->begin(); it != sourceQueue2->end();)
         {
-          if ((*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
+          if ((*it)->Address.DieID == dieID && !(planeVector & 1U << (*it)->Address.PlaneID))
           {
             if (planeVector == 0 || (*it)->Address.PageID == pageID)//Check for identical pages when running multiplane command
             {
               (*it)->SuspendRequired = suspensionRequired;
-              planeVector |= 1 << (*it)->Address.PlaneID;
+              planeVector |= 1U << (*it)->Address.PlaneID;
               transaction_dispatch_slots.push_back(*it);
               sourceQueue2->remove(it++);
               continue;
@@ -288,8 +308,9 @@ namespace SSD_Components
           it++;
         }
 
-      if (transaction_dispatch_slots.size() > 0)
+      if (!transaction_dispatch_slots.empty())
         _NVMController->Send_command_to_chip(transaction_dispatch_slots);
+
       transaction_dispatch_slots.clear();
       dieID = (dieID + 1) % die_no_per_chip;
     }

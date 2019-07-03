@@ -119,7 +119,6 @@ set(MQSIM_SSD_SOURCES
     ssd/interface/Host_Interface_SATA.cpp
     ssd/interface/Host_Interface_SATA.h
     ssd/interface/HostInterfaceHandler.h
-    ssd/NVM_Channel_Base.h
     ssd/NVM_Firmware.cpp
     ssd/NVM_Firmware.h
     ssd/phy/NVM_PHY_Base.cpp

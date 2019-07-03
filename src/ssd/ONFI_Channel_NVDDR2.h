@@ -11,11 +11,59 @@
 
 namespace SSD_Components
 {
-  class ONFI_Channel_NVDDR2 : public ONFI_Channel_Base
-  {
+  class ONFI_Channel_NVDDR2 : public ONFI_Channel_Base {
   public:
+#if 0 // Currently not in use
+    const sim_time_type ReadDataOutSetupTime;
+    const sim_time_type ReadDataOutSetupTime_2Planes;
+    const sim_time_type ReadDataOutSetupTime_3Planes;
+    const sim_time_type ReadDataOutSetupTime_4Planes;
+#endif
+
+    //The DDR delay for two-unit device data out/in
+    const sim_time_type TwoUnitDataOutTime;
+    const sim_time_type TwoUnitDataInTime;
+
+    const sim_time_type ProgramSuspendCommandTime;
+    const sim_time_type EraseSuspendCommandTime;
+
+    // Read/Program/Erase command transfer time for different number of planes.
+    const sim_time_type ReadCommandTime[5];
+    const sim_time_type ProgramCommandTime[5];
+    const sim_time_type EraseCommandTime[5];
+
+    const uint32_t ChannelWidth; //channel width in bytes
+
+    /**
+     * ONFI_CHANNEL_NVDDR2 constructor
+     *
+     * Arguments
+     *   Data input/ouput timing parameters related to bus frequency
+     *    - t_RC: Average RE cycle time, e.g. 6ns
+     *    - t_DSC: Average DQS cycle time, e.g. 6ns
+     *
+     *   Flash timing parameters.
+     *    - t_DBSY: Dummy busy time, e.g. 500ns
+     *
+     *   ONFI NVDDR2 command and address protocol timing parameters
+     *     - t_CS: CE setup, e.g. 20ns
+     *     - t_RR: Ready to data output, e.g. 20ns
+     *     - t_WB: CLK HIGH to R/B LOW, e.g. 100ns
+     *     - t_WC: WE cycle time, e.g. 25ns
+     *     - t_ADL: ALE to data loading time, e.g. 70ns
+     *     - t_CALS: ALE, CLE setup with ODT disabled, e.g. 15
+     *
+     *   ONFI NVDDR2 data output protocol timing paramters
+     *     - t_DQSRE: Access window of DQS from RE, e.g. 15ns
+     *     - t_RPRE: Read preamble, e.g. 15ns
+     *     - t_RHW: Data output to command, address, or data input, 100ns
+     *     - t_CCS: Change column setup time to data in/out or next command, 300ns
+     *
+     *   ONFI NVDDR2 data input protocol timing paramters
+     *     - t_WPST: DQS write postamble, e.g. 6ns
+     *     - t_WPSTH: DQS write postamble hold time, e.g. 15ns
+     */
     ONFI_Channel_NVDDR2(flash_channel_ID_type channelID,
-                        uint32_t chipCount,
                         NVM::FlashMemory::Flash_Chip** flashChips,
                         uint32_t ChannelWidth,
                         sim_time_type t_RC = 6,
@@ -27,50 +75,15 @@ namespace SSD_Components
                         sim_time_type t_WC = 25,
                         sim_time_type t_ADL = 70,
                         sim_time_type t_CALS = 15,
+#if 0 // Currently not in use
                         sim_time_type t_DQSRE = 15,
                         sim_time_type t_RPRE = 15,
                         sim_time_type t_RHW = 100,
                         sim_time_type t_CCS = 300,
+#endif
                         sim_time_type t_WPST = 6,
                         sim_time_type t_WPSTH = 15);
 
-    sim_time_type TwoUnitDataOutTime; //The DDR delay for two-unit device data out
-    sim_time_type ReadCommandTime[5];//Read command transfer time for different number of planes
-    sim_time_type ReadDataOutSetupTime, ReadDataOutSetupTime_TwoPlane, ReadDataOutSetupTime_ThreePlane, ReadDataOutSetupTime_FourPlane;
-
-    sim_time_type TwoUnitDataInTime; //The DDR delay for two-unit device data in
-    sim_time_type ProgramCommandTime[5];//Program command transfer time for different number of planes
-    sim_time_type ProgramSuspendCommandTime;
-
-    sim_time_type EraseCommandTime[5];
-    sim_time_type EraseSuspendCommandTime;
-
-    uint32_t ChannelWidth; //channel width in bytes
-  private:
-    //Data input/ouput timing parameters related to bus frequency
-    sim_time_type t_RC; //Average RE cycle time, e.g. 6ns
-    sim_time_type t_DSC; //Average DQS cycle time, e.g. 6ns
-
-    //flash timing parameters
-    sim_time_type t_DBSY; //Dummy busy time, e.g. 500ns
-  
-    //ONFI NVDDR2 command and address protocol timing parameters
-    sim_time_type t_CS; //CE setup, e.g. 20ns
-    sim_time_type t_RR; //Ready to data output, e.g. 20ns
-    sim_time_type t_WB; //CLK HIGH to R/B LOW, e.g. 100ns
-    sim_time_type t_WC; //WE cycle time, e.g. 25ns
-    sim_time_type t_ADL; //ALE to data loading time, e.g. 70ns
-    sim_time_type t_CALS; //ALE, CLE setup with ODT disabled, e.g. 15
-    
-    //ONFI NVDDR2 data output protocol timing paramters
-    sim_time_type t_DQSRE; //Access window of DQS from RE, e.g. 15ns
-    sim_time_type t_RPRE; //Read preamble, e.g. 15ns
-    sim_time_type t_RHW; //Data output to command, address, or data input, 100ns
-    sim_time_type t_CCS; //Change column setup time to data in/out or next command, 300ns
-    
-    //ONFI NVDDR2 data input protocol timing paramters
-    sim_time_type t_WPST; //DQS write postamble, e.g. 6ns
-    sim_time_type t_WPSTH; //DQS write postamble hold time, e.g. 15ns
   };
 }
 
