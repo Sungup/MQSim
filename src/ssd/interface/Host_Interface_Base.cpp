@@ -32,7 +32,7 @@ Host_Interface_Base::~Host_Interface_Base()
 }
 
 void
-Host_Interface_Base::__handle_user_request_signal_from_cache(User_Request* request)
+Host_Interface_Base::__handle_user_request_signal_from_cache(UserRequest* request)
 {
   input_stream_manager->Handle_serviced_request(request);
 }

@@ -205,7 +205,7 @@
     <ClCompile Include="src\ssd\TSU_OutofOrder.cpp">
       <Filter>ssd</Filter>
     </ClCompile>
-    <ClCompile Include="src\ssd\User_Request.cpp">
+    <ClCompile Include="src\ssd\UserRequest.cpp">
       <Filter>ssd</Filter>
     </ClCompile>
     <ClCompile Include="src\host\SATA_HBA.cpp">
@@ -243,7 +243,7 @@
     <ClInclude Include="src\host\Host_Defs.h">
       <Filter>host</Filter>
     </ClInclude>
-    <ClInclude Include="src\host\Host_IO_Request.h">
+    <ClInclude Include="src\host\HostIORequest.h">
       <Filter>host</Filter>
     </ClInclude>
     <ClInclude Include="src\host\IO_Flow_Base.h">
@@ -321,7 +321,7 @@
     <ClInclude Include="src\nvm_chip\flash_memory\Flash_Chip.h">
       <Filter>nvm_chip\flash_memory</Filter>
     </ClInclude>
-    <ClInclude Include="src\nvm_chip\flash_memory\Flash_Command.h">
+    <ClInclude Include="src\nvm_chip\flash_memory\FlashCommand.h">
       <Filter>nvm_chip\flash_memory</Filter>
     </ClInclude>
     <ClInclude Include="src\nvm_chip\flash_memory\FlashTypes.h">
@@ -465,7 +465,7 @@
     <ClInclude Include="src\ssd\TSU_OutofOrder.h">
       <Filter>ssd</Filter>
     </ClInclude>
-    <ClInclude Include="src\ssd\User_Request.h">
+    <ClInclude Include="src\ssd\UserRequest.h">
       <Filter>ssd</Filter>
     </ClInclude>
     <ClInclude Include="src\host\SATA_HBA.h">

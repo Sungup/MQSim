@@ -7,7 +7,7 @@ namespace Host_Components
   {
     for (uint16_t cmdid = 0; cmdid < (uint16_t)(0xffffffff); cmdid++)
       available_command_ids.insert(cmdid);
-    Host_IO_Request* t = NULL;
+    HostIORequest* t = NULL;
     for (uint16_t cmdid = 0; cmdid < ncq_size; cmdid++)
       request_queue_in_memory.push_back(t);
     sata_ncq.Submission_queue_size = ncq_size;
@@ -20,16 +20,6 @@ namespace Host_Components
     sata_ncq.Submission_tail_register_address_on_device = NCQ_SUBMISSION_REGISTER;
     sata_ncq.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_1;
     sata_ncq.Completion_head_register_address_on_device = NCQ_COMPLETION_REGISTER;
-  }
-
-  SATA_HBA::~SATA_HBA()
-  {
-    for (auto &req : sata_ncq.queue)
-      if (req.second)
-        delete req.second;
-    for (auto &req : waiting_requests_for_submission)
-      if (req)
-        delete req;
   }
 
   void SATA_HBA::Start_simulation()
@@ -45,10 +35,10 @@ namespace Host_Components
     {
     case HBA_Sim_Events::CONSUME_IO_REQUEST:
     {
-      Completion_Queue_Entry* cqe = consume_requests.front();
+      CompletionQueueEntry* cqe = consume_requests.front();
       consume_requests.pop();
       //Find the request and update statistics
-      Host_IO_Request* request = sata_ncq.queue[cqe->Command_Identifier];
+      HostIORequest* request = sata_ncq.queue[cqe->Command_Identifier];
       sata_ncq.queue.erase(cqe->Command_Identifier);
       available_command_ids.insert(cqe->Command_Identifier);
       sata_ncq.Submission_queue_head = cqe->SQ_Head;
@@ -61,7 +51,7 @@ namespace Host_Components
       while (waiting_requests_for_submission.size() > 0)
         if (!SATA_SQ_FULL(sata_ncq) && available_command_ids.size() > 0)
         {
-          Host_IO_Request* new_req = waiting_requests_for_submission.front();
+          HostIORequest* new_req = waiting_requests_for_submission.front();
           waiting_requests_for_submission.pop_front();
           if (sata_ncq.queue[*available_command_ids.begin()] != NULL)
             PRINT_ERROR("Unexpteced situation in SATA_HBA! Overwriting a waiting I/O request in the queue!")
@@ -86,7 +76,7 @@ namespace Host_Components
     }
     case HBA_Sim_Events::SUBMIT_IO_REQUEST:
     {
-      Host_IO_Request* request = host_requests.front();
+      HostIORequest* request = host_requests.front();
       host_requests.pop();
       if (SATA_SQ_FULL(sata_ncq) || available_command_ids.size() == 0)//If the hardware queue is full
         waiting_requests_for_submission.push_back(request);
@@ -114,7 +104,7 @@ namespace Host_Components
     }
   }
 
-  void SATA_HBA::Submit_io_request(Host_IO_Request* request)
+  void SATA_HBA::Submit_io_request(HostIORequest* request)
   {
     host_requests.push(request);
     if (host_requests.size() == 1) {
@@ -122,7 +112,7 @@ namespace Host_Components
       sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
     }
   }
-  void SATA_HBA::SATA_consume_io_request(Completion_Queue_Entry* cqe)
+  void SATA_HBA::SATA_consume_io_request(CompletionQueueEntry* cqe)
   {
     consume_requests.push(cqe);
     if (consume_requests.size() == 1) {
@@ -130,15 +120,15 @@ namespace Host_Components
       sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
     }
   }
-  Submission_Queue_Entry* SATA_HBA::Read_ncq_entry(uint64_t address)
+  SubmissionQueueEntry* SATA_HBA::Read_ncq_entry(uint64_t address)
   {
-    Submission_Queue_Entry* ncq_entry = new Submission_Queue_Entry;
-    Host_IO_Request* request = request_queue_in_memory[(uint16_t)((address - sata_ncq.Submission_queue_memory_base_address) / sizeof(Submission_Queue_Entry))];
+    SubmissionQueueEntry* ncq_entry = new SubmissionQueueEntry;
+    HostIORequest* request = request_queue_in_memory[(uint16_t)((address - sata_ncq.Submission_queue_memory_base_address) / sizeof(SubmissionQueueEntry))];
     if (request == NULL)
       throw std::invalid_argument("SATA HBA: Request to access an NCQ entry that does not exist.");
 
     ncq_entry->Command_Identifier = request->IO_queue_info;
-    if (request->Type == Host_IO_Request_Type::READ)//For simplicity, MQSim's SATA host interface uses NVMe opcodes
+    if (request->Type == HostIOReqType::READ)//For simplicity, MQSim's SATA host interface uses NVMe opcodes
     {
       ncq_entry->Opcode = NVME_READ_OPCODE;
       ncq_entry->Command_specific[0] = (uint32_t)request->Start_LBA;

@@ -24,7 +24,7 @@ namespace SSD_Components
     std::queue<Memory_Transfer_Info*>* dram_execution_queue;
 
     //The list of user requests that are waiting for free space in DRAM
-    std::list<User_Request*>* waiting_user_requests_queue_for_dram_free_slot;
+    std::list<UserRequest*>* waiting_user_requests_queue_for_dram_free_slot;
 
     int request_queue_turn;
     uint32_t back_pressure_buffer_max_depth;
@@ -35,11 +35,11 @@ namespace SSD_Components
 
     FlashTransactionHandler<Data_Cache_Manager_Flash_Simple> __user_transaction_handler;
 
-    void process_new_user_request(User_Request* user_request) final;
+    void process_new_user_request(UserRequest* user_request) final;
 
     // Used in the WRITE_CACHE and WRITE_READ_CACHE modes in which the DRAM
     // space is used as a destage buffer
-    void write_to_destage_buffer(User_Request& user_request);
+    void write_to_destage_buffer(UserRequest& user_request);
 
     void service_dram_access_request(Memory_Transfer_Info& request_info);
 

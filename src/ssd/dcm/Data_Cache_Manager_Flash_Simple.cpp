@@ -44,7 +44,7 @@ Data_Cache_Manager_Flash_Simple::Data_Cache_Manager_Flash_Simple(const sim_objec
   capacity_in_pages = capacity_in_bytes / (SECTOR_SIZE_IN_BYTE * sector_no_per_page);
   data_cache = new Data_Cache_Flash(capacity_in_pages);
   dram_execution_queue = new std::queue<Memory_Transfer_Info*>[stream_count];
-  waiting_user_requests_queue_for_dram_free_slot = new std::list<User_Request*>[stream_count];
+  waiting_user_requests_queue_for_dram_free_slot = new std::list<UserRequest*>[stream_count];
   this->back_pressure_buffer_depth = 0;
   bloom_filter = new std::set<LPA_type>[stream_count];
 }
@@ -58,8 +58,6 @@ Data_Cache_Manager_Flash_Simple::~Data_Cache_Manager_Flash_Simple()
       delete dram_execution_queue[i].front();
       dram_execution_queue[i].pop();
     }
-    for (auto &req : waiting_user_requests_queue_for_dram_free_slot[i])
-      delete req;
   }
   delete data_cache;
   delete[] dram_execution_queue;
@@ -68,7 +66,7 @@ Data_Cache_Manager_Flash_Simple::~Data_Cache_Manager_Flash_Simple()
 }
 
 void
-Data_Cache_Manager_Flash_Simple::process_new_user_request(User_Request* user_request)
+Data_Cache_Manager_Flash_Simple::process_new_user_request(UserRequest* user_request)
 {
   if (user_request->Transaction_list.empty())//This condition shouldn't happen, but we check it
     return;
@@ -145,7 +143,7 @@ Data_Cache_Manager_Flash_Simple::process_new_user_request(User_Request* user_req
 }
 
 void
-Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(User_Request& user_request)
+Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(UserRequest& user_request)
 {
   //To eliminate race condition, MQSim assumes the management information and user data are stored in separate DRAM modules
   uint32_t cache_eviction_read_size_in_sectors = 0;//The size of data evicted from cache
@@ -337,9 +335,9 @@ Data_Cache_Manager_Flash_Simple::Execute_simulator_event(MQSimEngine::SimEvent* 
   {
   case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED://A user read is service from DRAM cache
   case Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED:
-    ((User_Request*)(transfer_inf)->Related_request)->Sectors_serviced_from_cache -= transfer_inf->Size_in_bytes / SECTOR_SIZE_IN_BYTE;
-    if (((User_Request*)(transfer_inf)->Related_request)->is_finished())
-      broadcast_user_request_serviced_signal(((User_Request*)(transfer_inf)->Related_request));
+    ((UserRequest*)(transfer_inf)->Related_request)->Sectors_serviced_from_cache -= transfer_inf->Size_in_bytes / SECTOR_SIZE_IN_BYTE;
+    if (((UserRequest*)(transfer_inf)->Related_request)->is_finished())
+      broadcast_user_request_serviced_signal(((UserRequest*)(transfer_inf)->Related_request));
     break;
   case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED://Reading data from DRAM and writing it back to the flash storage
     static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(*((std::list<NVM_Transaction*>*)(transfer_inf->Related_request)));

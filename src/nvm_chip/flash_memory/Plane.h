@@ -5,7 +5,7 @@
 #include "../NVM_Types.h"
 #include "FlashTypes.h"
 #include "Block.h"
-#include "Flash_Command.h"
+#include "FlashCommand.h"
 
 namespace NVM {
   namespace FlashMemory {

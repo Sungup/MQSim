@@ -9,7 +9,7 @@
 #include "../NVM_Chip.h"
 #include "FlashTypes.h"
 #include "Die.h"
-#include "Flash_Command.h"
+#include "FlashCommand.h"
 #include <vector>
 #include <stdexcept>
 
@@ -22,12 +22,12 @@ namespace NVM
     class ChipReadySignalHandlerBase {
     public:
       virtual ~ChipReadySignalHandlerBase() = default;
-      virtual void operator()(Flash_Chip& chip, Flash_Command& command) = 0;
+      virtual void operator()(Flash_Chip& chip, FlashCommand& command) = 0;
     };
 
     template <typename T>
     class ChipReadySignalHandler : public ChipReadySignalHandlerBase {
-      typedef void(T::*Handler)(Flash_Chip& chip, Flash_Command& command);
+      typedef void(T::*Handler)(Flash_Chip& chip, FlashCommand& command);
 
     private:
       T* __callee;
@@ -42,7 +42,7 @@ namespace NVM
 
       ~ChipReadySignalHandler() final = default;
 
-      void operator()(Flash_Chip& chip, Flash_Command& command) final
+      void operator()(Flash_Chip& chip, FlashCommand& command) final
       { (__callee->*__handler)(chip, command); }
     };
 
@@ -52,7 +52,7 @@ namespace NVM
     {
       enum class Internal_Status { IDLE, BUSY };
       enum class Chip_Sim_Event_Type { COMMAND_FINISHED };
-      typedef void(*ChipReadySignalHandlerType) (Flash_Chip* targetChip, Flash_Command* command);
+      typedef void(*ChipReadySignalHandlerType) (Flash_Chip* targetChip, FlashCommand* command);
 
     public:
       flash_channel_ID_type ChannelID;
@@ -81,9 +81,9 @@ namespace NVM
 
       ChipReadySignalHandlerList __connected_ready_handlers;
 
-      void start_command_execution(Flash_Command* command);
-      void finish_command_execution(Flash_Command* command);
-      void broadcast_ready_signal(Flash_Command* command);
+      void start_command_execution(FlashCommand* command);
+      void finish_command_execution(FlashCommand* command);
+      void broadcast_ready_signal(FlashCommand* command);
 
     public:
       Flash_Chip(const sim_object_id_type&,
@@ -107,7 +107,7 @@ namespace NVM
       {
         this->lastTransferStart = Simulator->Time();
       }
-      void EndCMDXfer(Flash_Command* command)//End transferring write data to the Flash chip
+      void EndCMDXfer(FlashCommand* command)//End transferring write data to the Flash chip
       {
         auto sim = Simulator;
 
@@ -122,7 +122,7 @@ namespace NVM
 
         lastTransferStart = INVALID_TIME;
       }
-      void EndCMDDataInXfer(Flash_Command* command)//End transferring write data of a group of multi-plane transactions to the Flash chip
+      void EndCMDDataInXfer(FlashCommand* command)//End transferring write data of a group of multi-plane transactions to the Flash chip
       {
         auto sim = Simulator;
 
@@ -135,7 +135,7 @@ namespace NVM
 
         lastTransferStart = INVALID_TIME;
       }
-      void EndDataOutXfer(Flash_Command* command)
+      void EndDataOutXfer(FlashCommand* command)
       {
         auto sim = Simulator;
 

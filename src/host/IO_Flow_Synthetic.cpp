@@ -71,39 +71,43 @@ namespace Host_Components
     delete random_time_interval_generator;
   }
 
-  Host_IO_Request* IO_Flow_Synthetic::Generate_next_request()
+  HostIORequest* IO_Flow_Synthetic::Generate_next_request()
   {
     if (stop_time > 0)
     {
       if (Simulator->Time() > stop_time)
-        return NULL;
+        return nullptr;
     }
     else if (STAT_generated_request_count >= total_requests_to_be_generated)
-      return NULL;
+      return nullptr;
     
-    Host_IO_Request* request = new Host_IO_Request;
+    LHA_type start_lba;
+    uint32_t lba_count;
+    HostIOReqType req_type;
+
+    // Get request type
     if (random_request_type_generator->Uniform(0, 1) <= read_ratio)
     {
-      request->Type = Host_IO_Request_Type::READ;
+      req_type = HostIOReqType::READ;
       STAT_generated_read_request_count++;
     }
     else
     {
-      request->Type = Host_IO_Request_Type::WRITE;
+      req_type = HostIOReqType::WRITE;
       STAT_generated_write_request_count++;
     }
 
     switch (request_size_distribution)
     {
     case Utils::Request_Size_Distribution_Type::FIXED:
-      request->LBA_count = average_request_size;
+      lba_count = average_request_size;
       break;
     case Utils::Request_Size_Distribution_Type::NORMAL:
     {
       double temp_request_size = random_request_size_generator->Normal(average_request_size, variance_request_size);
-      request->LBA_count = (uint32_t)(ceil(temp_request_size));
-      if (request->LBA_count <= 0)
-        request->LBA_count = 1;
+      lba_count = (uint32_t)(ceil(temp_request_size));
+      if (lba_count <= 0)
+        lba_count = 1;
       break;
     }
     default:
@@ -113,76 +117,78 @@ namespace Host_Components
     switch (address_distribution)
     {
     case Utils::Address_Distribution_Type::STREAMING:
-      request->Start_LBA = streaming_next_address;
-      if (request->Start_LBA + request->LBA_count > end_lsa_on_device)
-        request->Start_LBA = start_lsa_on_device;
-      streaming_next_address += request->LBA_count;
+      start_lba = streaming_next_address;
+      if (start_lba + lba_count > end_lsa_on_device)
+        start_lba = start_lsa_on_device;
+      streaming_next_address += lba_count;
       if (streaming_next_address > end_lsa_on_device)
         streaming_next_address = start_lsa_on_device;
       if (generate_aligned_addresses)
         if(streaming_next_address % alignment_value != 0)
           streaming_next_address += alignment_value - (streaming_next_address % alignment_value);
-      if(streaming_next_address == request->Start_LBA)
+      if(streaming_next_address == start_lba)
         PRINT_MESSAGE("Synthetic Message Generator: The same address is always repeated due to configuration parameters!")
       break;
     case Utils::Address_Distribution_Type::RANDOM_HOTCOLD:
       if (random_hot_cold_generator->Uniform(0, 1) < hot_region_ratio)// (100-hot)% of requests going to hot% of the address space
       {
-        request->Start_LBA = random_hot_address_generator->Uniform_ulong(hot_region_end_lsa + 1, end_lsa_on_device);
-        if (request->Start_LBA < hot_region_end_lsa + 1 || request->Start_LBA > end_lsa_on_device)
+        start_lba = random_hot_address_generator->Uniform_ulong(hot_region_end_lsa + 1, end_lsa_on_device);
+        if (start_lba < hot_region_end_lsa + 1 || start_lba > end_lsa_on_device)
           PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
-          if (request->Start_LBA + request->LBA_count > end_lsa_on_device)
-            request->Start_LBA = hot_region_end_lsa + 1;
+          if (start_lba + lba_count > end_lsa_on_device)
+            start_lba = hot_region_end_lsa + 1;
       }
       else
       {
-        request->Start_LBA = random_hot_address_generator->Uniform_ulong(start_lsa_on_device, hot_region_end_lsa);
-        if (request->Start_LBA < start_lsa_on_device || request->Start_LBA > hot_region_end_lsa)
+        start_lba = random_hot_address_generator->Uniform_ulong(start_lsa_on_device, hot_region_end_lsa);
+        if (start_lba < start_lsa_on_device || start_lba > hot_region_end_lsa)
           PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
       }
       break;
     case Utils::Address_Distribution_Type::RANDOM_UNIFORM:
-      request->Start_LBA = random_address_generator->Uniform_ulong(start_lsa_on_device, end_lsa_on_device);
-      if (request->Start_LBA < start_lsa_on_device || request->Start_LBA > end_lsa_on_device)
+      start_lba = random_address_generator->Uniform_ulong(start_lsa_on_device, end_lsa_on_device);
+      if (start_lba < start_lsa_on_device || start_lba > end_lsa_on_device)
         PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
-      if (request->Start_LBA + request->LBA_count > end_lsa_on_device)
-        request->Start_LBA = start_lsa_on_device;
+      if (start_lba + lba_count > end_lsa_on_device)
+        start_lba = start_lsa_on_device;
       break;
     default:
       PRINT_ERROR("Unknown address distribution type!\n")
     }
-    if (generate_aligned_addresses)
-      request->Start_LBA -= request->Start_LBA % alignment_value;
-    STAT_generated_request_count++;
-    request->Arrival_time = Simulator->Time();
-    PRINT_DEBUG("* Host: Request generated - " << (request->Type == Host_IO_Request_Type::READ ? "Read, " : "Write, ") << "LBA:" << request->Start_LBA << ", Size_in_bytes:" << request->LBA_count << "")
 
-    return request;
+    if (generate_aligned_addresses)
+      start_lba -= start_lba % alignment_value;
+
+    STAT_generated_request_count++;
+
+    PRINT_DEBUG("* Host: Request generated - " << (req_type == HostIOReqType::READ ? "Read, " : "Write, ") << "LBA:" << start_lba << ", Size_in_bytes:" << lba_count << "")
+
+    return _host_io_req_pool.construct(Simulator->Time(), start_lba, lba_count, req_type);
   }
 
-  void IO_Flow_Synthetic::NVMe_consume_io_request(Completion_Queue_Entry* io_request)
+  void IO_Flow_Synthetic::NVMe_consume_io_request(CompletionQueueEntry* io_request)
   {
     IO_Flow_Base::NVMe_consume_io_request(io_request);
     IO_Flow_Base::NVMe_update_and_submit_completion_queue_tail();
     if (generator_type == Utils::Request_Generator_Type::QUEUE_DEPTH)
     {
-      Host_IO_Request* request = Generate_next_request();
-      /* In the demand based execution mode, the Generate_next_request() function may return NULL
+      HostIORequest* request = Generate_next_request();
+      /* In the demand based execution mode, the Generate_next_request() function may return nullptr
       * if 1) the simulation stop is met, or 2) the number of generated I/O requests reaches its threshold.*/
-      if (request != NULL)
+      if (request != nullptr)
         Submit_io_request(request);
     }
   }
 
-  void IO_Flow_Synthetic::SATA_consume_io_request(Host_IO_Request* io_request)
+  void IO_Flow_Synthetic::SATA_consume_io_request(HostIORequest* io_request)
   {
     IO_Flow_Base::SATA_consume_io_request(io_request);
     if (generator_type == Utils::Request_Generator_Type::QUEUE_DEPTH)
     {
-      Host_IO_Request* request = Generate_next_request();
-      /* In the demand based execution mode, the Generate_next_request() function may return NULL
+      HostIORequest* request = Generate_next_request();
+      /* In the demand based execution mode, the Generate_next_request() function may return nullptr
       * if 1) the simulation stop is met, or 2) the number of generated I/O requests reaches its threshold.*/
-      if (request != NULL)
+      if (request != nullptr)
         Submit_io_request(request);
     }
   }
@@ -209,8 +215,8 @@ namespace Host_Components
   {
     if (generator_type == Utils::Request_Generator_Type::BANDWIDTH)
     {
-      Host_IO_Request* req = Generate_next_request();
-      if (req != NULL)
+      HostIORequest* req = Generate_next_request();
+      if (req != nullptr)
       {
         auto sim = Simulator;
         Submit_io_request(req);

@@ -6,6 +6,8 @@
 #include "Physical_Page_Address.h"
 #include "Page.h"
 
+#include "../../utils/InlineTools.h"
+#include "../../utils/ObjectPool.h"
 
 #define CMD_READ 0x0030
 #define CMD_READ_PAGE 0x0030
@@ -27,17 +29,40 @@
 //#define CMD_SUSPEND_ERASE 0x61
 //#define CMD_RESUME_ERASE 0xD2
 
-namespace NVM
-{
-  namespace FlashMemory
-  {
-    class Flash_Command
-    {
+namespace NVM {
+  namespace FlashMemory {
+    class FlashCommandBase {
     public:
       command_code_type CommandCode;
       std::vector<Physical_Page_Address> Address;
       std::vector<PageMetadata> Meta_data;
+
+      FlashCommandBase();
+      explicit FlashCommandBase(size_t reserve_size);
     };
+
+    force_inline
+    FlashCommandBase::FlashCommandBase()
+      : CommandCode()
+    {
+      // Cleanup old entries. There is no memory leak because following vectors
+      // is the object vector not the pointer vector.
+      Address.clear(); Meta_data.clear();
+    }
+
+    force_inline
+    FlashCommandBase::FlashCommandBase(size_t reserve_size)
+      : CommandCode()
+    {
+      // Cleanup old entries. There is no memory leak because following vectors
+      // is the object vector not the pointer vector.
+      Address.clear();   Address.reserve(reserve_size);
+      Meta_data.clear(); Meta_data.reserve(reserve_size);
+    }
+
+    typedef Utils::ObjectPool<FlashCommandBase> FlashCommandPool;
+    typedef FlashCommandPool::item_t            FlashCommand;
   }
 }
+
 #endif // !FLASH_COMMAND

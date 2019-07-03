@@ -73,7 +73,7 @@
     <ClCompile Include="src\ssd\TSU_Base.cpp" />
     <ClCompile Include="src\ssd\TSU_FLIN.cpp" />
     <ClCompile Include="src\ssd\TSU_OutofOrder.cpp" />
-    <ClCompile Include="src\ssd\User_Request.cpp" />
+    <ClCompile Include="src\ssd\UserRequest.cpp" />
     <ClCompile Include="src\utils\CMRRandomGenerator.cpp" />
     <ClCompile Include="src\utils\Helper_Functions.cpp" />
     <ClCompile Include="src\utils\Logical_Address_Partitioning_Unit.cpp" />
@@ -92,7 +92,7 @@
     <ClInclude Include="src\exec\SSD_Device.h" />
     <ClInclude Include="src\host\ASCII_Trace_Definition.h" />
     <ClInclude Include="src\host\Host_Defs.h" />
-    <ClInclude Include="src\host\Host_IO_Request.h" />
+    <ClInclude Include="src\host\HostIORequest.h" />
     <ClInclude Include="src\host\IO_Flow_Base.h" />
     <ClInclude Include="src\host\IO_Flow_Synthetic.h" />
     <ClInclude Include="src\host\IO_Flow_Trace_Based.h" />
@@ -105,7 +105,7 @@
     <ClInclude Include="src\nvm_chip\flash_memory\Die.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\FlashTypes.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\Flash_Chip.h" />
-    <ClInclude Include="src\nvm_chip\flash_memory\Flash_Command.h" />
+    <ClInclude Include="src\nvm_chip\flash_memory\FlashCommand.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\Page.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\Physical_Page_Address.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\Plane.h" />
@@ -155,7 +155,7 @@
     <ClInclude Include="src\ssd\TSU_Base.h" />
     <ClInclude Include="src\ssd\TSU_FLIN.h" />
     <ClInclude Include="src\ssd\TSU_OutofOrder.h" />
-    <ClInclude Include="src\ssd\User_Request.h" />
+    <ClInclude Include="src\ssd\UserRequest.h" />
     <ClInclude Include="src\utils\CMRRandomGenerator.h" />
     <ClInclude Include="src\utils\DistributionTypes.h" />
     <ClInclude Include="src\utils\Helper_Functions.h" />

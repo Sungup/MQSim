@@ -2,7 +2,7 @@
 #define NVM_PHY_ONFI_ONFI_H
 
 #include <vector>
-#include "../../nvm_chip/flash_memory/Flash_Command.h"
+#include "../../nvm_chip/flash_memory/FlashCommand.h"
 #include "../../nvm_chip/flash_memory/Flash_Chip.h"
 #include "../NVM_Transaction_Flash.h"
 #include "../NVM_Transaction_Flash_RD.h"
@@ -36,6 +36,8 @@ namespace SSD_Components
     uint32_t chip_no_per_channel;
     uint32_t die_no_per_chip;
     uint32_t plane_no_per_die;
+
+    NVM::FlashMemory::FlashCommandPool __cmd_pool;
 
     FlashTransactionHandlerList  __transaction_service_handlers;
     ChannelIdleSignalHandlerList __channel_idle_signal_handlers;

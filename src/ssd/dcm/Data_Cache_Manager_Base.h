@@ -4,7 +4,7 @@
 #include <vector>
 #include "../../sim/Sim_Object.h"
 #include "../interface/Host_Interface_Base.h"
-#include "../request/User_Request.h"
+#include "../request/UserRequest.h"
 #include "../NVM_Firmware.h"
 #include "../phy/NVM_PHY_ONFI.h"
 #include "../../utils/Workload_Statistics.h"
@@ -51,13 +51,13 @@ namespace SSD_Components
     uint32_t stream_count;
 
   private:
-    void __handle_user_request(User_Request* request);
+    void __handle_user_request(UserRequest* request);
 
   protected:
-    void broadcast_user_request_serviced_signal(User_Request* user_request);
+    void broadcast_user_request_serviced_signal(UserRequest* user_request);
     void broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction);
 
-    virtual void process_new_user_request(User_Request* user_request) = 0;
+    virtual void process_new_user_request(UserRequest* user_request) = 0;
 
   public:
     Data_Cache_Manager_Base(const sim_object_id_type& id,

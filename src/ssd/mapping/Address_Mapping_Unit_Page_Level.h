@@ -157,7 +157,8 @@ namespace SSD_Components
     FlashTransactionHandler<Address_Mapping_Unit_Page_Level> __transaction_service_handler;
 
     uint32_t cmt_capacity;
-    AddressMappingDomain** domains;
+
+    std::vector<AddressMappingDomain> domains;
     uint32_t CMT_entry_size, GTD_entry_size;//In CMT MQSim stores (lpn, ppn, page status bits) but in GTD it only stores (ppn, page status bits)
 
     std::set<NVM_Transaction_Flash_WR*>**** Write_transactions_for_overfull_planes;
@@ -221,7 +222,7 @@ namespace SSD_Components
                                     double Overprovisioning_ratio,
                                     CMT_Sharing_Mode sharing_mode = CMT_Sharing_Mode::SHARED,
                                     bool fold_large_addresses = true);
-    ~Address_Mapping_Unit_Page_Level() final;
+    ~Address_Mapping_Unit_Page_Level() final = default;
 
     // --------------------------
     // Over-ridden from SimObject

@@ -10,14 +10,14 @@
 #define __MQSim__HostInterfaceHandler__
 
 #include "../../utils/ServiceHandler.h"
-#include "../request/User_Request.h"
+#include "../request/UserRequest.h"
 #include "../NVM_Transaction_Flash.h"
 
 namespace SSD_Components {
-  typedef Utils::ServiceHandlerBase<User_Request*> UserRequestServiceHandlerBase;
+  typedef Utils::ServiceHandlerBase<UserRequest*> UserRequestServiceHandlerBase;
 
   template <typename T>
-  using UserRequestServiceHandler = Utils::ServiceHandler<T, User_Request*>;
+  using UserRequestServiceHandler = Utils::ServiceHandler<T, UserRequest*>;
 
   typedef std::vector<UserRequestServiceHandlerBase*> UserRequestServiceHandlerList;
 }

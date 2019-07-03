@@ -5,7 +5,7 @@
 #include <list>
 #include "../../sim/Sim_Defs.h"
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
-#include "../../nvm_chip/flash_memory/Flash_Command.h"
+#include "../../nvm_chip/flash_memory/FlashCommand.h"
 #include "NVM_PHY_ONFI.h"
 #include "../ONFI_Channel_NVDDR2.h"
 #include "../Flash_Transaction_Queue.h"
@@ -34,10 +34,10 @@ namespace SSD_Components
      * command is a flash chip-level concept
      */
     // The current command that is executing on the die
-    NVM::FlashMemory::Flash_Command* __active_cmd;
+    NVM::FlashMemory::FlashCommand* __active_cmd;
     std::list<NVM_Transaction_Flash*> __active_transactions;
 
-    NVM::FlashMemory::Flash_Command* __suspended_cmd;
+    NVM::FlashMemory::FlashCommand* __suspended_cmd;
     std::list<NVM_Transaction_Flash*> __suspended_transactions;
 
     // The current transaction
@@ -123,7 +123,7 @@ namespace SSD_Components
     void send_resume_command_to_chip(NVM::FlashMemory::Flash_Chip& chip,
                                      ChipBookKeepingEntry& chipBKE);
 
-    void __handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip, NVM::FlashMemory::Flash_Command& command);
+    void __handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip, NVM::FlashMemory::FlashCommand& command);
 
   public:
     NVM_PHY_ONFI_NVDDR2(const sim_object_id_type& id,

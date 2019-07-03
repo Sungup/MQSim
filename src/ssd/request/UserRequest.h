@@ -3,12 +3,15 @@
 
 #include <string>
 #include <list>
-#include "../SSD_Defs.h"
-#include "../../sim/Sim_Defs.h"
-#include "../interface/Host_Interface_Defs.h"
-#include "../NVM_Transaction.h"
 
+#include "../SSD_Defs.h"
+#include "../../sim/Engine.h"
+#include "../../sim/Sim_Defs.h"
 #include "../../utils/Exception.h"
+#include "../../utils/InlineTools.h"
+#include "../../utils/ObjectPool.h"
+
+#include "../interface/Host_Interface_Defs.h"
 
 namespace SSD_Components
 {
@@ -18,12 +21,8 @@ namespace SSD_Components
   };
 
   class NVM_Transaction;
-  class User_Request
+  class UserRequestBase
   {
-  private:
-    // TODO Change static id generator to global id generator
-    static uint32_t lastId;
-
   public:
     IO_Flow_Priority_Class Priority_class;
     const io_request_id_type ID;
@@ -43,35 +42,61 @@ namespace SSD_Components
     void* IO_command_info;//used to store host I/O command info
     void* Data;
 
-    User_Request();
+    explicit UserRequestBase(uint64_t id);
     bool is_finished() const;
     void assign_data(void* payload, size_t payload_size);
 
   };
 
   force_inline
-  User_Request::User_Request()
-    : ID(std::to_string(lastId++)),
+  UserRequestBase::UserRequestBase(uint64_t id)
+    : ID(id),
       Sectors_serviced_from_cache(0),
       ToBeIgnored(false)
   { }
 
   force_inline bool
-  User_Request::is_finished() const
+  UserRequestBase::is_finished() const
   {
     return (Transaction_list.empty()) && (Sectors_serviced_from_cache == 0);
   }
 
   force_inline void
-  User_Request::assign_data(void* payload, size_t payload_size)
+  UserRequestBase::assign_data(void* payload, size_t payload_size)
   {
     Data = MQSimEngine::copy_data(payload, payload_size);
   }
 
+  class UserReqPool : protected Utils::ObjectPool<UserRequestBase> {
+  public:
+    typedef Utils::ObjectPool<UserRequestBase>::item_t item_t;
+
+  private:
+    uint64_t __last_id;
+
+  public:
+    UserReqPool();
+
+    item_t* construct();
+  };
+
+  force_inline
+  UserReqPool::UserReqPool()
+    : __last_id(0ULL)
+  { }
+
+  force_inline UserReqPool::item_t*
+  UserReqPool::construct()
+  {
+    return Utils::ObjectPool<UserRequestBase>::construct(__last_id++);
+  }
+
+  typedef UserReqPool::item_t                UserRequest;
+
   // TODO Check following sequence can move to the request's destructor;
   force_inline void
-  delete_request_nvme(User_Request* request) {
-    delete (Submission_Queue_Entry*)request->IO_command_info;
+  delete_request_nvme(UserRequest* request) {
+    delete (SubmissionQueueEntry*)request->IO_command_info;
 
     if (Simulator->Is_integrated_execution_mode() && request->Data)
       delete[] (char*)request->Data;
@@ -79,7 +104,7 @@ namespace SSD_Components
     if (!request->Transaction_list.empty())
       throw mqsim_error("Deleting an unhandled user requests in the host interface! MQSim thinks something is going wrong!");
 
-    delete request;
+    request->release();
   }
 
 }

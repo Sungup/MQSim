@@ -96,7 +96,7 @@ const uint64_t COMPLETION_QUEUE_REGISTER_7 = 0x1073;
 const uint64_t SUBMISSION_QUEUE_REGISTER_8 = 0x1080;
 const uint64_t COMPLETION_QUEUE_REGISTER_8 = 0x1083;
 
-struct Completion_Queue_Entry
+struct CompletionQueueEntry
 {
   uint32_t Command_specific;
   uint32_t Reserved;
@@ -108,7 +108,7 @@ struct Completion_Queue_Entry
            //P:Identifies whether a Completion Queue entry is new
 };
 
-struct Submission_Queue_Entry
+struct SubmissionQueueEntry
 {
   uint8_t Opcode;//Is it a read or write request
   uint8_t PRP_FUSE;

@@ -17,9 +17,9 @@ namespace MQSimEngine
   {
   public:
     SimEventBase(sim_time_type fireTime,
-                Sim_Object* targetObject,
-                void* parameters = nullptr,
-                int type = 0)
+                 Sim_Object* targetObject,
+                 void* parameters = nullptr,
+                 int type = 0)
       : Fire_time(fireTime),
         Target_sim_object(targetObject),
         Parameters(parameters),

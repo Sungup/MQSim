@@ -10,7 +10,7 @@ namespace Host_Components
     IO_Flow_Priority_Class priority_class, sim_time_type stop_time, double initial_occupancy_ratio, uint32_t total_requets_to_be_generated,
     HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
     bool enabled_logging, sim_time_type logging_period, std::string logging_file_path) : 
-    MQSimEngine::Sim_Object(name), flow_id(flow_id), start_lsa_on_device(start_lsa_on_device), end_lsa_on_device(end_lsa_on_device), io_queue_id(io_queue_id),
+    MQSimEngine::Sim_Object(name), _host_io_req_pool(), flow_id(flow_id), start_lsa_on_device(start_lsa_on_device), end_lsa_on_device(end_lsa_on_device), io_queue_id(io_queue_id),
     priority_class(priority_class), stop_time(stop_time), initial_occupancy_ratio(initial_occupancy_ratio), total_requests_to_be_generated(total_requets_to_be_generated), SSD_device_type(SSD_device_type), pcie_root_complex(pcie_root_complex), sata_hba(sata_hba),
     STAT_generated_request_count(0), STAT_generated_read_request_count(0), STAT_generated_write_request_count(0),
     STAT_ignored_request_count(0),
@@ -24,7 +24,7 @@ namespace Host_Components
     STAT_transferred_bytes_total(0), STAT_transferred_bytes_read(0), STAT_transferred_bytes_write(0), progress(0), next_progress_step(0),
     enabled_logging(enabled_logging), logging_period(logging_period), logging_file_path(logging_file_path)
   {
-    Host_IO_Request* t= NULL;
+    HostIORequest* t= NULL;
 
     switch (SSD_device_type)
     {
@@ -109,23 +109,6 @@ namespace Host_Components
   IO_Flow_Base::~IO_Flow_Base()
   {
     log_file.close();
-    for(auto &req : waiting_requests)
-      if (req)
-        delete req;
-
-    switch (SSD_device_type)
-    {
-    case HostInterface_Types::NVME:
-      for (auto &req : nvme_software_request_queue)
-        if (req.second)
-          delete req.second;
-      break;
-    case HostInterface_Types::SATA:
-      break;
-    default:
-      PRINT_ERROR("Unsupported host interface type in IO_Flow_Base!")
-    }
-
   }
   void IO_Flow_Base::Start_simulation()
   {
@@ -137,7 +120,7 @@ namespace Host_Components
     STAT_serviced_request_count_short_term = 0;
   }
 
-  void IO_Flow_Base::SATA_consume_io_request(Host_IO_Request* request)
+  void IO_Flow_Base::SATA_consume_io_request(HostIORequest* request)
   {
     auto sim = Simulator;
 
@@ -160,7 +143,7 @@ namespace Host_Components
       STAT_min_request_delay = request_delay;
     STAT_transferred_bytes_total += request->LBA_count * SECTOR_SIZE_IN_BYTE;
 
-    if (request->Type == Host_IO_Request_Type::READ)
+    if (request->Type == HostIOReqType::READ)
     {
       STAT_serviced_read_request_count++;
       STAT_sum_device_response_time_read += device_response_time;
@@ -191,7 +174,7 @@ namespace Host_Components
       STAT_transferred_bytes_write += request->LBA_count * SECTOR_SIZE_IN_BYTE;
     }
 
-    delete request;
+    request->release();
 
     //Announce simulation progress
     if (stop_time > 0)
@@ -227,11 +210,11 @@ namespace Host_Components
       next_logging_milestone = sim->Time() + logging_period;
     }
   }
-  void IO_Flow_Base::NVMe_consume_io_request(Completion_Queue_Entry* cqe)
+  void IO_Flow_Base::NVMe_consume_io_request(CompletionQueueEntry* cqe)
   {
     auto sim = Simulator;
     //Find the request and update statistics
-    Host_IO_Request* request = nvme_software_request_queue[cqe->Command_Identifier];
+    HostIORequest* request = nvme_software_request_queue[cqe->Command_Identifier];
     nvme_software_request_queue.erase(cqe->Command_Identifier);
     available_command_ids.insert(cqe->Command_Identifier);
     sim_time_type device_response_time = sim->Time() - request->Enqueue_time;
@@ -253,7 +236,7 @@ namespace Host_Components
       STAT_min_request_delay = request_delay;
     STAT_transferred_bytes_total += request->LBA_count * SECTOR_SIZE_IN_BYTE;
     
-    if (request->Type == Host_IO_Request_Type::READ)
+    if (request->Type == HostIOReqType::READ)
     {
       STAT_serviced_read_request_count++;
       STAT_sum_device_response_time_read += device_response_time;
@@ -284,7 +267,7 @@ namespace Host_Components
       STAT_transferred_bytes_write += request->LBA_count * SECTOR_SIZE_IN_BYTE;
     }
 
-    delete request;
+    request->release();
 
     nvme_queue_pair.Submission_queue_head = cqe->SQ_Head;
     
@@ -294,7 +277,7 @@ namespace Host_Components
     while(waiting_requests.size() > 0)
       if (!NVME_SQ_FULL(nvme_queue_pair) && available_command_ids.size() > 0)
       {
-        Host_IO_Request* new_req = waiting_requests.front();
+        HostIORequest* new_req = waiting_requests.front();
         waiting_requests.pop_front();
         if (nvme_software_request_queue[*available_command_ids.begin()] != NULL)
           PRINT_ERROR("Unexpteced situation in IO_Flow_Base! Overwriting a waiting I/O request in the queue!")
@@ -347,14 +330,14 @@ namespace Host_Components
       next_logging_milestone = sim->Time() + logging_period;
     }
   }
-  Submission_Queue_Entry* IO_Flow_Base::NVMe_read_sqe(uint64_t address)
+  SubmissionQueueEntry* IO_Flow_Base::NVMe_read_sqe(uint64_t address)
   {
-    Submission_Queue_Entry* sqe = new Submission_Queue_Entry;
-    Host_IO_Request* request = request_queue_in_memory[(uint16_t)((address - nvme_queue_pair.Submission_queue_memory_base_address) / sizeof(Submission_Queue_Entry))];
+    SubmissionQueueEntry* sqe = new SubmissionQueueEntry;
+    HostIORequest* request = request_queue_in_memory[(uint16_t)((address - nvme_queue_pair.Submission_queue_memory_base_address) / sizeof(SubmissionQueueEntry))];
     if (request == NULL)
       throw std::invalid_argument(this->ID() + ": Request to access a submission queue entry that does not exist.");
     sqe->Command_Identifier = request->IO_queue_info;
-    if (request->Type == Host_IO_Request_Type::READ)
+    if (request->Type == HostIOReqType::READ)
     {
       sqe->Opcode = NVME_READ_OPCODE;
       sqe->Command_specific[0] = (uint32_t) request->Start_LBA;
@@ -374,7 +357,7 @@ namespace Host_Components
     }
     return sqe;
   }
-  void IO_Flow_Base::Submit_io_request(Host_IO_Request* request)
+  void IO_Flow_Base::Submit_io_request(HostIORequest* request)
   {
     switch (SSD_device_type)
     {

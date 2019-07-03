@@ -12,7 +12,7 @@
 #include "../sim/Sim_Reporter.h"
 #include "../ssd/SSD_Defs.h"
 #include "../ssd/interface/Host_Interface_Defs.h"
-#include "Host_IO_Request.h"
+#include "HostIORequest.h"
 #include "PCIe_Root_Complex.h"
 #include "SATA_HBA.h"
 #include "../utils/Workload_Statistics.h"
@@ -50,11 +50,11 @@ namespace Host_Components
     virtual ~IO_Flow_Base();
     void Start_simulation();
     IO_Flow_Priority_Class Priority_class() { return priority_class; }
-    virtual Host_IO_Request* Generate_next_request() = 0;
-    virtual void NVMe_consume_io_request(Completion_Queue_Entry*);
-    Submission_Queue_Entry* NVMe_read_sqe(uint64_t address);
+    virtual HostIORequest* Generate_next_request() = 0;
+    virtual void NVMe_consume_io_request(CompletionQueueEntry*);
+    SubmissionQueueEntry* NVMe_read_sqe(uint64_t address);
     const NVMe_Queue_Pair* Get_nvme_queue_pair_info();
-    virtual void SATA_consume_io_request(Host_IO_Request* request);
+    virtual void SATA_consume_io_request(HostIORequest* request);
     LHA_type Get_start_lsa_on_device();
     LHA_type Get_end_lsa_address_on_device();
     uint32_t Get_generated_request_count();
@@ -71,6 +71,8 @@ namespace Host_Components
                            const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,
                            const Utils::NvmAccessBitmapFinderBase& find_nvm_subunit_access_bitmap) = 0;
   protected:
+    HostIOReqPool _host_io_req_pool;
+
     uint16_t flow_id;
     double initial_occupancy_ratio;//The initial amount of valid logical pages when pereconditioning is performed
     sim_time_type stop_time;//The flow stops generating request when simulation time reaches stop_time
@@ -80,7 +82,7 @@ namespace Host_Components
     SATA_HBA* sata_hba;
     LHA_type start_lsa_on_device, end_lsa_on_device;
 
-    void Submit_io_request(Host_IO_Request*);
+    void Submit_io_request(HostIORequest*);
 
     //NVMe host-to-device communication variables
     IO_Flow_Priority_Class priority_class;
@@ -89,9 +91,9 @@ namespace Host_Components
     uint16_t nvme_submission_queue_size;
     uint16_t nvme_completion_queue_size;
     std::set<uint16_t> available_command_ids;
-    std::vector<Host_IO_Request*> request_queue_in_memory;
-    std::list<Host_IO_Request*> waiting_requests;//The I/O requests that are still waiting to be enqueued in the I/O queue (the I/O queue is full)
-    std::unordered_map<sim_time_type, Host_IO_Request*> nvme_software_request_queue;//The I/O requests that are enqueued in the I/O queue of the SSD device
+    std::vector<HostIORequest*> request_queue_in_memory;
+    std::list<HostIORequest*> waiting_requests;//The I/O requests that are still waiting to be enqueued in the I/O queue (the I/O queue is full)
+    std::unordered_map<sim_time_type, HostIORequest*> nvme_software_request_queue;//The I/O requests that are enqueued in the I/O queue of the SSD device
     void NVMe_update_and_submit_completion_queue_tail();
 
     //Variables used to collect statistics

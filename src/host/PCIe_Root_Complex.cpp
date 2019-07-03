@@ -18,12 +18,12 @@ namespace Host_Components
       {
       case HostInterface_Types::NVME:
       {
-        uint32_t flow_id = QUEUE_ID_TO_FLOW_ID(((Completion_Queue_Entry*)payload)->SQ_ID);
-        ((*IO_flows)[flow_id])->NVMe_consume_io_request((Completion_Queue_Entry*)payload);
+        uint32_t flow_id = QUEUE_ID_TO_FLOW_ID(((CompletionQueueEntry*)payload)->SQ_ID);
+        ((*IO_flows)[flow_id])->NVMe_consume_io_request((CompletionQueueEntry*)payload);
         break;
       }
       case HostInterface_Types::SATA:
-        sata_hba->SATA_consume_io_request((Completion_Queue_Entry*)payload);
+        sata_hba->SATA_consume_io_request((CompletionQueueEntry*)payload);
         break;
       default:
         PRINT_ERROR("Uknown Host Interface type in PCIe_Root_Complex")
@@ -60,12 +60,12 @@ namespace Host_Components
       {
         uint16_t flow_id = QUEUE_ID_TO_FLOW_ID(uint16_t(address >> NVME_COMP_Q_MEMORY_REGION));
         payload = (*IO_flows)[flow_id]->NVMe_read_sqe(address);
-        payload_size = sizeof(Submission_Queue_Entry);
+        payload_size = sizeof(SubmissionQueueEntry);
         break;
       }
       case HostInterface_Types::SATA:
         payload = sata_hba->Read_ncq_entry(address);
-        payload_size = sizeof(Submission_Queue_Entry);
+        payload_size = sizeof(SubmissionQueueEntry);
         break;
       }
     }

@@ -11,38 +11,12 @@ namespace SSD_Components
   }
   Queue_Probe::Queue_Probe()
   {
-    states.push_back(StateStatistics());
-    statesEpoch.push_back(StateStatistics());
+    states.emplace_back(StateStatistics());
+    statesEpoch.emplace_back(StateStatistics());
   }
 
-  void Queue_Probe::EnqueueRequest(NVM_Transaction* transaction)
-  {
-    if (transaction == NULL)
-      PRINT_ERROR("Inserting a null object to queue!")
-
-    currentObjectsInQueue[transaction] = Simulator->Time();
-    nRequests++;
-    nRequestsEpoch++;
-    setCount(count + 1);
-  }
-
-  void Queue_Probe::DequeueRequest(NVM_Transaction* transaction)
-  {
-    nDepartures++;
-    nDeparturesEpoch++;
-
-    if (transaction == NULL)
-      throw std::logic_error("Object can not be null if accurateTimingEnabled=ture");
-    sim_time_type et = currentObjectsInQueue[transaction];
-    currentObjectsInQueue.erase(transaction);
-    sim_time_type tc = Simulator->Time() - et;
-    totalWaitingTime += tc;
-    if (tc > maxWaitingTime)
-      maxWaitingTime = tc;
-    totalWaitingTimeEpoch += tc;
-    setCount(count - 1);
-  }
-  void Queue_Probe::setCount(int val)
+  void
+  Queue_Probe::setCount(int val)
   {
     sim_time_type n = Simulator->Time();
     states[count].totalTime += n - lastCountChange;
@@ -53,11 +27,45 @@ namespace SSD_Components
     if (count > maxQueueLength)
       maxQueueLength = count;
     while (count + 1 > states.size())
-      states.push_back(StateStatistics());
+      states.emplace_back(StateStatistics());
     states[count].nEnterances++;
     while (count + 1 > statesEpoch.size())
-      statesEpoch.push_back(StateStatistics());
+      statesEpoch.emplace_back(StateStatistics());
     statesEpoch[count].nEnterances++;
+  }
+
+  void Queue_Probe::EnqueueRequest(NVM_Transaction* transaction)
+  {
+#if RUN_EXCEPTION_CHECK
+    if (transaction == nullptr)
+      throw mqsim_error("Inserting a null object to queue!");
+#endif
+
+    currentObjectsInQueue.insert(TransactionTimeMap::value_type(transaction, Simulator->Time()));
+    //currentObjectsInQueue[transaction] = Simulator->Time();
+    nRequests++;
+    nRequestsEpoch++;
+    setCount(count + 1);
+  }
+
+  void Queue_Probe::DequeueRequest(NVM_Transaction* transaction)
+  {
+#if RUN_EXCEPTION_CHECK
+    if (transaction == nullptr)
+      throw std::logic_error("Object can not be null if accurateTimingEnabled=true");
+#endif
+
+    nDepartures++;
+    nDeparturesEpoch++;
+
+    sim_time_type et = currentObjectsInQueue[transaction];
+    currentObjectsInQueue.erase(transaction);
+    sim_time_type tc = Simulator->Time() - et;
+    totalWaitingTime += tc;
+    if (tc > maxWaitingTime)
+      maxWaitingTime = tc;
+    totalWaitingTimeEpoch += tc;
+    setCount(count - 1);
   }
   void Queue_Probe::ResetEpochStatistics()
   {

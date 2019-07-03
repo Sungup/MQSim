@@ -53,7 +53,7 @@ DieBookKeepingEntry::PrepareResume()
 force_inline void
 DieBookKeepingEntry::ClearCommand()
 {
-  delete __active_cmd;
+  __active_cmd->release();
   __active_cmd = nullptr;
   __active_transactions.clear();
   __free = true;
@@ -331,13 +331,12 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
   }
 
   dieBKE->__free = false;
-  dieBKE->__active_cmd = new NVM::FlashMemory::Flash_Command();
+  dieBKE->__active_cmd = __cmd_pool.construct(transaction_list.size());
+
   for (auto tr: transaction_list) {
-    dieBKE->__active_transactions.push_back(tr);
-    dieBKE->__active_cmd->Address.push_back(tr->Address);
-    NVM::FlashMemory::PageMetadata metadata;
-    metadata.LPA = tr->LPA;
-    dieBKE->__active_cmd->Meta_data.push_back(metadata);
+    dieBKE->__active_transactions.emplace_back(tr);
+    dieBKE->__active_cmd->Address.emplace_back(tr->Address);
+    dieBKE->__active_cmd->Meta_data.emplace_back(tr->LPA);
   }
 
   auto sim = Simulator;
@@ -496,7 +495,7 @@ void NVM_PHY_ONFI_NVDDR2::Change_memory_status_preconditioning(const NVM::NVM_Me
 }
 
 force_inline void
-copy_read_data_to_transaction(NVM_Transaction_Flash_RD* read_transaction, NVM::FlashMemory::Flash_Command* command)
+copy_read_data_to_transaction(NVM_Transaction_Flash_RD* read_transaction, NVM::FlashMemory::FlashCommand* command)
 {
   int i = 0;
   for (auto &address : command->Address)
@@ -675,7 +674,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 
 void
 NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip,
-                                              NVM::FlashMemory::Flash_Command& command)
+                                              NVM::FlashMemory::FlashCommand& command)
 
 {
   ChipBookKeepingEntry& chipBKE = bookKeepingTable[chip.ChannelID][chip.ChipID];

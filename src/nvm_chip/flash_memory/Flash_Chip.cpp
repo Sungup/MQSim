@@ -63,7 +63,7 @@ void Flash_Chip::Setup_triggers() { MQSimEngine::Sim_Object::Setup_triggers(); }
 void Flash_Chip::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 {
   Chip_Sim_Event_Type eventType = (Chip_Sim_Event_Type)ev->Type;
-  Flash_Command* command = (Flash_Command*)ev->Parameters;
+  FlashCommand* command = (FlashCommand*)ev->Parameters;
 
   switch (eventType)
   {
@@ -80,7 +80,7 @@ LPA_type Flash_Chip::Get_metadata(flash_die_ID_type die_id, flash_plane_ID_type 
   return page.Metadata.LPA;
 }
 
-void Flash_Chip::start_command_execution(Flash_Command* command)
+void Flash_Chip::start_command_execution(FlashCommand* command)
 {
   Die& targetDie = Dies[command->Address[0].DieID];
 
@@ -110,7 +110,7 @@ void Flash_Chip::start_command_execution(Flash_Command* command)
   PRINT_DEBUG("Command execution started on channel: " << this->ChannelID << " chip: " << this->ChipID)
 }
 
-void Flash_Chip::finish_command_execution(Flash_Command* command)
+void Flash_Chip::finish_command_execution(FlashCommand* command)
 {
   Die& targetDie = Dies[command->Address[0].DieID];
 
@@ -182,7 +182,7 @@ void Flash_Chip::finish_command_execution(Flash_Command* command)
   broadcast_ready_signal(command);
 }
 
-void Flash_Chip::broadcast_ready_signal(Flash_Command* command)
+void Flash_Chip::broadcast_ready_signal(FlashCommand* command)
 {
   for (auto it : __connected_ready_handlers)
     (*it)(*this, *command);

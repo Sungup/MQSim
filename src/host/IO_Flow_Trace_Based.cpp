@@ -24,44 +24,46 @@ namespace Host_Components
   IO_Flow_Trace_Based::~IO_Flow_Trace_Based()
   {}
 
-  Host_IO_Request* IO_Flow_Trace_Based::Generate_next_request()
+  HostIORequest* IO_Flow_Trace_Based::Generate_next_request()
   {
     if (current_trace_line.size() == 0 || STAT_generated_request_count >= total_requests_to_be_generated)
-      return NULL;
+      return nullptr;
 
-    Host_IO_Request* request = new Host_IO_Request;
-    if (current_trace_line[ASCIITraceTypeColumn].compare(ASCIITraceWriteCode) == 0)
+    HostIOReqType req_type;
+    uint32_t lba_count;
+    LHA_type start_lba;
+
+    if (current_trace_line[ASCIITraceTypeColumn] == ASCIITraceWriteCode)
     {
-      request->Type = Host_IO_Request_Type::WRITE;
+      req_type = HostIOReqType::WRITE;
       STAT_generated_write_request_count++;
     }
     else
     {
-      request->Type = Host_IO_Request_Type::READ;
+      req_type = HostIOReqType::READ;
       STAT_generated_read_request_count++;
     }
 
     char* pEnd;
-    request->LBA_count = std::strtoul(current_trace_line[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
+    lba_count = std::strtoul(current_trace_line[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
 
-    request->Start_LBA = std::strtoull(current_trace_line[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
-    if (request->Start_LBA <= (end_lsa_on_device - start_lsa_on_device))
-      request->Start_LBA += start_lsa_on_device;
+    start_lba = std::strtoull(current_trace_line[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
+    if (start_lba <= (end_lsa_on_device - start_lsa_on_device))
+      start_lba += start_lsa_on_device;
     else
-      request->Start_LBA = start_lsa_on_device + request->Start_LBA % (end_lsa_on_device - start_lsa_on_device);
+      start_lba = start_lsa_on_device + start_lba % (end_lsa_on_device - start_lsa_on_device);
 
-    request->Arrival_time = time_offset + Simulator->Time();
     STAT_generated_request_count++;
-    return request;
+    return _host_io_req_pool.construct(time_offset + Simulator->Time(), start_lba, lba_count, req_type);
   }
 
-  void IO_Flow_Trace_Based::NVMe_consume_io_request(Completion_Queue_Entry* io_request)
+  void IO_Flow_Trace_Based::NVMe_consume_io_request(CompletionQueueEntry* io_request)
   {
     IO_Flow_Base::NVMe_consume_io_request(io_request);
     IO_Flow_Base::NVMe_update_and_submit_completion_queue_tail();
   }
 
-  void IO_Flow_Trace_Based::SATA_consume_io_request(Host_IO_Request* io_request)
+  void IO_Flow_Trace_Based::SATA_consume_io_request(HostIORequest* io_request)
   {
     IO_Flow_Base::SATA_consume_io_request(io_request);
   }
@@ -112,8 +114,8 @@ namespace Host_Components
 
   void IO_Flow_Trace_Based::Execute_simulator_event(MQSimEngine::SimEvent*)
   {
-    Host_IO_Request* request = Generate_next_request();
-    if (request != NULL)
+    HostIORequest* request = Generate_next_request();
+    if (request != nullptr)
       Submit_io_request(request);
 
     if (STAT_generated_request_count < total_requests_to_be_generated)

@@ -34,7 +34,7 @@ set(MQSIM_EXEC_SOURCES
 set(MQSIM_HOST_SOURCES
     host/ASCII_Trace_Definition.h
     host/Host_Defs.h
-    host/Host_IO_Request.h
+    host/HostIORequest.h
     host/IO_Flow_Base.cpp
     host/IO_Flow_Base.h
     host/IO_Flow_Synthetic.cpp
@@ -60,7 +60,7 @@ set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/flash_memory/FlashTypes.h
     nvm_chip/flash_memory/Flash_Chip.cpp
     nvm_chip/flash_memory/Flash_Chip.h
-    nvm_chip/flash_memory/Flash_Command.h
+    nvm_chip/flash_memory/FlashCommand.h
     nvm_chip/flash_memory/Page.h
     nvm_chip/flash_memory/Physical_Page_Address.cpp
     nvm_chip/flash_memory/Physical_Page_Address.h
@@ -149,8 +149,7 @@ set(MQSIM_SSD_SOURCES
     ssd/tsu/TSU_Base.h
     ssd/tsu/TSU_OutofOrder.cpp
     ssd/tsu/TSU_OutofOrder.h
-    ssd/request/User_Request.cpp
-    ssd/request/User_Request.h ssd/ONFIChannelDefs.h)
+    ssd/request/UserRequest.h ssd/ONFIChannelDefs.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp

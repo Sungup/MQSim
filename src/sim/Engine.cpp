@@ -64,7 +64,7 @@ void Engine::Start_simulation()
   for (auto& obj : _ObjectList)
     obj.second->Start_simulation();
 
-  while (!stop && _EventList->Count > 0) {
+  while (!stop && _EventList->is_exist()) {
     EventTreeNode* minNode = _EventList->Get_min_node();
     auto* ev = minNode->FirstSimEvent;
 

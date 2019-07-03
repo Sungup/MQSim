@@ -9,7 +9,7 @@
 #include "../host/PCIe_Switch.h"
 #include "../host/PCIe_Message.h"
 #include "../host/IO_Flow_Base.h"
-#include "../host/Host_IO_Request.h"
+#include "../host/HostIORequest.h"
 #include "../ssd/interface/Host_Interface_Base.h"
 #include "params/HostParameterSet.h"
 #include "SSD_Device.h"

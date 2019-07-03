@@ -13,5 +13,6 @@ NVM_PHY_ONFI::NVM_PHY_ONFI(const sim_object_id_type& id,
     channel_count(ChannelCount),
     chip_no_per_channel(chip_no_per_channel),
     die_no_per_chip(DieNoPerChip),
-    plane_no_per_die(PlaneNoPerDie)
+    plane_no_per_die(PlaneNoPerDie),
+    __cmd_pool()
 { }

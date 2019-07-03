@@ -21,8 +21,8 @@ namespace NVM
       sim_time_type Expected_finish_time;
       sim_time_type RemainingSuspendedExecTime;//used to support suspend command
 
-      Flash_Command* CurrentCMD;
-      Flash_Command* SuspendedCMD;
+      FlashCommand* CurrentCMD;
+      FlashCommand* SuspendedCMD;
 
       bool Suspended;
 

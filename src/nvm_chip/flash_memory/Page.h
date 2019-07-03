@@ -17,6 +17,7 @@ namespace NVM {
 
     public:
       PageMetadata();
+      explicit PageMetadata(LPA_type lpa);
 
       void update(const PageMetadata& metadata);
     };
@@ -24,6 +25,16 @@ namespace NVM {
     force_inline
     PageMetadata::PageMetadata()
       : LPA(NO_LPA)
+    {
+      // Currently not in use.
+      //
+      // Status = FREE_PAGE;
+      // SourceStreamID = NO_STREAM;
+    }
+
+    force_inline
+    PageMetadata::PageMetadata(LPA_type lpa)
+      : LPA(lpa)
     {
       // Currently not in use.
       //

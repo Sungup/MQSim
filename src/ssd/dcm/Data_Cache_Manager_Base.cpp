@@ -35,14 +35,14 @@ Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
 { }
 
 void
-Data_Cache_Manager_Base::__handle_user_request(User_Request* request)
+Data_Cache_Manager_Base::__handle_user_request(UserRequest* request)
 {
   // Pass user request to children.
   process_new_user_request(request);
 }
 
 void
-Data_Cache_Manager_Base::broadcast_user_request_serviced_signal(User_Request* request)
+Data_Cache_Manager_Base::broadcast_user_request_serviced_signal(UserRequest* request)
 {
   for (auto handler : __user_req_svc_handler)
     (*handler)(request);

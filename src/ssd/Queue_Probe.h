@@ -20,6 +20,26 @@ namespace SSD_Components
 
   class Queue_Probe
   {
+  private:
+    typedef std::unordered_map<NVM_Transaction*, sim_time_type> TransactionTimeMap;
+    uint32_t count = 0;
+    unsigned long nRequests = 0;
+    unsigned long nDepartures = 0;
+    sim_time_type totalWaitingTime = 0;
+    sim_time_type lastCountChange = 0;
+    sim_time_type lastCountChangeReference = 0;
+    unsigned long nRequestsEpoch = 0;
+    unsigned long nDeparturesEpoch = 0;
+    sim_time_type totalWaitingTimeEpoch = 0;
+    sim_time_type epochStartTime;
+    std::vector<StateStatistics> states;
+    std::vector<StateStatistics> statesEpoch;
+    TransactionTimeMap currentObjectsInQueue;
+    uint32_t maxQueueLength = 0;
+    sim_time_type maxWaitingTime = 0;
+
+    void setCount(int val);
+
   public:
     Queue_Probe();
     void EnqueueRequest(NVM_Transaction* transaction);
@@ -38,23 +58,6 @@ namespace SSD_Components
     sim_time_type AvgWaitingTime();
     sim_time_type AvgWaitingTimeEpoch();
     sim_time_type TotalWaitingTime();
-  private:
-    uint32_t count = 0;
-    unsigned long nRequests = 0;
-    unsigned long nDepartures = 0;
-    sim_time_type totalWaitingTime = 0;
-    sim_time_type lastCountChange = 0;
-    sim_time_type lastCountChangeReference = 0;
-    unsigned long nRequestsEpoch = 0;
-    unsigned long nDeparturesEpoch = 0;
-    sim_time_type totalWaitingTimeEpoch = 0;
-    sim_time_type epochStartTime;
-    std::vector<StateStatistics> states;
-    std::vector<StateStatistics> statesEpoch;
-    std::unordered_map<NVM_Transaction*, sim_time_type> currentObjectsInQueue;
-    uint32_t maxQueueLength = 0;
-    sim_time_type maxWaitingTime = 0;
-    void setCount(int val);
   };
 
 }

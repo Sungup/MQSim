@@ -2,11 +2,11 @@
 #define HOST_INTERFACE_BASE_H
 
 #include <vector>
+#include "../request/UserRequest.h"
 #include "../../sim/Sim_Object.h"
 #include "../../sim/Sim_Reporter.h"
 #include "../../host/PCIe_Switch.h"
 #include "../../host/PCIe_Message.h"
-#include "../request/User_Request.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
 #include <stdint.h>
 #include <cstring>
@@ -49,9 +49,6 @@ namespace SSD_Components
   class Input_Stream_Base
   {
   public:
-    Input_Stream_Base();
-    virtual ~Input_Stream_Base() = default;
-
     uint32_t STAT_rd_requests;
     uint32_t STAT_wr_requests;
     uint32_t STAT_rd_transactions;
@@ -63,6 +60,9 @@ namespace SSD_Components
     sim_time_type STAT_total_wr_execution_time;
     sim_time_type STAT_total_wr_transfer_time;
     sim_time_type STAT_total_wr_waiting_time;
+
+    Input_Stream_Base();
+    virtual ~Input_Stream_Base() = default;
 
     sim_time_type STAT_total_rd_turnaround_time() const;
     sim_time_type STAT_total_wr_turnaround_time() const;
@@ -157,15 +157,15 @@ namespace SSD_Components
 
   protected:
     Host_Interface_Base* host_interface;
-    virtual void segment_user_request(User_Request* user_request) = 0;
+    virtual void segment_user_request(UserRequest* user_request) = 0;
     std::vector<Input_Stream_Base*> input_streams;
 
   public:
     Input_Stream_Manager_Base(Host_Interface_Base* host_interface);
     virtual ~Input_Stream_Manager_Base();
-    virtual void Handle_new_arrived_request(User_Request* request) = 0;
-    virtual void Handle_arrived_write_data(User_Request* request) = 0;
-    virtual void Handle_serviced_request(User_Request* request) = 0;
+    virtual void Handle_new_arrived_request(UserRequest* request) = 0;
+    virtual void Handle_arrived_write_data(UserRequest* request) = 0;
+    virtual void Handle_serviced_request(UserRequest* request) = 0;
 
     void Update_transaction_statistics(NVM_Transaction* transaction);
 
@@ -237,6 +237,7 @@ namespace SSD_Components
       void * object;
     };
 
+    UserReqPool _user_req_pool;
     Host_Interface_Base* host_interface;
     std::list<DMA_Req_Item*> dma_list;
 
@@ -244,15 +245,16 @@ namespace SSD_Components
     Request_Fetch_Unit_Base(Host_Interface_Base* host_interface);
     virtual ~Request_Fetch_Unit_Base();
     virtual void Fetch_next_request(stream_id_type stream_id) = 0;
-    virtual void Fetch_write_data(User_Request* request) = 0;
-    virtual void Send_read_data(User_Request* request) = 0;
+    virtual void Fetch_write_data(UserRequest* request) = 0;
+    virtual void Send_read_data(UserRequest* request) = 0;
     virtual void Process_pcie_write_message(uint64_t, void *, uint32_t) = 0;
     virtual void Process_pcie_read_message(uint64_t, void *, uint32_t) = 0;
   };
 
   force_inline
-  Request_Fetch_Unit_Base::Request_Fetch_Unit_Base(Host_Interface_Base* host_interface) :
-    host_interface(host_interface)
+  Request_Fetch_Unit_Base::Request_Fetch_Unit_Base(Host_Interface_Base* host_interface)
+    : _user_req_pool(),
+      host_interface(host_interface)
   { }
 
   force_inline
@@ -294,9 +296,9 @@ namespace SSD_Components
     Request_Fetch_Unit_Base* request_fetch_unit;
 
   protected:
-    void broadcast_user_request_arrival_signal(User_Request* user_request);
+    void broadcast_user_request_arrival_signal(UserRequest* user_request);
 
-    void __handle_user_request_signal_from_cache(User_Request* request);
+    void __handle_user_request_signal_from_cache(UserRequest* request);
     void __handle_user_transaction_signal_from_cache(NVM_Transaction* transaction);
 
   public:
@@ -323,7 +325,7 @@ namespace SSD_Components
   };
 
   force_inline void
-  Host_Interface_Base::broadcast_user_request_arrival_signal(User_Request* user_request)
+  Host_Interface_Base::broadcast_user_request_arrival_signal(UserRequest* user_request)
   {
     for (auto& handler : __connected_user_req_signal_handlers)
       (*handler)(user_request);
