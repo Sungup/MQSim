@@ -8,7 +8,7 @@
 #include "../SSD_Defs.h"
 #include "Data_Cache_Manager_Base.h"
 #include "Data_Cache_Flash.h"
-#include "../NVM_Transaction_Flash.h"
+#include "../NvmTransactionFlash.h"
 
 namespace SSD_Components
 {
@@ -72,7 +72,7 @@ namespace SSD_Components
 
     void service_dram_access_request(Memory_Transfer_Info& request_info);
 
-    void __handle_transaction_service(NVM_Transaction_Flash* nvm_transaction);
+    void __handle_transaction_service(NvmTransactionFlash* nvm_transaction);
 
   public:
     Data_Cache_Manager_Flash_Advanced(const sim_object_id_type& id,

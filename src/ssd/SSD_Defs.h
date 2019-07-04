@@ -5,6 +5,7 @@
 #include <string>
 #include "../sim/Sim_Defs.h"
 #include "../nvm_chip/flash_memory/FlashTypes.h"
+#include "../utils/InlineTools.h"
 
 //enum class Memory_Type {FLASH};
 
@@ -28,12 +29,17 @@ typedef uint64_t data_cache_content_type;
 #define UNIQUE_KEY_TO_LPN(STREAM,LPN) ((~(((LPA_type)STREAM)<<56U))&LPN)
 
 
-inline uint32_t count_sector_no_from_status_bitmap(const page_status_type page_status)
+force_inline uint32_t
+count_sector_no_from_status_bitmap(page_status_type page_status)
 {
   uint32_t size = 0;
-  for (uint32_t i = 0; i < 64; i++)
-    if ((((page_status_type)1) << i) & page_status)
-      size++;
+
+  while (page_status) {
+    size += 0x01ULL & page_status;
+
+    page_status = (page_status >> 1U);
+  }
+
   return size;
 }
 

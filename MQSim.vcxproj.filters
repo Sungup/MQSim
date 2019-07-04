@@ -172,16 +172,16 @@
     <ClCompile Include="src\ssd\NVM_PHY_ONFI_NVDDR2.cpp">
       <Filter>ssd</Filter>
     </ClCompile>
-    <ClCompile Include="src\ssd\NVM_Transaction_Flash.cpp">
+    <ClCompile Include="src\ssd\NvmTransactionFlash.cpp">
       <Filter>ssd</Filter>
     </ClCompile>
-    <ClCompile Include="src\ssd\NVM_Transaction_Flash_ER.cpp">
+    <ClCompile Include="src\ssd\NvmTransactionFlashER.cpp">
       <Filter>ssd</Filter>
     </ClCompile>
-    <ClCompile Include="src\ssd\NVM_Transaction_Flash_RD.cpp">
+    <ClCompile Include="src\ssd\NvmTransactionFlashRD.cpp">
       <Filter>ssd</Filter>
     </ClCompile>
-    <ClCompile Include="src\ssd\NVM_Transaction_Flash_WR.cpp">
+    <ClCompile Include="src\ssd\NvmTransactionFlashWR.cpp">
       <Filter>ssd</Filter>
     </ClCompile>
     <ClCompile Include="src\ssd\ONFI_Channel_Base.cpp">
@@ -426,19 +426,19 @@
     <ClInclude Include="src\ssd\NVM_PHY_ONFI_NVDDR2.h">
       <Filter>ssd</Filter>
     </ClInclude>
-    <ClInclude Include="src\ssd\NVM_Transaction.h">
+    <ClInclude Include="src\ssd\NvmTransaction.h">
       <Filter>ssd</Filter>
     </ClInclude>
-    <ClInclude Include="src\ssd\NVM_Transaction_Flash.h">
+    <ClInclude Include="src\ssd\NvmTransactionFlash.h">
       <Filter>ssd</Filter>
     </ClInclude>
-    <ClInclude Include="src\ssd\NVM_Transaction_Flash_ER.h">
+    <ClInclude Include="src\ssd\NvmTransactionFlashER.h">
       <Filter>ssd</Filter>
     </ClInclude>
-    <ClInclude Include="src\ssd\NVM_Transaction_Flash_RD.h">
+    <ClInclude Include="src\ssd\NvmTransactionFlashRD.h">
       <Filter>ssd</Filter>
     </ClInclude>
-    <ClInclude Include="src\ssd\NVM_Transaction_Flash_WR.h">
+    <ClInclude Include="src\ssd\NvmTransactionFlashWR.h">
       <Filter>ssd</Filter>
     </ClInclude>
     <ClInclude Include="src\ssd\ONFI_Channel_Base.h">

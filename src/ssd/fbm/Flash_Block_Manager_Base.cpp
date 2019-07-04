@@ -2,71 +2,6 @@
 
 using namespace SSD_Components;
 
-// =========================================
-// Block_Pool_Slot_Type Class Implementation
-// =========================================
-force_inline
-Block_Pool_Slot_Type::Block_Pool_Slot_Type(uint32_t block_id,
-                                           uint32_t pages_no_per_block)
-  : BlockID(block_id),
-    Current_page_write_index(0),
-    Current_status(Block_Service_Status::IDLE),
-    Erase_count(0),
-    __page_vector_size(pages_no_per_block
-                         / BITMAP_SIZE
-                         + (pages_no_per_block % BITMAP_SIZE == 0 ? 0 : 1)),
-    Invalid_page_count(0),
-#if (DEBUG || PROFILE)
-    // Wrapping the ALL_VALID_PAGES because C++11 cannot replace constexpr
-    // directly on -O0 optimization mode.
-    Invalid_page_bitmap(__page_vector_size, uint64_t(ALL_VALID_PAGE)),
-#else
-    Invalid_page_bitmap(__page_vector_size, ALL_VALID_PAGE),
-#endif
-    Holds_mapping_data(false),
-    Has_ongoing_gc_wl(false),
-    Erase_transaction(nullptr),
-    Hot_block(false),
-    Ongoing_user_program_count(0),
-    Ongoing_user_read_count(0)
-{ }
-
-// =========================================
-// PlaneBookKeepingType Class Implementation
-// =========================================
-force_inline
-PlaneBookKeepingType::PlaneBookKeepingType(uint32_t total_concurrent_streams_no,
-                                           uint32_t block_no_per_plane,
-                                           uint32_t pages_no_per_block)
-  : Total_pages_count(block_no_per_plane * pages_no_per_block),
-    Free_pages_count(Total_pages_count),
-    Valid_pages_count(0),
-    Invalid_pages_count(0),
-    Blocks(),
-    __tmp__block_no_per_plane(block_no_per_plane),
-    Data_wf(total_concurrent_streams_no, nullptr),
-    GC_wf(total_concurrent_streams_no, nullptr),
-    Translation_wf(total_concurrent_streams_no, nullptr),
-    Ongoing_erase_operations()
-{
-  //Initialize block pool for plane
-  Blocks.reserve(block_no_per_plane);
-
-  for (uint32_t blockID = 0; blockID < block_no_per_plane; blockID++) {
-    Blocks.emplace_back(blockID, pages_no_per_block);
-    Add_to_free_block_pool(Blocks[blockID], false);
-  }
-
-  for (uint32_t cnt = 0; cnt < total_concurrent_streams_no; ++cnt) {
-    Data_wf[cnt] = Get_a_free_block(cnt, false);
-    Translation_wf[cnt] = Get_a_free_block(cnt, true);
-    GC_wf[cnt] = Get_a_free_block(cnt, false);
-  }
-}
-
-// =============================================
-// Flash_Block_Manager_Base Class Implementation
-// =============================================
 Flash_Block_Manager_Base::Flash_Block_Manager_Base(GC_and_WL_Unit_Base* gc_and_wl_unit,
                                                    Stats& stats,
                                                    uint32_t max_allowed_block_erase_count,
@@ -206,9 +141,7 @@ void Flash_Block_Manager_Base::GC_WL_finished(const NVM::FlashMemory::Physical_P
   plane_record->Blocks[block_address.BlockID].Has_ongoing_gc_wl = false;
 }
 
-bool Flash_Block_Manager_Base::Is_page_valid(Block_Pool_Slot_Type* block, flash_page_ID_type page_id)
+bool Flash_Block_Manager_Base::Is_page_valid(const Block_Pool_Slot_Type& block, flash_page_ID_type page_id)
 {
-  if ((block->Invalid_page_bitmap[page_id / 64] & (((uint64_t)1) << page_id)) == 0)
-    return true;
-  return false;
+  return ((block.Invalid_page_bitmap[page_id / 64] & (((uint64_t)1) << page_id)) == 0);
 }

@@ -128,7 +128,7 @@ namespace SSD_Components
       //Check if LSA is in the correct range allocted to the stream
       if (lsa < ((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->Start_logical_sector_address || lsa >((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->End_logical_sector_address)
         lsa = ((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->Start_logical_sector_address
-        + (lsa % (((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->End_logical_sector_address - (((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->Start_logical_sector_address)));
+                + (lsa % (((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->End_logical_sector_address - (((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->Start_logical_sector_address)));
       LHA_type internal_lsa = lsa - ((Input_Stream_SATA*)input_streams[SATA_STREAM_ID])->Start_logical_sector_address;//For each flow, all lsa's should be translated into a range starting from zero
 
 
@@ -143,19 +143,11 @@ namespace SSD_Components
       access_status_bitmap = temp << (uint32_t)(internal_lsa % host_interface->sectors_per_page);
 
       if (user_request->Type == UserRequestType::READ)
-      {
-        auto* transaction = new NVM_Transaction_Flash_RD(Transaction_Source_Type::USERIO, SATA_STREAM_ID,
-          transaction_size * SECTOR_SIZE_IN_BYTE, lpa, NO_PPA, user_request, 0, access_status_bitmap, CurrentTimeStamp);
-        user_request->Transaction_list.push_back(transaction);
-        input_streams[SATA_STREAM_ID]->STAT_rd_transactions++;
-      }
-      else //user_request->Type == UserRequestType::WRITE
-      {
-        auto* transaction = new NVM_Transaction_Flash_WR(Transaction_Source_Type::USERIO, SATA_STREAM_ID,
-          transaction_size * SECTOR_SIZE_IN_BYTE, lpa, user_request, 0, access_status_bitmap, CurrentTimeStamp);
-        user_request->Transaction_list.push_back(transaction);
-        input_streams[SATA_STREAM_ID]->STAT_wr_transactions++;
-      }
+        _make_read_tr(user_request, SATA_STREAM_ID, transaction_size,
+                      access_status_bitmap, lpa);
+      else
+        _make_write_tr(user_request, SATA_STREAM_ID, transaction_size,
+                       access_status_bitmap, lpa);
 
       lsa = lsa + transaction_size;
       hanled_sectors_count += transaction_size;

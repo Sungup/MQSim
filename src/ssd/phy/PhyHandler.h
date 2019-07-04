@@ -10,19 +10,19 @@
 #define __MQSim__PhyHandler__
 
 #include "../../utils/ServiceHandler.h"
-#include "../NVM_Transaction_Flash.h"
+#include "../NvmTransactionFlash.h"
 
 namespace SSD_Components {
-  typedef Utils::ServiceHandlerBase<NVM_Transaction*>                    NvmTransactionHandlerBase;
-  typedef Utils::ServiceHandlerBase<NVM_Transaction_Flash*>              FlashTransactionHandlerBase;
+  typedef Utils::ServiceHandlerBase<NvmTransaction*>                    NvmTransactionHandlerBase;
+  typedef Utils::ServiceHandlerBase<NvmTransactionFlash*>              FlashTransactionHandlerBase;
   typedef Utils::ServiceHandlerBase<flash_channel_ID_type>               ChannelIdleSignalHandlerBase;
   typedef Utils::ServiceHandlerBase<const NVM::FlashMemory::Flash_Chip&> ChipIdleSignalHandlerBase;
 
   template <typename T>
-  using NvmTransactionHandler = Utils::ServiceHandler<T, NVM_Transaction*>;
+  using NvmTransactionHandler = Utils::ServiceHandler<T, NvmTransaction*>;
 
   template <typename T>
-  using FlashTransactionHandler = Utils::ServiceHandler<T, NVM_Transaction_Flash*>;
+  using FlashTransactionHandler = Utils::ServiceHandler<T, NvmTransactionFlash*>;
 
   template <typename T>
   using ChannelIdleSignalHandler = Utils::ServiceHandler<T, flash_channel_ID_type>;

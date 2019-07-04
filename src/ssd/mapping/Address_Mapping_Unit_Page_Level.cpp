@@ -1,8 +1,11 @@
-#include <cmath>
+#include "Address_Mapping_Unit_Page_Level.h"
+
 #include <assert.h>
+#include <cmath>
 #include <stdexcept>
 
-#include "Address_Mapping_Unit_Page_Level.h"
+#include "../FTL.h"
+
 #include "../Stats.h"
 #include "../../utils/Logical_Address_Partitioning_Unit.h"
 
@@ -302,15 +305,15 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                               fold_large_addresses),
     __transaction_service_handler(this, &Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal)
 {
-  Write_transactions_for_overfull_planes = new std::set<NVM_Transaction_Flash_WR*>***[channel_count];
+  Write_transactions_for_overfull_planes = new std::set<NvmTransactionFlashWR*>***[channel_count];
   for (uint32_t channel_id = 0; channel_id < channel_count; channel_id++)
   {
-    Write_transactions_for_overfull_planes[channel_id] = new std::set<NVM_Transaction_Flash_WR*>**[chip_no_per_channel];
+    Write_transactions_for_overfull_planes[channel_id] = new std::set<NvmTransactionFlashWR*>**[chip_no_per_channel];
     for (uint32_t chip_id = 0; chip_id < chip_no_per_channel; chip_id++)
     {
-      Write_transactions_for_overfull_planes[channel_id][chip_id] = new std::set<NVM_Transaction_Flash_WR*>*[die_no_per_chip];
+      Write_transactions_for_overfull_planes[channel_id][chip_id] = new std::set<NvmTransactionFlashWR*>*[die_no_per_chip];
       for (uint32_t die_id = 0; die_id < die_no_per_chip; die_id++)
-        Write_transactions_for_overfull_planes[channel_id][chip_id][die_id] = new std::set<NVM_Transaction_Flash_WR*>[plane_no_per_die];
+        Write_transactions_for_overfull_planes[channel_id][chip_id][die_id] = new std::set<NvmTransactionFlashWR*>[plane_no_per_die];
     }
   }
 
@@ -383,14 +386,14 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
 // Internal private functions
 // --------------------------
 force_inline void
-Address_Mapping_Unit_Page_Level::allocate_plane_for_user_write(NVM_Transaction_Flash_WR* transaction)
+Address_Mapping_Unit_Page_Level::allocate_plane_for_user_write(NvmTransactionFlashWR* transaction)
 {
   domains[transaction->Stream_id].plane_allocate(transaction->Address,
                                                  transaction->LPA);
 }
 
 force_inline void
-Address_Mapping_Unit_Page_Level::allocate_page_in_plane_for_user_write(NVM_Transaction_Flash_WR* transaction,
+Address_Mapping_Unit_Page_Level::allocate_page_in_plane_for_user_write(NvmTransactionFlashWR* transaction,
                                                                        bool is_for_gc)
 {
   AddressMappingDomain& domain = domains[transaction->Stream_id];
@@ -425,9 +428,16 @@ Address_Mapping_Unit_Page_Level::allocate_page_in_plane_for_user_write(NVM_Trans
       else
       {
         page_status_type read_pages_bitmap = status_intersection ^ prev_page_status;
-        auto* update_read_tr = new NVM_Transaction_Flash_RD(transaction->Source, transaction->Stream_id,
-                                                            count_sector_no_from_status_bitmap(read_pages_bitmap) * SECTOR_SIZE_IN_BYTE, transaction->LPA, old_ppa, transaction->UserIORequest,
-                                                            transaction->Content, transaction, read_pages_bitmap, domain.GlobalMappingTable[transaction->LPA].TimeStamp);
+        auto* update_read_tr = new NvmTransactionFlashRD(transaction->Source,
+                                                         transaction->Stream_id,
+                                                         count_sector_no_from_status_bitmap(read_pages_bitmap) * SECTOR_SIZE_IN_BYTE,
+                                                         transaction->UserIORequest,
+                                                         transaction->Content,
+                                                         read_pages_bitmap,
+                                                         domain.GlobalMappingTable[transaction->LPA].TimeStamp,
+                                                         transaction->LPA,
+                                                         old_ppa,
+                                                         transaction);
         Convert_ppa_to_address(old_ppa, update_read_tr->Address);
         block_manager->Read_transaction_issued(update_read_tr->Address);//Inform block manager about a new transaction as soon as the transaction's target address is determined
         block_manager->Invalidate_page_in_block(transaction->Stream_id, update_read_tr->Address);
@@ -445,17 +455,17 @@ Address_Mapping_Unit_Page_Level::allocate_page_in_plane_for_user_write(NVM_Trans
     block_manager->Allocate_block_and_page_in_plane_for_user_write(transaction->Stream_id, transaction->Address);
   transaction->PPA = Convert_address_to_ppa(transaction->Address);
   domain.Update_mapping_info(ideal_mapping_table, transaction->Stream_id, transaction->LPA, transaction->PPA,
-                             ((NVM_Transaction_Flash_WR*)transaction)->write_sectors_bitmap | domain.Get_page_status(ideal_mapping_table, transaction->Stream_id, transaction->LPA));
+                             ((NvmTransactionFlashWR*)transaction)->write_sectors_bitmap | domain.Get_page_status(ideal_mapping_table, transaction->Stream_id, transaction->LPA));
 }
 
 force_inline void
-Address_Mapping_Unit_Page_Level::allocate_plane_for_translation_write(NVM_Transaction_Flash* transaction)
+Address_Mapping_Unit_Page_Level::allocate_plane_for_translation_write(NvmTransactionFlash* transaction)
 {
-  allocate_plane_for_user_write((NVM_Transaction_Flash_WR*)transaction);
+  allocate_plane_for_user_write((NvmTransactionFlashWR*)transaction);
 }
 
 force_inline void
-Address_Mapping_Unit_Page_Level::allocate_page_in_plane_for_translation_write(NVM_Transaction_Flash* transaction, MVPN_type mvpn, bool is_for_gc)
+Address_Mapping_Unit_Page_Level::allocate_page_in_plane_for_translation_write(NvmTransactionFlash* transaction, MVPN_type mvpn, bool is_for_gc)
 {
   AddressMappingDomain& domain = domains[transaction->Stream_id];
 
@@ -614,14 +624,14 @@ Address_Mapping_Unit_Page_Level::request_mapping_entry(stream_id_type stream_id,
  * will throw an exception.
  */
 force_inline bool
-Address_Mapping_Unit_Page_Level::translate_lpa_to_ppa(stream_id_type streamID, NVM_Transaction_Flash* transaction)
+Address_Mapping_Unit_Page_Level::translate_lpa_to_ppa(stream_id_type streamID, NvmTransactionFlash* transaction)
 {
   PPA_type ppa = domains[streamID].Get_ppa(ideal_mapping_table, streamID, transaction->LPA);
 
   if (transaction->Type == Transaction_Type::READ)
   {
     if (ppa == NO_PPA)
-      ppa = online_create_entry_for_reads(transaction->LPA, streamID, transaction->Address, ((NVM_Transaction_Flash_RD*)transaction)->read_sectors_bitmap);
+      ppa = online_create_entry_for_reads(transaction->LPA, streamID, transaction->Address, ((NvmTransactionFlashRD*)transaction)->read_sectors_bitmap);
     transaction->PPA = ppa;
     Convert_ppa_to_address(transaction->PPA, transaction->Address);
     block_manager->Read_transaction_issued(transaction->Address);
@@ -630,10 +640,10 @@ Address_Mapping_Unit_Page_Level::translate_lpa_to_ppa(stream_id_type streamID, N
   }
   else//This is a write transaction
   {
-    allocate_plane_for_user_write((NVM_Transaction_Flash_WR*)transaction);
+    allocate_plane_for_user_write((NvmTransactionFlashWR*)transaction);
     if (ftl->GC_and_WL_Unit->Stop_servicing_writes(transaction->Address))//there are too few free pages remaining only for GC
       return false;
-    allocate_page_in_plane_for_user_write((NVM_Transaction_Flash_WR*)transaction, false);
+    allocate_page_in_plane_for_user_write((NvmTransactionFlashWR*)transaction, false);
     transaction->Physical_address_determined = true;
     return true;
   }
@@ -662,8 +672,9 @@ Address_Mapping_Unit_Page_Level::generate_flash_read_request_for_mapping_data(st
     if (ppn == NO_MPPN)
     PRINT_ERROR("Reading an invalid physical flash page address in function generate_flash_read_request_for_mapping_data!")
 
-    NVM_Transaction_Flash_RD* readTR = new NVM_Transaction_Flash_RD(Transaction_Source_Type::MAPPING, stream_id,
-                                                                    SECTOR_SIZE_IN_BYTE, NO_LPA, NO_PPA, nullptr, mvpn, ((page_status_type)0x1) << sector_no_per_page, CurrentTimeStamp);
+    auto* readTR = _make_mapping_read_tr(stream_id, SECTOR_SIZE_IN_BYTE, mvpn,
+                                         ((page_status_type) 0x01) << sector_no_per_page);
+
     Convert_ppa_to_address(ppn, readTR->Address);
     block_manager->Read_transaction_issued(readTR->Address);//Inform block_manager as soon as the transaction's target address is determined
     readTR->PPA = ppn;
@@ -717,20 +728,29 @@ Address_Mapping_Unit_Page_Level::generate_flash_writeback_request_for_mapping_da
       }
 
     //Read the unchaged mapping entries from flash to merge them with updated parts of MVPN
-    NVM_Transaction_Flash_RD* readTR = nullptr;
+    NvmTransactionFlashRD* readTR = nullptr;
     MPPN_type mppn = domain.GlobalTranslationDirectory[mvpn].MPPN;
     if (mppn != NO_MPPN)
     {
-      readTR = new NVM_Transaction_Flash_RD(Transaction_Source_Type::MAPPING, stream_id, read_size,
-                                            mvpn, mppn, nullptr, mvpn, nullptr, readSectorsBitmap, CurrentTimeStamp);
+      readTR = _make_mapping_read_tr(stream_id, read_size, mvpn,
+                                     readSectorsBitmap, mvpn, mppn);
+
       Convert_ppa_to_address(mppn, readTR->Address);
       block_manager->Read_transaction_issued(readTR->Address);//Inform block_manager as soon as the transaction's target address is determined
       domain.ArrivingMappingEntries.insert(std::pair<MVPN_type, LPA_type>(mvpn, lpn));
       ftl->TSU->Submit_transaction(readTR);
     }
 
-    NVM_Transaction_Flash_WR* writeTR = new NVM_Transaction_Flash_WR(Transaction_Source_Type::MAPPING, stream_id, SECTOR_SIZE_IN_BYTE * sector_no_per_page,
-                                                                     mvpn, mppn, nullptr, mvpn, readTR, (((page_status_type)0x1) << sector_no_per_page) - 1, CurrentTimeStamp);
+    NvmTransactionFlashWR* writeTR = new NvmTransactionFlashWR(Transaction_Source_Type::MAPPING,
+                                                               stream_id,
+                                                               SECTOR_SIZE_IN_BYTE * sector_no_per_page,
+                                                               nullptr,
+                                                               mvpn,
+                                                               (((page_status_type)0x1) << sector_no_per_page) - 1,
+                                                               CurrentTimeStamp,
+                                                               mvpn,
+                                                               mppn,
+                                                               readTR);
     allocate_plane_for_translation_write(writeTR);
     allocate_page_in_plane_for_translation_write(writeTR, mvpn, false);
     domain.DepartingMappingEntries.insert(get_MVPN(lpn, stream_id));
@@ -764,18 +784,18 @@ Address_Mapping_Unit_Page_Level::get_end_LPN_in_MVP(MVPN_type mvpn) const
   return MVPN_type(mvpn * no_of_translation_entries_per_page + no_of_translation_entries_per_page - 1);
 }
 
-force_inline std::set<NVM_Transaction_Flash_WR*>&
+force_inline std::set<NvmTransactionFlashWR*>&
 Address_Mapping_Unit_Page_Level::__wr_transaction_for_overfull_plane(const NVM::FlashMemory::Physical_Page_Address& address)
 {
   return Write_transactions_for_overfull_planes[address.ChannelID][address.ChipID][address.DieID][address.PlaneID];
 }
 
 force_inline void
-Address_Mapping_Unit_Page_Level::manage_unsuccessful_translation(NVM_Transaction_Flash *transaction)
+Address_Mapping_Unit_Page_Level::manage_unsuccessful_translation(NvmTransactionFlash *transaction)
 {
   // Currently, the only unsuccessfull translation would be for program
   // translations that are accessing a plane that is running out of free pages
-  __wr_transaction_for_overfull_plane(transaction->Address).insert((NVM_Transaction_Flash_WR*)transaction);
+  __wr_transaction_for_overfull_plane(transaction->Address).insert((NvmTransactionFlashWR*)transaction);
 }
 
 void
@@ -817,7 +837,7 @@ Address_Mapping_Unit_Page_Level::__processing_unmapped_transactions(FlashTransac
 }
 
 void
-Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NVM_Transaction_Flash* transaction)
+Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NvmTransactionFlash* transaction)
 {
   //First check if the transaction source is Mapping Module
   if (transaction->Source != Transaction_Source_Type::MAPPING)
@@ -831,17 +851,17 @@ Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NVM_Transac
 
   if (transaction->Type == Transaction_Type::WRITE)
   {
-    domain.DepartingMappingEntries.erase((MVPN_type)((NVM_Transaction_Flash_WR*)transaction)->Content);
+    domain.DepartingMappingEntries.erase((MVPN_type)((NvmTransactionFlashWR*)transaction)->Content);
   }
   else
   {
     /*If this is a read for an MVP that is required for merging unchanged mapping enries
     * (stored on flash) with those updated entries that are evicted from CMT*/
-    if (((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite != nullptr)
-      ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->RelatedRead = nullptr;
+    if (((NvmTransactionFlashRD*)transaction)->RelatedWrite != nullptr)
+      ((NvmTransactionFlashRD*)transaction)->RelatedWrite->RelatedRead = nullptr;
 
     ftl->TSU->Prepare_for_transaction_submit();
-    auto  mvpn = (MVPN_type)((NVM_Transaction_Flash_RD*)transaction)->Content;
+    auto  mvpn = (MVPN_type)((NvmTransactionFlashRD*)transaction)->Content;
     auto  it = domain.ArrivingMappingEntries.find(mvpn);
 
     while (it != domain.ArrivingMappingEntries.end())
@@ -862,12 +882,12 @@ Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal(NVM_Transac
 
         __processing_unmapped_transactions(domain.Waiting_unmapped_read_transactions,
                                            lpa, stream_id,
-                                           [&](NVM_Transaction_Flash* transaction) {});
+                                           [&](NvmTransactionFlash* transaction) {});
 
         __processing_unmapped_transactions(domain.Waiting_unmapped_program_transactions,
                                            lpa, stream_id,
-                                           [&](NVM_Transaction_Flash* transaction) {
-          auto* wr_transaction = (NVM_Transaction_Flash_WR*)(transaction);
+                                           [&](NvmTransactionFlash* transaction) {
+          auto* wr_transaction = (NvmTransactionFlashWR*)(transaction);
 
           if (wr_transaction->RelatedRead != nullptr)
             ftl->TSU->Submit_transaction(wr_transaction->RelatedRead);
@@ -1095,16 +1115,15 @@ Address_Mapping_Unit_Page_Level::Store_mapping_table_on_flash_at_start()
     return;
 
   //Since address translation functions work on flash transactions
-  auto* dummy_tr = new NVM_Transaction_Flash_WR(Transaction_Source_Type::MAPPING,
-                                                0,
-                                                0,
-                                                NO_LPA,
-                                                0,
-                                                nullptr,
-                                                0,
-                                                nullptr,
-                                                0,
-                                                0);
+  auto* dummy_tr = new NvmTransactionFlashWR(Transaction_Source_Type::MAPPING,
+                                             0,
+                                             0,
+                                             nullptr,
+                                             0,
+                                             0,
+                                             0,
+                                             NO_LPA,
+                                             0);
 
   for (uint32_t stream_id = 0; stream_id < no_of_input_streams; stream_id++)
   {
@@ -1142,26 +1161,26 @@ Address_Mapping_Unit_Page_Level::Get_logical_pages_count(stream_id_type stream_i
 }
 
 void
-Address_Mapping_Unit_Page_Level::Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactions)
+Address_Mapping_Unit_Page_Level::Translate_lpa_to_ppa_and_dispatch(const std::list<NvmTransaction*>& transactions)
 {
   for (auto it = transactions.cbegin(); it != transactions.cend(); ) {
     //iterator should be post-incremented since the iterator may be deleted from list
-    if (is_lpa_locked_for_gc((*it)->Stream_id, ((NVM_Transaction_Flash*)(*it))->LPA))
-      manage_user_transaction_facing_barrier((NVM_Transaction_Flash*)*(it++));
-    else query_cmt((NVM_Transaction_Flash*)(*it++));
+    if (is_lpa_locked_for_gc((*it)->Stream_id, ((NvmTransactionFlash*)(*it))->LPA))
+      manage_user_transaction_facing_barrier((NvmTransactionFlash*)*(it++));
+    else query_cmt((NvmTransactionFlash*)(*it++));
   }
 
   if (!transactions.empty()) {
     ftl->TSU->Prepare_for_transaction_submit();
 
     for (auto& it : transactions) {
-      auto* transaction = (NVM_Transaction_Flash*)(it);
+      auto* transaction = (NvmTransactionFlash*)(it);
 
       if (transaction->Physical_address_determined) {
         ftl->TSU->Submit_transaction(transaction);
 
         if (transaction->Type == Transaction_Type::WRITE) {
-          auto* wr_transaction = (NVM_Transaction_Flash_WR*)(transaction);
+          auto* wr_transaction = (NvmTransactionFlashWR*)(transaction);
 
           if (wr_transaction->RelatedRead != nullptr)
             ftl->TSU->Submit_transaction(wr_transaction->RelatedRead);
@@ -1202,7 +1221,7 @@ Address_Mapping_Unit_Page_Level::Get_translation_mapping_info_for_gc(stream_id_t
 }
 
 void
-Address_Mapping_Unit_Page_Level::Allocate_new_page_for_gc(NVM_Transaction_Flash_WR* transaction, bool is_translation_page)
+Address_Mapping_Unit_Page_Level::Allocate_new_page_for_gc(NvmTransactionFlashWR* transaction, bool is_translation_page)
 {
   auto& domain = domains[transaction->Stream_id];
 
@@ -1337,32 +1356,32 @@ void
 Address_Mapping_Unit_Page_Level::Set_barrier_for_accessing_physical_block(const NVM::FlashMemory::Physical_Page_Address& block_address)
 {
   //The LPAs are actually not known until they are read one-by-one from flash storage. But, to reduce MQSim's complexity, we assume that LPAs are stored in DRAM and thus no read from flash storage is needed.
-  Block_Pool_Slot_Type* block = &(block_manager->plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID].Blocks[block_address.BlockID]);
+  Block_Pool_Slot_Type& block = (block_manager->plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID].Blocks[block_address.BlockID]);
   NVM::FlashMemory::Physical_Page_Address addr(block_address);
 
-  auto& domain = domains[block->Stream_id];
+  auto& domain = domains[block.Stream_id];
 
-  for (flash_page_ID_type pageID = 0; pageID < block->Current_page_write_index; pageID++)
+  for (flash_page_ID_type pageID = 0; pageID < block.Current_page_write_index; pageID++)
   {
     if (block_manager->Is_page_valid(block, pageID))
     {
       addr.PageID = pageID;
-      if (block->Holds_mapping_data)
+      if (block.Holds_mapping_data)
       {
         auto mpvn = (MVPN_type)flash_controller->Get_metadata(addr.ChannelID, addr.ChipID, addr.DieID, addr.PlaneID, addr.BlockID, addr.PageID);
         if (domain.GlobalTranslationDirectory[mpvn].MPPN != Convert_address_to_ppa(addr))
           PRINT_ERROR("Inconsistency in the global translation directory when locking an MPVN!")
-          Set_barrier_for_accessing_mvpn(block->Stream_id, mpvn);
+          Set_barrier_for_accessing_mvpn(block.Stream_id, mpvn);
       }
       else
       {
         LPA_type lpa = flash_controller->Get_metadata(addr.ChannelID, addr.ChipID, addr.DieID, addr.PlaneID, addr.BlockID, addr.PageID);
         LPA_type ppa = domain.GlobalMappingTable[lpa].PPA;
-        if (domain.CMT->Exists(block->Stream_id, lpa))
-          ppa = domain.CMT->Retrieve_ppa(block->Stream_id, lpa);
+        if (domain.CMT->Exists(block.Stream_id, lpa))
+          ppa = domain.CMT->Retrieve_ppa(block.Stream_id, lpa);
         if (ppa != Convert_address_to_ppa(addr))
           PRINT_ERROR("Inconsistency in the global mapping table when locking an LPA!")
-        Set_barrier_for_accessing_lpa(block->Stream_id, lpa);
+        Set_barrier_for_accessing_lpa(block.Stream_id, lpa);
       }
     }
   }
@@ -1415,8 +1434,9 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_mvpn(stream_id_typ
     if (ppn == NO_MPPN)
       PRINT_ERROR("Reading an invalid physical flash page address in function generate_flash_read_request_for_mapping_data!")
 
-      auto* readTR = new NVM_Transaction_Flash_RD(Transaction_Source_Type::MAPPING, stream_id,
-        SECTOR_SIZE_IN_BYTE, NO_LPA, NO_PPA, nullptr, mvpn, ((page_status_type)0x1) << sector_no_per_page, CurrentTimeStamp);
+    auto* readTR = _make_mapping_read_tr(stream_id, SECTOR_SIZE_IN_BYTE, mvpn,
+                                         ((page_status_type)0x1) << sector_no_per_page);
+
     Convert_ppa_to_address(ppn, readTR->Address);
     readTR->PPA = ppn;
     __stats.Total_flash_reads_for_mapping++;
@@ -1454,8 +1474,15 @@ Address_Mapping_Unit_Page_Level::Remove_barrier_for_accessing_mvpn(stream_id_typ
 
     //Read the unchaged mapping entries from flash to merge them with updated parts of MVPN
     MPPN_type mppn = domain.GlobalTranslationDirectory[mvpn].MPPN;
-    auto* writeTR = new NVM_Transaction_Flash_WR(Transaction_Source_Type::MAPPING, stream_id, SECTOR_SIZE_IN_BYTE * sector_no_per_page,
-      mvpn, mppn, nullptr, mvpn, nullptr, (((page_status_type)0x1) << sector_no_per_page) - 1, CurrentTimeStamp);
+    auto* writeTR = new NvmTransactionFlashWR(Transaction_Source_Type::MAPPING,
+                                              stream_id,
+                                              SECTOR_SIZE_IN_BYTE * sector_no_per_page,
+                                              nullptr,
+                                              mvpn,
+                                              (((page_status_type)0x1) << sector_no_per_page) - 1,
+                                              CurrentTimeStamp,
+                                              mvpn,
+                                              mppn);
 
 
     __stats.Total_flash_reads_for_mapping++;
@@ -1495,7 +1522,7 @@ Address_Mapping_Unit_Page_Level::Start_servicing_writes_for_overfull_plane(const
 // Over-ridden from Address_Mapping_Unit_Base on protected
 // -------------------------------------------------------
 bool
-Address_Mapping_Unit_Page_Level::query_cmt(NVM_Transaction_Flash* transaction)
+Address_Mapping_Unit_Page_Level::query_cmt(NvmTransactionFlash* transaction)
 {
   stream_id_type stream_id = transaction->Stream_id;
   __stats.total_CMT_queries++;
@@ -1566,7 +1593,7 @@ Address_Mapping_Unit_Page_Level::query_cmt(NVM_Transaction_Flash* transaction)
         __stats.total_readTR_CMT_queries_per_stream[stream_id]++;
         __stats.readTR_CMT_miss++;
         __stats.readTR_CMT_miss_per_stream[stream_id]++;
-        domain.Waiting_unmapped_read_transactions.insert(std::pair<LPA_type, NVM_Transaction_Flash*>(transaction->LPA, transaction));
+        domain.Waiting_unmapped_read_transactions.insert(std::pair<LPA_type, NvmTransactionFlash*>(transaction->LPA, transaction));
       }
       else//This is a write transaction
       {
@@ -1574,7 +1601,7 @@ Address_Mapping_Unit_Page_Level::query_cmt(NVM_Transaction_Flash* transaction)
         __stats.total_writeTR_CMT_queries_per_stream[stream_id]++;
         __stats.writeTR_CMT_miss++;
         __stats.writeTR_CMT_miss_per_stream[stream_id]++;
-        domain.Waiting_unmapped_program_transactions.insert(std::pair<LPA_type, NVM_Transaction_Flash*>(transaction->LPA, transaction));
+        domain.Waiting_unmapped_program_transactions.insert(std::pair<LPA_type, NvmTransactionFlash*>(transaction->LPA, transaction));
       }
     }
     return false;
@@ -1598,9 +1625,9 @@ Address_Mapping_Unit_Page_Level::online_create_entry_for_reads(LPA_type lpa, con
 }
 
 void
-Address_Mapping_Unit_Page_Level::manage_user_transaction_facing_barrier(NVM_Transaction_Flash* transaction)
+Address_Mapping_Unit_Page_Level::manage_user_transaction_facing_barrier(NvmTransactionFlash* transaction)
 {
-  std::pair<LPA_type, NVM_Transaction_Flash*> entry(transaction->LPA, transaction);
+  std::pair<LPA_type, NvmTransactionFlash*> entry(transaction->LPA, transaction);
   if (transaction->Type == Transaction_Type::READ)
     domains[transaction->Stream_id].Read_transactions_behind_LPA_barrier.insert(entry);
   else

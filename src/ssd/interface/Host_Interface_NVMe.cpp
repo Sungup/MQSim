@@ -1,8 +1,8 @@
 #include <stdexcept>
 #include "../../sim/Engine.h"
 #include "Host_Interface_NVMe.h"
-#include "../NVM_Transaction_Flash_RD.h"
-#include "../NVM_Transaction_Flash_WR.h"
+#include "../NvmTransactionFlashRD.h"
+#include "../NvmTransactionFlashWR.h"
 
 
 namespace SSD_Components
@@ -82,35 +82,36 @@ namespace SSD_Components
   inline void Input_Stream_Manager_NVMe::Handle_serviced_request(UserRequest* request)
   {
     stream_id_type stream_id = request->Stream_id;
-    ((Input_Stream_NVMe*)input_streams[request->Stream_id])->Waiting_user_requests.remove(request);
-    ((Input_Stream_NVMe*)input_streams[stream_id])->On_the_fly_requests--;
+    auto* stream = (Input_Stream_NVMe*)input_streams[stream_id];
 
-    PRINT_DEBUG("** Host Interface: Request #" << request->ID << " from stream #" << request->Stream_id << " is finished")
+    stream->Waiting_user_requests.remove(request);
+    stream->On_the_fly_requests--;
+
+    PRINT_DEBUG("** Host Interface: Request #" << request->ID << " from stream #" << stream_id << " is finished")
 
     if (request->Type == UserRequestType::READ)//If this is a read request, then the read data should be written to host memory
       ((Host_Interface_NVMe*)host_interface)->request_fetch_unit->Send_read_data(request);
 
-    if (((Input_Stream_NVMe*)input_streams[stream_id])->Submission_head != ((Input_Stream_NVMe*)input_streams[stream_id])->Submission_tail)//there are waiting requests in the submission queue but have not been fetched, due to Queue_fetch_size limit
+    if (stream->Submission_head != stream->Submission_tail)//there are waiting requests in the submission queue but have not been fetched, due to Queue_fetch_size limit
     {
       ((Host_Interface_NVMe*)host_interface)->request_fetch_unit->Fetch_next_request(stream_id);
-      ((Input_Stream_NVMe*)input_streams[stream_id])->On_the_fly_requests++;
-      ((Input_Stream_NVMe*)input_streams[stream_id])->Submission_head++;//Update submission queue head after starting fetch request
-      if (((Input_Stream_NVMe*)input_streams[stream_id])->Submission_head == ((Input_Stream_NVMe*)input_streams[stream_id])->Submission_queue_size)//Circular queue implementation
-        ((Input_Stream_NVMe*)input_streams[stream_id])->Submission_head = 0;
+      stream->On_the_fly_requests++;
+      stream->Submission_head++;//Update submission queue head after starting fetch request
+      if (stream->Submission_head == stream->Submission_queue_size)//Circular queue implementation
+        stream->Submission_head = 0;
     }
 
-    if (((Input_Stream_NVMe*)input_streams[stream_id])->Completion_head > ((Input_Stream_NVMe*)input_streams[stream_id])->Completion_tail)//Check if completion queue is full
+    if (stream->Completion_head > stream->Completion_tail)//Check if completion queue is full
     {
-      if (((Input_Stream_NVMe*)input_streams[stream_id])->Completion_tail + 1 == ((Input_Stream_NVMe*)input_streams[stream_id])->Completion_head)//completion queue is full
+      if (stream->Completion_tail + 1 == stream->Completion_head)//completion queue is full
       {
-        ((Input_Stream_NVMe*)input_streams[stream_id])->Completed_user_requests.push_back(request);//Wait while the completion queue is full
+        stream->Completed_user_requests.push_back(request);//Wait while the completion queue is full
         return;
       }
     }
-    else if(((Input_Stream_NVMe*)input_streams[stream_id])->Completion_tail - ((Input_Stream_NVMe*)input_streams[stream_id])->Completion_head 
-      == ((Input_Stream_NVMe*)input_streams[stream_id])->Completion_queue_size -1)
+    else if(stream->Completion_tail - stream->Completion_head == stream->Completion_queue_size -1)
     {
-      ((Input_Stream_NVMe*)input_streams[stream_id])->Completed_user_requests.push_back(request);//Wait while the completion queue is full
+      stream->Completed_user_requests.push_back(request);//Wait while the completion queue is full
       return;
     }
 
@@ -135,10 +136,12 @@ namespace SSD_Components
 
   inline void Input_Stream_Manager_NVMe::inform_host_request_completed(stream_id_type stream_id, UserRequest* request)
   {
-    ((Request_Fetch_Unit_NVMe*)((Host_Interface_NVMe*)host_interface)->request_fetch_unit)->Send_completion_queue_element(request, ((Input_Stream_NVMe*)input_streams[stream_id])->Submission_head_informed_to_host);
-    ((Input_Stream_NVMe*)input_streams[stream_id])->Completion_tail++;//Next free slot in the completion queue
-    if (((Input_Stream_NVMe*)input_streams[stream_id])->Completion_tail == ((Input_Stream_NVMe*)input_streams[stream_id])->Completion_queue_size)//Circular queue implementation
-      ((Input_Stream_NVMe*)input_streams[stream_id])->Completion_tail = 0;
+    auto* stream = (Input_Stream_NVMe*)input_streams[stream_id];
+
+    ((Request_Fetch_Unit_NVMe*)((Host_Interface_NVMe*)host_interface)->request_fetch_unit)->Send_completion_queue_element(request, stream->Submission_head_informed_to_host);
+    stream->Completion_tail++;//Next free slot in the completion queue
+    if (stream->Completion_tail == stream->Completion_queue_size)//Circular queue implementation
+      stream->Completion_tail = 0;
   }
   
   void Input_Stream_Manager_NVMe::segment_user_request(UserRequest* user_request)
@@ -150,14 +153,14 @@ namespace SSD_Components
     page_status_type access_status_bitmap = 0;
     uint32_t hanled_sectors_count = 0;
     uint32_t transaction_size = 0;
+
+    auto* stream = (Input_Stream_NVMe*)input_streams[user_request->Stream_id];
     while (hanled_sectors_count < req_size)
     {      
       //Check if LSA is in the correct range allocted to the stream
-      if (lsa < ((Input_Stream_NVMe*)input_streams[user_request->Stream_id])->Start_logical_sector_address || lsa >((Input_Stream_NVMe*)input_streams[user_request->Stream_id])->End_logical_sector_address)
-        lsa = ((Input_Stream_NVMe*)input_streams[user_request->Stream_id])->Start_logical_sector_address
-        + (lsa % (((Input_Stream_NVMe*)input_streams[user_request->Stream_id])->End_logical_sector_address - (((Input_Stream_NVMe*)input_streams[user_request->Stream_id])->Start_logical_sector_address)));
-      LHA_type internal_lsa = lsa - ((Input_Stream_NVMe*)input_streams[user_request->Stream_id])->Start_logical_sector_address;//For each flow, all lsa's should be translated into a range starting from zero
-      
+      if (lsa < stream->Start_logical_sector_address || lsa >stream->End_logical_sector_address)
+        lsa = stream->Start_logical_sector_address + (lsa % (stream->End_logical_sector_address - (stream->Start_logical_sector_address)));
+      LHA_type internal_lsa = lsa - stream->Start_logical_sector_address;//For each flow, all lsa's should be translated into a range starting from zero
 
       transaction_size = host_interface->sectors_per_page - (uint32_t)(lsa % host_interface->sectors_per_page);
       if (hanled_sectors_count + transaction_size >= req_size)
@@ -170,19 +173,11 @@ namespace SSD_Components
       access_status_bitmap = temp << (uint32_t)(internal_lsa % host_interface->sectors_per_page);
 
       if (user_request->Type == UserRequestType::READ)
-      {
-        auto* transaction = new NVM_Transaction_Flash_RD(Transaction_Source_Type::USERIO, user_request->Stream_id,
-          transaction_size * SECTOR_SIZE_IN_BYTE, lpa, NO_PPA, user_request, 0, access_status_bitmap, CurrentTimeStamp);
-        user_request->Transaction_list.push_back(transaction);
-        input_streams[user_request->Stream_id]->STAT_rd_transactions++;
-      }
-      else //user_request->Type == UserRequestType::WRITE
-      {
-        auto* transaction = new NVM_Transaction_Flash_WR(Transaction_Source_Type::USERIO, user_request->Stream_id,
-          transaction_size * SECTOR_SIZE_IN_BYTE, lpa, user_request, 0, access_status_bitmap, CurrentTimeStamp);
-        user_request->Transaction_list.push_back(transaction);
-        input_streams[user_request->Stream_id]->STAT_wr_transactions++;
-      }
+        _make_read_tr(user_request, user_request->Stream_id, transaction_size,
+                      access_status_bitmap, lpa);
+      else
+        _make_write_tr(user_request, user_request->Stream_id, transaction_size,
+                       access_status_bitmap, lpa);
 
       lsa = lsa + transaction_size;
       hanled_sectors_count += transaction_size;      

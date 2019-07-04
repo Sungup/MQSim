@@ -1,5 +1,8 @@
-#include <string>
 #include "TSU_Base.h"
+
+#include <string>
+
+#include "../FTL.h"
 
 using namespace SSD_Components;
 
@@ -39,7 +42,7 @@ void TSU_Base::Setup_triggers()
 }
 
 force_inline void
-TSU_Base::__handle_transaction_serviced_signal(NVM_Transaction_Flash* /* transaction */)
+TSU_Base::__handle_transaction_serviced_signal(NvmTransactionFlash* /* transaction */)
 { /* TSU does nothing. The generator of the transaction will handle it. */ }
 
 force_inline void

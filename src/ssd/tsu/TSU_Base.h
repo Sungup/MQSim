@@ -7,7 +7,6 @@
 #include "../../sim/Sim_Object.h"
 #include "../../nvm_chip/flash_memory/Flash_Chip.h"
 #include "../../sim/Sim_Reporter.h"
-#include "../FTL.h"
 #include "../phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../Flash_Transaction_Queue.h"
 
@@ -43,7 +42,7 @@ namespace SSD_Components
     * and die-interleaved execution.
     */
     virtual void Prepare_for_transaction_submit() = 0;
-    virtual void Submit_transaction(NVM_Transaction_Flash* transaction) = 0;
+    virtual void Submit_transaction(NvmTransactionFlash* transaction) = 0;
     
     /* Shedules the transactions currently stored in inputTransactionSlots. The transactions could
     * be mixes of reads, writes, and erases.
@@ -55,7 +54,7 @@ namespace SSD_Components
     ChannelIdleSignalHandler<TSU_Base>  __channel_idle_signal_handler;
     ChipIdleSignalHandler<TSU_Base>     __chip_idle_signal_handler;
 
-    void __handle_transaction_serviced_signal(NVM_Transaction_Flash* transaction);
+    void __handle_transaction_serviced_signal(NvmTransactionFlash* transaction);
     void __handle_channel_idle_signal(flash_channel_ID_type channelID);
     void __handle_chip_idle_signal(const NVM::FlashMemory::Flash_Chip& chip);
 
@@ -85,8 +84,8 @@ namespace SSD_Components
     flash_chip_ID_type* __channel_rr_turn;//Used for round-robin service of the chips in channels
 
   protected:
-    std::list<NVM_Transaction_Flash*> transaction_receive_slots;//Stores the transactions that are received for sheduling
-    std::list<NVM_Transaction_Flash*> transaction_dispatch_slots;//Used to submit transactions to the channel controller
+    std::list<NvmTransactionFlash*> transaction_receive_slots;//Stores the transactions that are received for sheduling
+    std::list<NvmTransactionFlash*> transaction_dispatch_slots;//Used to submit transactions to the channel controller
     virtual bool service_read_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
     virtual bool service_write_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
     virtual bool service_erase_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;

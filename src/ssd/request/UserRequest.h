@@ -20,7 +20,7 @@ namespace SSD_Components
     WRITE
   };
 
-  class NVM_Transaction;
+  class NvmTransaction;
   class UserRequestBase
   {
   public:
@@ -31,7 +31,7 @@ namespace SSD_Components
     sim_time_type STAT_InitiationTime;
     sim_time_type STAT_ResponseTime;
 
-    std::list<NVM_Transaction*> Transaction_list;
+    std::list<NvmTransaction*> Transaction_list;
     uint32_t Sectors_serviced_from_cache;
 
     uint32_t Size_in_byte;

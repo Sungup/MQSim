@@ -9,8 +9,6 @@
 #include "../utils/InlineTools.h"
 #include "../utils/Workload_Statistics.h"
 
-#include "NVM_Transaction.h"
-
 namespace SSD_Components
 {
   class Data_Cache_Manager_Base;

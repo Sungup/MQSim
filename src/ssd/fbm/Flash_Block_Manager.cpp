@@ -1,7 +1,8 @@
+#include "Flash_Block_Manager.h"
 
 #include "../../nvm_chip/flash_memory/Physical_Page_Address.h"
-#include "Flash_Block_Manager.h"
 #include "../Stats.h"
+#include "../gc_and_wl/GC_and_WL_Unit_Base.h"
 
 namespace SSD_Components
 {
@@ -123,9 +124,9 @@ namespace SSD_Components
     plane_record.Invalid_pages_count -= block.Invalid_page_count;
 
 #ifdef GATHER_BLOCK_ERASE_HISTO
-    __stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]--;
+    _stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]--;
     block.Erase();
-    __stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]++;
+    _stats.Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block.Erase_count]++;
 #else
     block.Erase();
 #endif

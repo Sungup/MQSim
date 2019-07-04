@@ -1,16 +1,17 @@
 #ifndef ADDRESS_MAPPING_UNIT_BASE_H
 #define ADDRESS_MAPPING_UNIT_BASE_H
 
+#include <map>
+
 #include "../../sim/Sim_Object.h"
 #include "../../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
 #include "../SSD_Defs.h"
-#include "../NVM_Transaction_Flash.h"
+#include "../NvmTransactionFlash.h"
 #include "../phy/NVM_PHY_ONFI_NVDDR2.h"
-#include "../FTL.h"
-#include "../fbm/Flash_Block_Manager_Base.h"
-#include "AddressMappingUnitDefs.h"
 #include "../Stats.h"
+
+#include "AddressMappingUnitDefs.h"
 
 namespace SSD_Components
 {
@@ -83,7 +84,7 @@ namespace SSD_Components
     virtual LPA_type Get_logical_pages_count(stream_id_type stream_id) = 0;
 
     //Address translation functions
-    virtual void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactionList) = 0;
+    virtual void Translate_lpa_to_ppa_and_dispatch(const std::list<NvmTransaction*>& transactionList) = 0;
 
     virtual void Get_data_mapping_info_for_gc(stream_id_type stream_id,
                                               LPA_type lpa,
@@ -95,7 +96,7 @@ namespace SSD_Components
                                                      MPPN_type& mppa,
                                                      sim_time_type& timestamp) = 0;
 
-    virtual void Allocate_new_page_for_gc(NVM_Transaction_Flash_WR* transaction,
+    virtual void Allocate_new_page_for_gc(NvmTransactionFlashWR* transaction,
                                           bool is_translation_page) = 0;
 
     virtual NVM::FlashMemory::Physical_Page_Address Convert_ppa_to_address(PPA_type ppa) = 0;
@@ -165,14 +166,21 @@ namespace SSD_Components
     virtual void Start_servicing_writes_for_overfull_plane(NVM::FlashMemory::Physical_Page_Address plane_address) = 0;
 
   protected:
-    virtual bool query_cmt(NVM_Transaction_Flash* transaction) = 0;
+    NvmTransactionFlashRD* _make_mapping_read_tr(stream_id_type stream_id,
+                                                 uint32_t data_size,
+                                                 NVM::memory_content_type content,
+                                                 page_status_type read_sectors_bitmap,
+                                                 LPA_type lpa = NO_LPA,
+                                                 PPA_type ppa = NO_PPA);
+
+    virtual bool query_cmt(NvmTransactionFlash* transaction) = 0;
 
     virtual PPA_type online_create_entry_for_reads(LPA_type lpa,
                                                    stream_id_type stream_id,
                                                    NVM::FlashMemory::Physical_Page_Address& read_address,
                                                    uint64_t read_sectors_bitmap) = 0;
 
-    virtual void manage_user_transaction_facing_barrier(NVM_Transaction_Flash* transaction) = 0;
+    virtual void manage_user_transaction_facing_barrier(NvmTransactionFlash* transaction) = 0;
 
     virtual void manage_mapping_transaction_facing_barrier(stream_id_type stream_id,
                                                            MVPN_type mvpn,
@@ -184,6 +192,27 @@ namespace SSD_Components
     virtual bool is_mvpn_locked_for_gc(stream_id_type stream_id,
                                        MVPN_type mvpn) = 0;
   };
+
+  force_inline NvmTransactionFlashRD*
+  Address_Mapping_Unit_Base::_make_mapping_read_tr(stream_id_type stream_id,
+                                                   uint32_t data_size,
+                                                   NVM::memory_content_type content,
+                                                   page_status_type read_sectors_bitmap,
+                                                   LPA_type lpa,
+                                                   PPA_type ppa)
+  {
+    auto* tr = new NvmTransactionFlashRD(Transaction_Source_Type::MAPPING,
+                                         stream_id,
+                                         data_size,
+                                         nullptr,
+                                         content,
+                                         read_sectors_bitmap,
+                                         CurrentTimeStamp,
+                                         lpa,
+                                         ppa);
+
+    return tr;
+  }
 }
 
 #endif // !ADDRESS_MAPPING_UNIT_BASE_H

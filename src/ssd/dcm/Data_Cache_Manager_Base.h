@@ -55,7 +55,7 @@ namespace SSD_Components
 
   protected:
     void broadcast_user_request_serviced_signal(UserRequest* user_request);
-    void broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction);
+    void broadcast_user_memory_transaction_serviced_signal(NvmTransaction* transaction);
 
     virtual void process_new_user_request(UserRequest* user_request) = 0;
 

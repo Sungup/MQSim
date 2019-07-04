@@ -49,7 +49,7 @@ Data_Cache_Manager_Base::broadcast_user_request_serviced_signal(UserRequest* req
 }
 
 void
-Data_Cache_Manager_Base::broadcast_user_memory_transaction_serviced_signal(NVM_Transaction* transaction)
+Data_Cache_Manager_Base::broadcast_user_memory_transaction_serviced_signal(NvmTransaction* transaction)
 {
   for (auto handler : __user_mem_tr_svc_handler)
     (*handler)(transaction);

@@ -43,12 +43,6 @@ namespace Host_Components
         {
         case 0:
           throw std::logic_error("I/O queue id 0 is reserved for NVMe admin queues and should not be used for I/O flows");
-          /*
-          nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_0;
-          nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_0;
-          nvme_queue_pair.Completion_queue_tail = COMPLETION_QUEUE_REGISTER_0;*/
-          nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_REGISTER_0;
-          break;
         case 1:
           nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_1;
           nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_1;

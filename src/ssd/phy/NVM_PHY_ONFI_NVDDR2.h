@@ -35,13 +35,13 @@ namespace SSD_Components
      */
     // The current command that is executing on the die
     NVM::FlashMemory::FlashCommand* __active_cmd;
-    std::list<NVM_Transaction_Flash*> __active_transactions;
+    std::list<NvmTransactionFlash*> __active_transactions;
 
     NVM::FlashMemory::FlashCommand* __suspended_cmd;
-    std::list<NVM_Transaction_Flash*> __suspended_transactions;
+    std::list<NvmTransactionFlash*> __suspended_transactions;
 
     // The current transaction
-    NVM_Transaction_Flash* __active_transfer;
+    NvmTransactionFlash* __active_transfer;
 
     bool __free;
 
@@ -115,7 +115,7 @@ namespace SSD_Components
 
     void transfer_read_data_from_chip(ChipBookKeepingEntry& chipBKE,
                                       DieBookKeepingEntry& dieBKE,
-                                      NVM_Transaction_Flash* tr);
+                                      NvmTransactionFlash* tr);
 
     void perform_interleaved_cmd_data_transfer(NVM::FlashMemory::Flash_Chip& chip,
                                                DieBookKeepingEntry& bookKeepingEntry);
@@ -158,10 +158,10 @@ namespace SSD_Components
     bool HasSuspendedCommand(const NVM::FlashMemory::Flash_Chip& chip) final;
 
     sim_time_type Expected_finish_time(const NVM::FlashMemory::Flash_Chip& chip) final;
-    sim_time_type Expected_finish_time(NVM_Transaction_Flash* transaction) final;
-    sim_time_type Expected_transfer_time(NVM_Transaction_Flash* transaction) final;
+    sim_time_type Expected_finish_time(NvmTransactionFlash* transaction) final;
+    sim_time_type Expected_transfer_time(NvmTransactionFlash* transaction) final;
 
-    void Send_command_to_chip(std::list<NVM_Transaction_Flash*>& transactionList) final;
+    void Send_command_to_chip(std::list<NvmTransactionFlash*>& transactionList) final;
 
     void Change_flash_page_status_for_preconditioning(const NVM::FlashMemory::Physical_Page_Address& page_address,
                                                       LPA_type lpa) final;
@@ -174,12 +174,12 @@ namespace SSD_Components
     void Execute_simulator_event(MQSimEngine::SimEvent*) final;
 
     /// 4. Non-override functions
-    NVM_Transaction_Flash* Is_chip_busy_with_stream(NVM_Transaction_Flash* transaction);
-    bool Is_chip_busy(NVM_Transaction_Flash* transaction);
+    NvmTransactionFlash* Is_chip_busy_with_stream(NvmTransactionFlash* transaction);
+    bool Is_chip_busy(NvmTransactionFlash* transaction);
   };
 
-  force_inline NVM_Transaction_Flash*
-  NVM_PHY_ONFI_NVDDR2::Is_chip_busy_with_stream(NVM_Transaction_Flash* transaction)
+  force_inline NvmTransactionFlash*
+  NVM_PHY_ONFI_NVDDR2::Is_chip_busy_with_stream(NvmTransactionFlash* transaction)
   {
     auto& chipBKE = bookKeepingTable[transaction->Address.ChannelID][transaction->Address.ChipID];
     stream_id_type stream_id = transaction->Stream_id;
@@ -193,7 +193,7 @@ namespace SSD_Components
   }
 
   force_inline bool
-  NVM_PHY_ONFI_NVDDR2::Is_chip_busy(NVM_Transaction_Flash* transaction)
+  NVM_PHY_ONFI_NVDDR2::Is_chip_busy(NvmTransactionFlash* transaction)
   {
     auto& chipBKE = bookKeepingTable[transaction->Address.ChannelID][transaction->Address.ChipID];
     return (chipBKE.Status != ChipStatus::IDLE);

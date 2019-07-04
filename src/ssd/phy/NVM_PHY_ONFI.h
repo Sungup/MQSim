@@ -4,10 +4,10 @@
 #include <vector>
 #include "../../nvm_chip/flash_memory/FlashCommand.h"
 #include "../../nvm_chip/flash_memory/Flash_Chip.h"
-#include "../NVM_Transaction_Flash.h"
-#include "../NVM_Transaction_Flash_RD.h"
-#include "../NVM_Transaction_Flash_WR.h"
-#include "../NVM_Transaction_Flash_ER.h"
+#include "../NvmTransactionFlash.h"
+#include "../NvmTransactionFlashRD.h"
+#include "../NvmTransactionFlashWR.h"
+#include "../NvmTransactionFlashER.h"
 #include "NVM_PHY_Base.h"
 #include "../ONFI_Channel_Base.h"
 #include "../Stats.h"
@@ -43,7 +43,7 @@ namespace SSD_Components
     ChannelIdleSignalHandlerList __channel_idle_signal_handlers;
     ChipIdleSignalHandlerList    __chip_idle_signal_handlers;
 
-    void broadcastTransactionServicedSignal(NVM_Transaction_Flash* transaction);
+    void broadcastTransactionServicedSignal(NvmTransactionFlash* transaction);
     void broadcastChannelIdleSignal(flash_channel_ID_type);
     void broadcastChipIdleSignal(NVM::FlashMemory::Flash_Chip& chip);
 
@@ -80,12 +80,12 @@ namespace SSD_Components
     virtual bool HasSuspendedCommand(const NVM::FlashMemory::Flash_Chip& chip) = 0;
 
     virtual sim_time_type Expected_finish_time(const NVM::FlashMemory::Flash_Chip& chip) = 0;
-    virtual sim_time_type Expected_finish_time(NVM_Transaction_Flash* transaction) = 0;
-    virtual sim_time_type Expected_transfer_time(NVM_Transaction_Flash* transaction) = 0;
+    virtual sim_time_type Expected_finish_time(NvmTransactionFlash* transaction) = 0;
+    virtual sim_time_type Expected_transfer_time(NvmTransactionFlash* transaction) = 0;
 
     // Provides communication between controller and NVM chips for a simple
     // read/write/erase command.
-    virtual void Send_command_to_chip(std::list<NVM_Transaction_Flash*>& transactionList) = 0;
+    virtual void Send_command_to_chip(std::list<NvmTransactionFlash*>& transactionList) = 0;
 
     virtual void Change_flash_page_status_for_preconditioning(const NVM::FlashMemory::Physical_Page_Address& page_address,
                                                               LPA_type lpa) = 0;
@@ -93,7 +93,7 @@ namespace SSD_Components
   };
 
   force_inline void
-  NVM_PHY_ONFI::broadcastTransactionServicedSignal(NVM_Transaction_Flash* transaction)
+  NVM_PHY_ONFI::broadcastTransactionServicedSignal(NvmTransactionFlash* transaction)
   {
     for (auto& handler : __transaction_service_handlers)
       (*handler)(transaction);

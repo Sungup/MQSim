@@ -8,11 +8,15 @@
 #include "../../host/PCIe_Switch.h"
 #include "../../host/PCIe_Message.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
-#include <stdint.h>
+
+// Renewed Headers
+#include <cstdint>
 #include <cstring>
 
 #include "HostInterfaceHandler.h"
 #include "../phy/PhyHandler.h"
+#include "../NvmTransactionFlashRD.h"
+#include "../NvmTransactionFlashWR.h"
 
 namespace Host_Components
 {
@@ -67,8 +71,8 @@ namespace SSD_Components
     sim_time_type STAT_total_rd_turnaround_time() const;
     sim_time_type STAT_total_wr_turnaround_time() const;
 
-    void accumulate_rd_transaction_time(NVM_Transaction* tr);
-    void accumulate_wr_transaction_time(NVM_Transaction* tr);
+    void accumulate_rd_transaction_time(NvmTransaction* tr);
+    void accumulate_wr_transaction_time(NvmTransaction* tr);
 
     DEFINE_ISB_AVG_IO_OPERATION_TIME(rd, execution);
     DEFINE_ISB_AVG_IO_OPERATION_TIME(rd, transfer);
@@ -112,7 +116,7 @@ namespace SSD_Components
   }
 
   force_inline void
-  Input_Stream_Base::accumulate_rd_transaction_time(NVM_Transaction* tr)
+  Input_Stream_Base::accumulate_rd_transaction_time(NvmTransaction* tr)
   {
     STAT_total_rd_execution_time += tr->STAT_execution_time;
     STAT_total_rd_transfer_time  += tr->STAT_transfer_time;
@@ -120,7 +124,7 @@ namespace SSD_Components
   }
 
   force_inline void
-  Input_Stream_Base::accumulate_wr_transaction_time(NVM_Transaction* tr)
+  Input_Stream_Base::accumulate_wr_transaction_time(NvmTransaction* tr)
   {
     STAT_total_wr_execution_time += tr->STAT_execution_time;
     STAT_total_wr_transfer_time  += tr->STAT_transfer_time;
@@ -160,6 +164,19 @@ namespace SSD_Components
     virtual void segment_user_request(UserRequest* user_request) = 0;
     std::vector<Input_Stream_Base*> input_streams;
 
+  protected:
+    NvmTransactionFlashRD* _make_read_tr(UserRequest* request,
+                                         stream_id_type stream_id,
+                                         uint32_t transaction_size,
+                                         page_status_type access_status_bitmap,
+                                         LPA_type lpa);
+
+    NvmTransactionFlashWR* _make_write_tr(UserRequest* request,
+                                          stream_id_type stream_id,
+                                          uint32_t transaction_size,
+                                          page_status_type access_status_bitmap,
+                                          LPA_type lpa);
+
   public:
     Input_Stream_Manager_Base(Host_Interface_Base* host_interface);
     virtual ~Input_Stream_Manager_Base();
@@ -167,7 +184,7 @@ namespace SSD_Components
     virtual void Handle_arrived_write_data(UserRequest* request) = 0;
     virtual void Handle_serviced_request(UserRequest* request) = 0;
 
-    void Update_transaction_statistics(NVM_Transaction* transaction);
+    void Update_transaction_statistics(NvmTransaction* transaction);
 
     DEFINE_ISMB_AVG_IO_OPERATION_TIME(rd, turnaround);
     DEFINE_ISMB_AVG_IO_OPERATION_TIME(rd, execution);
@@ -192,8 +209,54 @@ namespace SSD_Components
       delete stream;
   }
 
+  force_inline NvmTransactionFlashRD*
+  Input_Stream_Manager_Base::_make_read_tr(UserRequest *request,
+                                           stream_id_type stream_id,
+                                           uint32_t transaction_size,
+                                           page_status_type access_status_bitmap,
+                                           LPA_type lpa)
+  {
+    auto* tr = new NvmTransactionFlashRD(Transaction_Source_Type::USERIO,
+                                         stream_id,
+                                         transaction_size * SECTOR_SIZE_IN_BYTE,
+                                         request,
+                                         0,
+                                         access_status_bitmap,
+                                         CurrentTimeStamp,
+                                         lpa);
+
+    request->Transaction_list.emplace_back(tr);
+
+    input_streams[stream_id]->STAT_rd_transactions++;
+
+    return tr;
+  }
+
+  force_inline NvmTransactionFlashWR*
+  Input_Stream_Manager_Base::_make_write_tr(SSD_Components::UserRequest *request,
+                                            stream_id_type stream_id,
+                                            uint32_t transaction_size,
+                                            page_status_type access_status_bitmap,
+                                            LPA_type lpa)
+  {
+    auto* tr  = new NvmTransactionFlashWR(Transaction_Source_Type::USERIO,
+                                          stream_id,
+                                          transaction_size * SECTOR_SIZE_IN_BYTE,
+                                          request,
+                                          0,
+                                          access_status_bitmap,
+                                          CurrentTimeStamp,
+                                          lpa);
+
+    request->Transaction_list.emplace_back(tr);
+
+    input_streams[stream_id]->STAT_wr_transactions++;
+
+    return tr;
+  }
+
   force_inline void
-  Input_Stream_Manager_Base::Update_transaction_statistics(NVM_Transaction* transaction)
+  Input_Stream_Manager_Base::Update_transaction_statistics(NvmTransaction* transaction)
   {
     switch (transaction->Type)
     {
@@ -299,7 +362,7 @@ namespace SSD_Components
     void broadcast_user_request_arrival_signal(UserRequest* user_request);
 
     void __handle_user_request_signal_from_cache(UserRequest* request);
-    void __handle_user_transaction_signal_from_cache(NVM_Transaction* transaction);
+    void __handle_user_transaction_signal_from_cache(NvmTransaction* transaction);
 
   public:
     Host_Interface_Base(const sim_object_id_type& id,

@@ -23,10 +23,10 @@ namespace SSD_Components
     int Bring_to_CMT_for_preconditioning(stream_id_type stream_id, LPA_type lpa);
     uint32_t Get_cmt_capacity();
     uint32_t Get_current_cmt_occupancy_for_stream(stream_id_type stream_id);
-    void Translate_lpa_to_ppa_and_dispatch(const std::list<NVM_Transaction*>& transactionList);
+    void Translate_lpa_to_ppa_and_dispatch(const std::list<NvmTransaction*>& transactionList);
     void Get_data_mapping_info_for_gc(const stream_id_type stream_id, const LPA_type lpa, PPA_type& ppa, page_status_type& page_state);
     void Get_translation_mapping_info_for_gc(const stream_id_type stream_id, const MVPN_type mvpn, MPPN_type& mppa, sim_time_type& timestamp);
-    void Allocate_new_page_for_gc(NVM_Transaction_Flash_WR* transaction, bool is_translation_page);
+    void Allocate_new_page_for_gc(NvmTransactionFlashWR* transaction, bool is_translation_page);
 
     void Store_mapping_table_on_flash_at_start();
     LPA_type Get_logical_pages_count(stream_id_type stream_id);
@@ -41,9 +41,9 @@ namespace SSD_Components
     void Remove_barrier_for_accessing_mvpn(stream_id_type stream_id, MVPN_type mpvn);
     void Start_servicing_writes_for_overfull_plane(const NVM::FlashMemory::Physical_Page_Address plane_address);
   private:
-    bool query_cmt(NVM_Transaction_Flash* transaction);
+    bool query_cmt(NvmTransactionFlash* transaction);
     PPA_type online_create_entry_for_reads(LPA_type lpa, const stream_id_type stream_id, NVM::FlashMemory::Physical_Page_Address& read_address, uint64_t read_sectors_bitmap);
-    void manage_user_transaction_facing_barrier(NVM_Transaction_Flash* transaction);
+    void manage_user_transaction_facing_barrier(NvmTransactionFlash* transaction);
     void manage_mapping_transaction_facing_barrier(stream_id_type stream_id, MVPN_type mvpn, bool read);
     bool is_lpa_locked_for_gc(stream_id_type stream_id, LPA_type lpa);
     bool is_mvpn_locked_for_gc(stream_id_type stream_id, MVPN_type mvpn);

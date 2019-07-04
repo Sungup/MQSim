@@ -34,7 +34,7 @@ namespace SSD_Components
     statesEpoch[count].nEnterances++;
   }
 
-  void Queue_Probe::EnqueueRequest(NVM_Transaction* transaction)
+  void Queue_Probe::EnqueueRequest(NvmTransaction* transaction)
   {
 #if RUN_EXCEPTION_CHECK
     if (transaction == nullptr)
@@ -48,7 +48,7 @@ namespace SSD_Components
     setCount(count + 1);
   }
 
-  void Queue_Probe::DequeueRequest(NVM_Transaction* transaction)
+  void Queue_Probe::DequeueRequest(NvmTransaction* transaction)
   {
 #if RUN_EXCEPTION_CHECK
     if (transaction == nullptr)

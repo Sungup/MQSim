@@ -3,7 +3,7 @@
 
 #include <list>
 #include <string>
-#include "NVM_Transaction_Flash.h"
+#include "NvmTransactionFlash.h"
 #include "Queue_Probe.h"
 #include "../sim/Sim_Reporter.h"
 
@@ -14,7 +14,7 @@ namespace SSD_Components
   // TODO Change inheritencies because default list operators is not virtual
   //  function
   class Flash_Transaction_Queue
-    : public std::list<NVM_Transaction_Flash*>,
+    : public std::list<NvmTransactionFlash*>,
       public MQSimEngine::Sim_Reporter
   {
   private:
@@ -27,12 +27,12 @@ namespace SSD_Components
 
     void Set_id(const std::string& id);
 
-    void remove(list<NVM_Transaction_Flash*>::iterator const& itr_pos);
+    void remove(list<NvmTransactionFlash*>::iterator const& itr_pos);
 
-    void push_back(NVM_Transaction_Flash* const&);
-    void push_front(NVM_Transaction_Flash* const&);
-    std::list<NVM_Transaction_Flash*>::iterator insert(list<NVM_Transaction_Flash*>::iterator position, NVM_Transaction_Flash* const& transaction);
-    void remove(NVM_Transaction_Flash* const& transaction);
+    void push_back(NvmTransactionFlash* const&);
+    void push_front(NvmTransactionFlash* const&);
+    std::list<NvmTransactionFlash*>::iterator insert(list<NvmTransactionFlash*>::iterator position, NvmTransactionFlash* const& transaction);
+    void remove(NvmTransactionFlash* const& transaction);
     void pop_front();
 
     void Report_results_in_XML(std::string name_prefix,
@@ -46,7 +46,7 @@ namespace SSD_Components
 
   force_inline
   Flash_Transaction_Queue::Flash_Transaction_Queue()
-    : std::list<NVM_Transaction_Flash*>(),
+    : std::list<NvmTransactionFlash*>(),
       MQSimEngine::Sim_Reporter(),
       __id(),
       __queue_probe()
@@ -54,7 +54,7 @@ namespace SSD_Components
 
   force_inline
   Flash_Transaction_Queue::Flash_Transaction_Queue(std::string id)
-    : std::list<NVM_Transaction_Flash*>(),
+    : std::list<NvmTransactionFlash*>(),
       MQSimEngine::Sim_Reporter(),
       __id(std::move(id)),
       __queue_probe()
@@ -67,44 +67,44 @@ namespace SSD_Components
   }
 
   force_inline void
-  Flash_Transaction_Queue::remove(std::list<NVM_Transaction_Flash*>::iterator const& itr_pos)
+  Flash_Transaction_Queue::remove(std::list<NvmTransactionFlash*>::iterator const& itr_pos)
   {
     __queue_probe.DequeueRequest(*itr_pos);
-    list<NVM_Transaction_Flash*>::erase(itr_pos);
+    list<NvmTransactionFlash*>::erase(itr_pos);
   }
 
   force_inline void
-  Flash_Transaction_Queue::push_back(NVM_Transaction_Flash* const& transaction)
+  Flash_Transaction_Queue::push_back(NvmTransactionFlash* const& transaction)
   {
     __queue_probe.EnqueueRequest(transaction);
-    return list<NVM_Transaction_Flash*>::push_back(transaction);
+    return list<NvmTransactionFlash*>::push_back(transaction);
   }
 
   force_inline void
-  Flash_Transaction_Queue::push_front(NVM_Transaction_Flash* const& transaction)
+  Flash_Transaction_Queue::push_front(NvmTransactionFlash* const& transaction)
   {
     __queue_probe.EnqueueRequest(transaction);
-    return list<NVM_Transaction_Flash*>::push_front(transaction);
+    return list<NvmTransactionFlash*>::push_front(transaction);
   }
 
-  force_inline std::list<NVM_Transaction_Flash*>::iterator
-  Flash_Transaction_Queue::insert(std::list<NVM_Transaction_Flash*>::iterator position, NVM_Transaction_Flash* const& transaction)
+  force_inline std::list<NvmTransactionFlash*>::iterator
+  Flash_Transaction_Queue::insert(std::list<NvmTransactionFlash*>::iterator position, NvmTransactionFlash* const& transaction)
   {
     __queue_probe.EnqueueRequest(transaction);
-    return list<NVM_Transaction_Flash*>::insert(position, transaction);
+    return list<NvmTransactionFlash*>::insert(position, transaction);
   }
   force_inline void
-  Flash_Transaction_Queue::remove(NVM_Transaction_Flash* const& transaction)
+  Flash_Transaction_Queue::remove(NvmTransactionFlash* const& transaction)
   {
     __queue_probe.DequeueRequest(transaction);
-    return list<NVM_Transaction_Flash*>::remove(transaction);
+    return list<NvmTransactionFlash*>::remove(transaction);
   }
 
   force_inline void
   Flash_Transaction_Queue::pop_front()
   {
     __queue_probe.DequeueRequest(this->front());
-    list<NVM_Transaction_Flash*>::pop_front();
+    list<NvmTransactionFlash*>::pop_front();
   }
 
   force_inline void

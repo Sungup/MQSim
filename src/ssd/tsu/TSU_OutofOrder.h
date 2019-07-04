@@ -3,7 +3,7 @@
 
 #include <list>
 #include "TSU_Base.h"
-#include "../NVM_Transaction_Flash.h"
+#include "../NvmTransactionFlash.h"
 #include "../phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../FTL.h"
 
@@ -30,7 +30,7 @@ namespace SSD_Components
       bool EraseSuspensionEnabled, bool ProgramSuspensionEnabled);
     ~TSU_OutOfOrder();
     void Prepare_for_transaction_submit();
-    void Submit_transaction(NVM_Transaction_Flash* transaction);
+    void Submit_transaction(NvmTransactionFlash* transaction);
     void Schedule();
 
     void Start_simulation();

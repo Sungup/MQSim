@@ -7,7 +7,7 @@
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
 #include "../SSD_Defs.h"
 #include "Data_Cache_Manager_Base.h"
-#include "../NVM_Transaction_Flash.h"
+#include "../NvmTransactionFlash.h"
 
 namespace SSD_Components
 {

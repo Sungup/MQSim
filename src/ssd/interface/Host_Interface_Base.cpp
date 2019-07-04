@@ -38,7 +38,7 @@ Host_Interface_Base::__handle_user_request_signal_from_cache(UserRequest* reques
 }
 
 void
-Host_Interface_Base::__handle_user_transaction_signal_from_cache(NVM_Transaction* transaction)
+Host_Interface_Base::__handle_user_transaction_signal_from_cache(NvmTransaction* transaction)
 {
   input_stream_manager->Update_transaction_statistics(transaction);
 }

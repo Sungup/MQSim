@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include "../sim/Sim_Defs.h"
-#include "NVM_Transaction.h"
+#include "NvmTransaction.h"
 #include "../utils/XMLWriter.h"
 
 namespace SSD_Components
@@ -21,7 +21,7 @@ namespace SSD_Components
   class Queue_Probe
   {
   private:
-    typedef std::unordered_map<NVM_Transaction*, sim_time_type> TransactionTimeMap;
+    typedef std::unordered_map<NvmTransaction*, sim_time_type> TransactionTimeMap;
     uint32_t count = 0;
     unsigned long nRequests = 0;
     unsigned long nDepartures = 0;
@@ -42,8 +42,8 @@ namespace SSD_Components
 
   public:
     Queue_Probe();
-    void EnqueueRequest(NVM_Transaction* transaction);
-    void DequeueRequest(NVM_Transaction* transaction);
+    void EnqueueRequest(NvmTransaction* transaction);
+    void DequeueRequest(NvmTransaction* transaction);
     void ResetEpochStatistics();
     void Snapshot(std::string id, Utils::XmlWriter& writer);
     unsigned long NRequests();

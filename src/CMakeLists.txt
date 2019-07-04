@@ -99,13 +99,12 @@ set(MQSIM_SSD_SOURCES
     ssd/dcm/Data_Cache_Manager_Flash_Simple.cpp
     ssd/dcm/Data_Cache_Manager_Flash_Simple.h
     ssd/dcm/DataCacheDefs.h
+    ssd/fbm/BlockPoolSlotType.h
     ssd/fbm/Flash_Block_Manager.cpp
     ssd/fbm/Flash_Block_Manager.h
     ssd/fbm/Flash_Block_Manager_Base.cpp
     ssd/fbm/Flash_Block_Manager_Base.h
-    ssd/Flash_Transaction_Queue.h
-    ssd/FTL.cpp
-    ssd/FTL.h
+    ssd/fbm/PlaneBookKeepingType.h
     ssd/gc_and_wl/GC_and_WL_Unit_Base.cpp
     ssd/gc_and_wl/GC_and_WL_Unit_Base.h
     ssd/gc_and_wl/GC_and_WL_Unit_Page_Level.cpp
@@ -119,37 +118,37 @@ set(MQSIM_SSD_SOURCES
     ssd/interface/Host_Interface_SATA.cpp
     ssd/interface/Host_Interface_SATA.h
     ssd/interface/HostInterfaceHandler.h
-    ssd/NVM_Firmware.cpp
-    ssd/NVM_Firmware.h
     ssd/phy/NVM_PHY_Base.cpp
     ssd/phy/NVM_PHY_Base.h
     ssd/phy/NVM_PHY_ONFI.cpp
     ssd/phy/NVM_PHY_ONFI.h
     ssd/phy/NVM_PHY_ONFI_NVDDR2.cpp
     ssd/phy/NVM_PHY_ONFI_NVDDR2.h
-    ssd/NVM_Transaction.h
-    ssd/NVM_Transaction_Flash.cpp
-    ssd/NVM_Transaction_Flash.h
-    ssd/NVM_Transaction_Flash_ER.cpp
-    ssd/NVM_Transaction_Flash_ER.h
-    ssd/NVM_Transaction_Flash_RD.cpp
-    ssd/NVM_Transaction_Flash_RD.h
-    ssd/NVM_Transaction_Flash_WR.cpp
-    ssd/NVM_Transaction_Flash_WR.h
-    ssd/ONFI_Channel_Base.cpp
-    ssd/ONFI_Channel_Base.h
-    ssd/ONFI_Channel_NVDDR2.cpp
-    ssd/ONFI_Channel_NVDDR2.h
-    ssd/Queue_Probe.cpp
-    ssd/Queue_Probe.h
-    ssd/SSD_Defs.h
-    ssd/Stats.cpp
-    ssd/Stats.h
+    ssd/request/UserRequest.h
     ssd/tsu/TSU_Base.cpp
     ssd/tsu/TSU_Base.h
     ssd/tsu/TSU_OutofOrder.cpp
     ssd/tsu/TSU_OutofOrder.h
-    ssd/request/UserRequest.h ssd/ONFIChannelDefs.h)
+    ssd/Flash_Transaction_Queue.h
+    ssd/FTL.cpp
+    ssd/FTL.h
+    ssd/NVM_Firmware.cpp
+    ssd/NVM_Firmware.h
+    ssd/NvmTransaction.h
+    ssd/NvmTransactionFlash.h
+    ssd/NvmTransactionFlashER.h
+    ssd/NvmTransactionFlashRD.h
+    ssd/NvmTransactionFlashWR.h
+    ssd/ONFI_Channel_Base.cpp
+    ssd/ONFI_Channel_Base.h
+    ssd/ONFI_Channel_NVDDR2.cpp
+    ssd/ONFI_Channel_NVDDR2.h
+    ssd/ONFIChannelDefs.h
+    ssd/Queue_Probe.cpp
+    ssd/Queue_Probe.h
+    ssd/SSD_Defs.h
+    ssd/Stats.cpp
+    ssd/Stats.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp
@@ -159,19 +158,21 @@ set(MQSIM_UTILS_SOURCES
     utils/CMRRandomGenerator.cpp
     utils/CMRRandomGenerator.h
     utils/DistributionTypes.h
+    utils/EnumTools.h
     utils/Exception.h
     utils/Helper_Functions.cpp
     utils/Helper_Functions.h
     utils/InlineTools.h
     utils/Logical_Address_Partitioning_Unit.cpp
     utils/Logical_Address_Partitioning_Unit.h
+    utils/ObjectPool.h
     utils/RandomGenerator.cpp
     utils/RandomGenerator.h
     utils/ServiceHandler.h
     utils/StringTools.h
     utils/Workload_Statistics.h
     utils/XMLWriter.cpp
-    utils/XMLWriter.h utils/ObjectPool.h utils/EnumTools.h)
+    utils/XMLWriter.h)
 
 add_executable(MQSim
                main.cpp

@@ -133,7 +133,7 @@ NVM_PHY_ONFI_NVDDR2::NVM_PHY_ONFI_NVDDR2(const sim_object_id_type& id,
 force_inline void
 NVM_PHY_ONFI_NVDDR2::transfer_read_data_from_chip(ChipBookKeepingEntry& chipBKE,
                                                   DieBookKeepingEntry& dieBKE,
-                                                  NVM_Transaction_Flash* tr)
+                                                  NvmTransactionFlash* tr)
 {
   auto sim = Simulator;
 
@@ -168,7 +168,7 @@ NVM_PHY_ONFI_NVDDR2::perform_interleaved_cmd_data_transfer(NVM::FlashMemory::Fla
                               (int)NVDDR2_SimEventType::READ_CMD_ADDR_TRANSFERRED);
       break;
     case Transaction_Type::WRITE:
-      if (((NVM_Transaction_Flash_WR*)bookKeepingEntry.__active_transactions.front())->RelatedRead == nullptr) {
+      if (((NvmTransactionFlashWR*)bookKeepingEntry.__active_transactions.front())->RelatedRead == nullptr) {
         chip.StartCMDDataInXfer();
         bookKeepingTable[chip.ChannelID][chip.ChipID].Status = ChipStatus::CMD_DATA_IN;
         sim->Register_sim_event(sim->Time() + bookKeepingEntry.__die_interleaved_time,
@@ -273,7 +273,7 @@ inline sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_finish_time(const NVM::FlashM
   return bookKeepingTable[chip.ChannelID][chip.ChipID].Expected_command_exec_finish_time;
 }
 
-sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_finish_time(NVM_Transaction_Flash* transaction)
+sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_finish_time(NvmTransactionFlash* transaction)
 {
   auto& channel = channels[transaction->Address.ChannelID];
 
@@ -281,7 +281,7 @@ sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_finish_time(NVM_Transaction_Flash* t
 }
 
 
-sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_transfer_time(NVM_Transaction_Flash* transaction)
+sim_time_type NVM_PHY_ONFI_NVDDR2::Expected_transfer_time(NvmTransactionFlash* transaction)
 {
   return NVDDR2DataInTransferTime(transaction->Data_and_metadata_size_in_byte, channels[transaction->Address.ChannelID]);
 }
@@ -291,7 +291,7 @@ void NVM_PHY_ONFI_NVDDR2::Change_flash_page_status_for_preconditioning(const NVM
   channels[page_address.ChannelID]->Chips[page_address.ChipID]->Change_memory_status_preconditioning(&page_address, &lpa);
 }
 
-void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>& transaction_list)
+void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NvmTransactionFlash*>& transaction_list)
 {
   ONFI_Channel_NVDDR2* target_channel = channels[transaction_list.front()->Address.ChannelID];
 
@@ -378,7 +378,7 @@ void NVM_PHY_ONFI_NVDDR2::Send_command_to_chip(std::list<NVM_Transaction_Flash*>
       chipBKE->Expected_command_exec_finish_time = dieBKE->__expected_finish_time;
     break;
   case Transaction_Type::WRITE:
-    if (((NVM_Transaction_Flash_WR*)transaction_list.front())->ExecutionMode == WriteExecutionModeType::SIMPLE)
+    if (((NvmTransactionFlashWR*)transaction_list.front())->ExecutionMode == WriteExecutionModeType::SIMPLE)
     {
       if (transaction_list.size() == 1) {
         __stats.IssuedProgramCMD++;
@@ -495,7 +495,7 @@ void NVM_PHY_ONFI_NVDDR2::Change_memory_status_preconditioning(const NVM::NVM_Me
 }
 
 force_inline void
-copy_read_data_to_transaction(NVM_Transaction_Flash_RD* read_transaction, NVM::FlashMemory::FlashCommand* command)
+copy_read_data_to_transaction(NvmTransactionFlashRD* read_transaction, NVM::FlashMemory::FlashCommand* command)
 {
   int i = 0;
   for (auto &address : command->Address)
@@ -576,7 +576,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
   case NVDDR2_SimEventType::READ_DATA_TRANSFERRED:
     //DEBUG2("Chip " << targetChip->ChannelID << ", " << targetChip->ChipID << ", " << dieBKE->__active_transactions.front()->Address.DieID << ": READ_DATA_TRANSFERRED ")
     targetChip->EndDataOutXfer(dieBKE->__active_cmd);
-    copy_read_data_to_transaction((NVM_Transaction_Flash_RD*)dieBKE->__active_transfer, dieBKE->__active_cmd);
+    copy_read_data_to_transaction((NvmTransactionFlashRD*)dieBKE->__active_transfer, dieBKE->__active_cmd);
 #if 0
     if (tr->ExecutionMode != ExecutionModeType::COPYBACK)
 #endif
@@ -642,7 +642,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
   }
   else if (!WaitingMappingRead_TX[channel_id].empty())
   {
-    auto* waitingTR = (NVM_Transaction_Flash_RD*)WaitingMappingRead_TX[channel_id].front();
+    auto* waitingTR = (NvmTransactionFlashRD*)WaitingMappingRead_TX[channel_id].front();
     WaitingMappingRead_TX[channel_id].pop_front();
     transfer_read_data_from_chip(bookKeepingTable[channel_id][waitingTR->Address.ChipID],
                                  bookKeepingTable[channel_id][waitingTR->Address.ChipID].Die_book_keeping_records[waitingTR->Address.DieID],
@@ -651,7 +651,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
   }
   else if (!WaitingReadTX[channel_id].empty())
   {
-    auto* waitingTR = (NVM_Transaction_Flash_RD*)WaitingReadTX[channel_id].front();
+    auto* waitingTR = (NvmTransactionFlashRD*)WaitingReadTX[channel_id].front();
     WaitingReadTX[channel_id].pop_front();
     transfer_read_data_from_chip(bookKeepingTable[channel_id][waitingTR->Address.ChipID],
                                  bookKeepingTable[channel_id][waitingTR->Address.ChipID].Die_book_keeping_records[waitingTR->Address.DieID],
@@ -660,7 +660,7 @@ void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
   }
   else if (!WaitingGCRead_TX[channel_id].empty())
   {
-    auto* waitingTR = (NVM_Transaction_Flash_RD*)WaitingGCRead_TX[channel_id].front();
+    auto* waitingTR = (NvmTransactionFlashRD*)WaitingGCRead_TX[channel_id].front();
     WaitingGCRead_TX[channel_id].pop_front();
     transfer_read_data_from_chip(bookKeepingTable[channel_id][waitingTR->Address.ChipID],
                                  bookKeepingTable[channel_id][waitingTR->Address.ChipID].Die_book_keeping_records[waitingTR->Address.DieID],
@@ -774,7 +774,7 @@ NVM_PHY_ONFI_NVDDR2::__handle_ready_from_chip(NVM::FlashMemory::Flash_Chip& chip
     int i = 0;
     for (auto it = dieBKE.__active_transactions.begin(); it != dieBKE.__active_transactions.end(); it++, i++)
     {
-      ((NVM_Transaction_Flash_WR*)(*it))->Content = command.Meta_data[i].LPA;
+      ((NvmTransactionFlashWR*)(*it))->Content = command.Meta_data[i].LPA;
       broadcastTransactionServicedSignal(*it);
     }
 

@@ -11,7 +11,7 @@
 
 #include "../../utils/ServiceHandler.h"
 #include "../request/UserRequest.h"
-#include "../NVM_Transaction_Flash.h"
+#include "../NvmTransactionFlash.h"
 
 namespace SSD_Components {
   typedef Utils::ServiceHandlerBase<UserRequest*> UserRequestServiceHandlerBase;

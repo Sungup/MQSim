@@ -1,8 +1,8 @@
 #include <stdexcept>
 #include "../../nvm_chip/NVM_Types.h"
 #include "Data_Cache_Manager_Flash_Simple.h"
-#include "../NVM_Transaction_Flash_RD.h"
-#include "../NVM_Transaction_Flash_WR.h"
+#include "../NvmTransactionFlashRD.h"
+#include "../NvmTransactionFlashWR.h"
 #include "../FTL.h"
 
 using namespace SSD_Components;
@@ -83,7 +83,7 @@ Data_Cache_Manager_Flash_Simple::process_new_user_request(UserRequest* user_requ
       auto it = user_request->Transaction_list.begin();
       while (it != user_request->Transaction_list.end())
       {
-        auto* tr = (NVM_Transaction_Flash_RD*)(*it);
+        auto* tr = (NvmTransactionFlashRD*)(*it);
         if (data_cache->Exists(tr->Stream_id, tr->LPA))
         {
           page_status_type available_sectors_bitmap = data_cache->Get_slot(tr->Stream_id, tr->LPA).State_bitmap_of_existing_sectors & tr->read_sectors_bitmap;
@@ -149,14 +149,14 @@ Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(UserRequest& user_reque
   uint32_t cache_eviction_read_size_in_sectors = 0;//The size of data evicted from cache
   uint32_t flash_written_back_write_size_in_sectors = 0;//The size of data that is both written back to flash and written to DRAM
   uint32_t dram_write_size_in_sectors = 0;//The size of data written to DRAM (must be >= flash_written_back_write_size_in_sectors)
-  auto evicted_cache_slots = new std::list<NVM_Transaction*>;
-  std::list<NVM_Transaction*> writeback_transactions;
+  auto evicted_cache_slots = new std::list<NvmTransaction*>;
+  std::list<NvmTransaction*> writeback_transactions;
   auto it = user_request.Transaction_list.begin();
 
   while (it != user_request.Transaction_list.end()
     && (back_pressure_buffer_depth + cache_eviction_read_size_in_sectors + flash_written_back_write_size_in_sectors) < back_pressure_buffer_max_depth)
   {
-    auto tr = (NVM_Transaction_Flash_WR*)(*it);
+    auto tr = (NvmTransactionFlashWR*)(*it);
     if (data_cache->Exists(tr->Stream_id, tr->LPA))//If the logical address already exists in the cache
     {
       /*MQSim should get rid of writting stale data to the cache.
@@ -178,9 +178,14 @@ Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(UserRequest& user_reque
         Data_Cache_Slot_Type evicted_slot = data_cache->Evict_one_slot_lru();
         if (evicted_slot.Status == Cache_Slot_Status::DIRTY_NO_FLASH_WRITEBACK)
         {
-          evicted_cache_slots->push_back(new NVM_Transaction_Flash_WR(Transaction_Source_Type::CACHE,
-            tr->Stream_id, count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE,
-            evicted_slot.LPA, nullptr, evicted_slot.Content, evicted_slot.State_bitmap_of_existing_sectors, evicted_slot.Timestamp));
+          evicted_cache_slots->push_back(new NvmTransactionFlashWR(Transaction_Source_Type::CACHE,
+                                                                   tr->Stream_id,
+                                                                   count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE,
+                                                                   nullptr,
+                                                                   evicted_slot.Content,
+                                                                   evicted_slot.State_bitmap_of_existing_sectors,
+                                                                   evicted_slot.Timestamp,
+                                                                   evicted_slot.LPA));
           cache_eviction_read_size_in_sectors += count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors);
           //DEBUG2("Evicting page" << evicted_slot.LPA << " from write buffer ")
         }
@@ -248,7 +253,7 @@ Data_Cache_Manager_Flash_Simple::service_dram_access_request(Memory_Transfer_Inf
 }
 
 void
-Data_Cache_Manager_Flash_Simple::__handle_transaction_service(NVM_Transaction_Flash* transaction)
+Data_Cache_Manager_Flash_Simple::__handle_transaction_service(NvmTransactionFlash* transaction)
 {
   //First check if the transaction source is a user request or the cache itself
   if (transaction->Source != Transaction_Source_Type::USERIO && transaction->Source != Transaction_Source_Type::CACHE)
@@ -260,9 +265,9 @@ Data_Cache_Manager_Flash_Simple::__handle_transaction_service(NVM_Transaction_Fl
   *  An update read transaction is issued in Address Mapping Unit, but is consumed in data cache manager.*/
   if (transaction->Type == Transaction_Type::READ)
   {
-    if (((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite != nullptr)
+    if (((NvmTransactionFlashRD*)transaction)->RelatedWrite != nullptr)
     {
-      ((NVM_Transaction_Flash_RD*)transaction)->RelatedWrite->RelatedRead = nullptr;
+      ((NvmTransactionFlashRD*)transaction)->RelatedWrite->RelatedRead = nullptr;
       return;
     }
     switch (caching_mode_per_input_stream[transaction->Stream_id])
@@ -291,14 +296,14 @@ Data_Cache_Manager_Flash_Simple::__handle_transaction_service(NVM_Transaction_Fl
         back_pressure_buffer_depth -= transaction->Data_and_metadata_size_in_byte / SECTOR_SIZE_IN_BYTE + (transaction->Data_and_metadata_size_in_byte % SECTOR_SIZE_IN_BYTE == 0 ? 0 : 1);
 
 
-        if (data_cache->Exists(transaction->Stream_id, ((NVM_Transaction_Flash_WR*)transaction)->LPA))
+        if (data_cache->Exists(transaction->Stream_id, ((NvmTransactionFlashWR*)transaction)->LPA))
         {
-          Data_Cache_Slot_Type slot = data_cache->Get_slot(transaction->Stream_id, ((NVM_Transaction_Flash_WR*)transaction)->LPA);
+          Data_Cache_Slot_Type slot = data_cache->Get_slot(transaction->Stream_id, ((NvmTransactionFlashWR*)transaction)->LPA);
           sim_time_type timestamp = slot.Timestamp;
           // Comment out unused variables.
           // NVM::memory_content_type content = slot.Content;
-          if (((NVM_Transaction_Flash_WR*)transaction)->DataTimeStamp >= timestamp)
-            data_cache->Remove_slot(transaction->Stream_id, ((NVM_Transaction_Flash_WR*)transaction)->LPA);
+          if (((NvmTransactionFlashWR*)transaction)->DataTimeStamp >= timestamp)
+            data_cache->Remove_slot(transaction->Stream_id, ((NvmTransactionFlashWR*)transaction)->LPA);
         }
 
 
@@ -340,8 +345,8 @@ Data_Cache_Manager_Flash_Simple::Execute_simulator_event(MQSimEngine::SimEvent* 
       broadcast_user_request_serviced_signal(((UserRequest*)(transfer_inf)->Related_request));
     break;
   case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED://Reading data from DRAM and writing it back to the flash storage
-    static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(*((std::list<NVM_Transaction*>*)(transfer_inf->Related_request)));
-    delete (std::list<NVM_Transaction*>*)transfer_inf->Related_request;
+    static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(*((std::list<NvmTransaction*>*)(transfer_inf->Related_request)));
+    delete (std::list<NvmTransaction*>*)transfer_inf->Related_request;
     break;
   case Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED://The recently read data from flash is written back to memory to support future user read requests
     break;

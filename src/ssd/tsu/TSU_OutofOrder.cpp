@@ -107,7 +107,7 @@ namespace SSD_Components
     xmlwriter.Write_close_tag();
   }
 
-  inline void TSU_OutOfOrder::Prepare_for_transaction_submit()
+  void TSU_OutOfOrder::Prepare_for_transaction_submit()
   {
     opened_scheduling_reqs++;
     if (opened_scheduling_reqs > 1)
@@ -115,7 +115,7 @@ namespace SSD_Components
     transaction_receive_slots.clear();
   }
 
-  inline void TSU_OutOfOrder::Submit_transaction(NVM_Transaction_Flash* transaction)
+  inline void TSU_OutOfOrder::Submit_transaction(NvmTransactionFlash* transaction)
   {
     transaction_receive_slots.push_back(transaction);
   }
@@ -376,7 +376,7 @@ namespace SSD_Components
 
       for (Flash_Transaction_Queue::iterator it = sourceQueue1->begin(); it != sourceQueue1->end(); )
       {
-        if (((NVM_Transaction_Flash_WR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
+        if (((NvmTransactionFlashWR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
         {
           if (planeVector == 0 || (*it)->Address.PageID == pageID)//Check for identical pages when running multiplane command
           {
@@ -393,7 +393,7 @@ namespace SSD_Components
       if (sourceQueue2 != nullptr)
         for (Flash_Transaction_Queue::iterator it = sourceQueue2->begin(); it != sourceQueue2->end(); )
         {
-          if (((NVM_Transaction_Flash_WR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
+          if (((NvmTransactionFlashWR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
           {
             if (planeVector == 0 || (*it)->Address.PageID == pageID)//Check for identical pages when running multiplane command
             {
@@ -433,7 +433,7 @@ namespace SSD_Components
 
       for (Flash_Transaction_Queue::iterator it = source_queue->begin(); it != source_queue->end(); )
       {
-        if (((NVM_Transaction_Flash_ER*)*it)->Page_movement_activities.size() == 0 && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
+        if (((NvmTransactionFlashER*)*it)->Page_movement_activities.size() == 0 && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
         {
           planeVector |= 1 << (*it)->Address.PlaneID;
           transaction_dispatch_slots.push_back(*it);
