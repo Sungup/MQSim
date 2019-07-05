@@ -2,7 +2,9 @@
 #define NVM_TRANSACTION_FLASH_ER_H
 
 #include <list>
+
 #include "../nvm_chip/flash_memory/FlashTypes.h"
+#include "../utils/InlineTools.h"
 
 #include "NvmTransactionFlash.h"
 

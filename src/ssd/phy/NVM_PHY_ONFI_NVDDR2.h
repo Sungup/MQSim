@@ -104,7 +104,8 @@ namespace SSD_Components
   private:
     NVM::FlashMemory::ChipReadySignalHandler<NVM_PHY_ONFI_NVDDR2> __ready_signal_handler;
 
-    ONFI_Channel_NVDDR2** channels;
+    std::vector<OnfiNvddr2Spec> __spec;
+    OnfiChannelList& channels;
 
     std::vector<ChipBookKeepingList> bookKeepingTable;
 
@@ -127,7 +128,8 @@ namespace SSD_Components
 
   public:
     NVM_PHY_ONFI_NVDDR2(const sim_object_id_type& id,
-                        ONFI_Channel_NVDDR2** channels,
+                        const DeviceParameterSet& params,
+                        OnfiChannelList& channels,
                         Stats& stats,
                         uint32_t ChannelCount,
                         uint32_t chip_no_per_channel,
@@ -174,10 +176,13 @@ namespace SSD_Components
     void Execute_simulator_event(MQSimEngine::SimEvent*) final;
 
     /// 4. Non-override functions
+#if UNBLOCK_NOT_IN_USE
     NvmTransactionFlash* Is_chip_busy_with_stream(NvmTransactionFlash* transaction);
     bool Is_chip_busy(NvmTransactionFlash* transaction);
+#endif
   };
 
+#if UNBLOCK_NOT_IN_USE
   force_inline NvmTransactionFlash*
   NVM_PHY_ONFI_NVDDR2::Is_chip_busy_with_stream(NvmTransactionFlash* transaction)
   {
@@ -198,6 +203,7 @@ namespace SSD_Components
     auto& chipBKE = bookKeepingTable[transaction->Address.ChannelID][transaction->Address.ChipID];
     return (chipBKE.Status != ChipStatus::IDLE);
   }
+#endif
 }
 
 #endif // !NVM_PHY_ONFI_NVDDR2_H

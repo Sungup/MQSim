@@ -3,11 +3,10 @@
 
 #include <cstdint>
 #include <vector>
-#include "../../sim/Sim_Defs.h"
+
 #include "../../utils/Exception.h"
 #include "../../utils/StringTools.h"
 #include "../../utils/InlineTools.h"
-#include "../NVM_Types.h"
 
 namespace NVM
 {
@@ -117,5 +116,19 @@ typedef std::vector<PlaneIDs>   StreamPlaneIDs;
 #define UNWRITTEN_LOGICAL_PAGE 0x0000000000000000ULL
 #define NO_PPA 0xffffffffffffffffULL
 #define NO_MPPN 0xffffffffULL
+
+force_inline uint32_t
+count_sector_no_from_status_bitmap(page_status_type page_status)
+{
+  uint32_t size = 0;
+
+  while (page_status) {
+    size += 0x01ULL & page_status;
+
+    page_status = (page_status >> 1U);
+  }
+
+  return size;
+}
 
 #endif // !FLASH_TYPES_H

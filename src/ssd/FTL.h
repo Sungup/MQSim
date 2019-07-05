@@ -1,16 +1,19 @@
 #ifndef FTL_H
 #define FTL_H
 
-#include "../exec/params/DeviceParameterSet.h"
-#include "../sim/Sim_Reporter.h"
 #include "../utils/RandomGenerator.h"
-#include "NVM_Firmware.h"
-#include "tsu/TSU_Base.h"
 #include "mapping/Address_Mapping_Unit_Base.h"
 #include "fbm/Flash_Block_Manager_Base.h"
 #include "gc_and_wl/GC_and_WL_Unit_Base.h"
 #include "phy/NVM_PHY_ONFI.h"
 #include "Stats.h"
+
+// Refined header list
+#include "../exec/params/DeviceParameterSet.h"
+#include "tsu/TSU_Base.h"
+#include "NvmTransactionFlash.h"
+
+#include "NVM_Firmware.h"
 
 namespace SSD_Components
 {
@@ -34,20 +37,21 @@ namespace SSD_Components
     sim_time_type avg_flash_read_latency;
     sim_time_type avg_flash_program_latency;
 
-    Stats __stats;
+    const Stats& __stats;
 
   public:
     Address_Mapping_Unit_Base* Address_Mapping_Unit;
     Flash_Block_Manager_Base* BlockManager;
     GC_and_WL_Unit_Base* GC_and_WL_Unit;
-    TSU_Base * TSU;
-    NVM_PHY_ONFI* PHY;
+
+  private:
+    TSUPtr __tsu;
 
   public:
-    FTL(const sim_object_id_type& id, const DeviceParameterSet& params);
+    FTL(const sim_object_id_type& id,
+        const DeviceParameterSet& params,
+        const Stats& stats);
     ~FTL() final = default;
-
-    Stats& get_stats_reference();
 
     void Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats);
     void Validate_simulation_config();
@@ -56,13 +60,29 @@ namespace SSD_Components
 
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
 
+    // TSU related passing functions
+    void assign_tsu(TSUPtr& tsu);
+    void preparing_for_transaction_submit();
+    void submit_transaction(NvmTransactionFlash* transaction);
+    void schedule_transaction();
   };
 
-  force_inline Stats&
-  FTL::get_stats_reference()
-  {
-    return __stats;
-  }
+  force_inline void
+  FTL::assign_tsu(SSD_Components::TSUPtr& tsu)
+  { __tsu = tsu; }
+
+  force_inline void
+  FTL::preparing_for_transaction_submit()
+  { __tsu->Prepare_for_transaction_submit(); }
+
+  force_inline void
+  FTL::submit_transaction(NvmTransactionFlash* transaction)
+  { __tsu->Submit_transaction(transaction); }
+
+  force_inline void
+  FTL::schedule_transaction()
+  { __tsu->Schedule(); }
+
 }
 
 

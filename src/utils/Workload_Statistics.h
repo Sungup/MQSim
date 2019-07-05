@@ -6,6 +6,7 @@
 #include <memory>
 #include <set>
 #include <vector>
+#include "../nvm_chip/flash_memory/FlashTypes.h"
 #include "../sim/Sim_Defs.h"
 #include "../ssd/SSD_Defs.h"
 #include "../utils/DistributionTypes.h"

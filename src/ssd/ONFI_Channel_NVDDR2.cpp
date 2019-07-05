@@ -2,31 +2,26 @@
 
 using namespace SSD_Components;
 
-ONFI_Channel_NVDDR2::ONFI_Channel_NVDDR2(flash_channel_ID_type channelID,
-                                         NVM::FlashMemory::Flash_Chip** flashChips,
-                                         uint32_t ChannelWidth,
-                                         sim_time_type t_RC,
-                                         sim_time_type t_DSC,
-                                         sim_time_type t_DBSY,
-                                         sim_time_type t_CS,
-                                         sim_time_type t_RR,
-                                         sim_time_type t_WB,
-                                         sim_time_type t_WC,
-                                         sim_time_type t_ADL,
-                                         sim_time_type t_CALS,
+OnfiNvddr2Spec::OnfiNvddr2Spec(uint32_t ChannelWidth,
+                               sim_time_type t_RC,
+                               sim_time_type t_DSC,
+                               sim_time_type t_DBSY,
+                               sim_time_type t_CS,
+                               sim_time_type t_RR,
+                               sim_time_type t_WB,
+                               sim_time_type t_WC,
+                               sim_time_type t_ADL,
+                               sim_time_type t_CALS,
 #if 0 // Currently not in use
-                                         sim_time_type t_DQSRE,
-                                         sim_time_type t_RPRE,
-                                         sim_time_type t_RHW,
-                                         sim_time_type t_CCS,
+                               sim_time_type t_DQSRE,
+                               sim_time_type t_RPRE,
+                               sim_time_type t_RHW,
+                               sim_time_type t_CCS,
 #endif
-                                         sim_time_type t_WPST,
-                                         sim_time_type t_WPSTH)
-  : ONFI_Channel_Base(channelID,
-                      flashChips,
-                      ONFI_Protocol::NVDDR2),
+                               sim_time_type t_WPST,
+                               sim_time_type t_WPSTH)
 #if 0 // Currently not in use
-    ReadDataOutSetupTime(t_RPRE + t_DQSRE),
+ReadDataOutSetupTime(t_RPRE + t_DQSRE),
     ReadDataOutSetupTime_2Planes(ReadDataOutSetupTime
                                    + t_RHW + 6 * t_WC + t_CCS + t_RPRE + t_DQSRE),
     ReadDataOutSetupTime_3Planes(ReadDataOutSetupTime_2Planes
@@ -34,7 +29,7 @@ ONFI_Channel_NVDDR2::ONFI_Channel_NVDDR2(flash_channel_ID_type channelID,
     ReadDataOutSetupTime_4Planes(ReadDataOutSetupTime_3Planes
                                    + t_RHW + 6 * t_WC + t_CCS + t_RPRE + t_DQSRE),
 #endif
-    TwoUnitDataOutTime(t_DSC),
+  : TwoUnitDataOutTime(t_DSC),
     TwoUnitDataInTime(t_RC),
     ProgramSuspendCommandTime(t_CS + t_WC * 3),
     EraseSuspendCommandTime(t_CS + t_WC * 3),

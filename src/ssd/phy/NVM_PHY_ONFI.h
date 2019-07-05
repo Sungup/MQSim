@@ -1,6 +1,7 @@
 #ifndef NVM_PHY_ONFI_ONFI_H
 #define NVM_PHY_ONFI_ONFI_H
 
+#include <memory>
 #include <vector>
 #include "../../nvm_chip/flash_memory/FlashCommand.h"
 #include "../../nvm_chip/flash_memory/Flash_Chip.h"
@@ -143,6 +144,15 @@ namespace SSD_Components
     __chip_idle_signal_handlers.emplace_back(&handler);
   }
 
+  // --------------------
+  // NVM_PHY_ONFI builder
+  // --------------------
+  typedef std::shared_ptr<NVM_PHY_ONFI> OnfiPhyPtr;
+
+  OnfiPhyPtr build_onfi_phy(const sim_object_id_type& id,
+                            const DeviceParameterSet& params,
+                            OnfiChannelList& channels,
+                            Stats& stats);
 }
 
 

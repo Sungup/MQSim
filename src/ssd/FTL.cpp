@@ -14,7 +14,9 @@
 
 using namespace SSD_Components;
 
-FTL::FTL(const sim_object_id_type& id, const DeviceParameterSet& params)
+FTL::FTL(const sim_object_id_type& id,
+         const DeviceParameterSet& params,
+         const Stats& stats)
   : NVM_Firmware(id),
     block_no_per_plane(params.Flash_Parameters.Block_No_Per_Plane),
     page_no_per_block(params.Flash_Parameters.Page_No_Per_Block),
@@ -24,12 +26,11 @@ FTL::FTL(const sim_object_id_type& id, const DeviceParameterSet& params)
     over_provisioning_ratio(params.Overprovisioning_Ratio),
     avg_flash_read_latency(params.Flash_Parameters.avg_read_latency()),
     avg_flash_program_latency(params.Flash_Parameters.avg_write_latency()),
-    __stats(params),
+    __stats(stats),
     Address_Mapping_Unit(nullptr),
     BlockManager(nullptr),
     GC_and_WL_Unit(nullptr),
-    TSU(nullptr),
-    PHY(nullptr)
+    __tsu()
 { }
 
 void
@@ -876,6 +877,9 @@ FTL::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
                                           __stats.avg_page_movement_for_wl());
 
   xmlwriter.Write_end_element_tag();
+
+  // Report TSU information before return;
+  __tsu->Report_results_in_XML(name_prefix, xmlwriter);
 }
 
 LPA_type

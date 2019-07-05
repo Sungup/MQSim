@@ -3,58 +3,53 @@
 
 #include <list>
 #include <memory>
-#include "../../sim/Sim_Defs.h"
-#include "../../sim/Sim_Object.h"
-#include "../../nvm_chip/flash_memory/Flash_Chip.h"
-#include "../../sim/Sim_Reporter.h"
-#include "../phy/NVM_PHY_ONFI_NVDDR2.h"
-#include "../Flash_Transaction_Queue.h"
 
+#include "../../sim/Sim_Defs.h"
+#include "../phy/NVM_PHY_ONFI.h"
 #include "../phy/PhyHandler.h"
 #include "TSU_Defs.h"
+
+#include "../../sim/Sim_Object.h"
 
 namespace SSD_Components
 {
   class FTL;
   class TSU_Base : public MQSimEngine::Sim_Object
   {
-  public:
-    TSU_Base(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, Flash_Scheduling_Type Type,
-      uint32_t Channel_no, uint32_t chip_no_per_channel, uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
-      bool EraseSuspensionEnabled, bool ProgramSuspensionEnabled,
-      sim_time_type WriteReasonableSuspensionTimeForRead,
-      sim_time_type EraseReasonableSuspensionTimeForRead,
-      sim_time_type EraseReasonableSuspensionTimeForWrite);
-    virtual ~TSU_Base();
-    void Setup_triggers();
+  private:
+#if UNBLOCK_NOT_IN_USE
+    FlashTransactionHandler<TSU_Base>  __transaction_service_handler;
+#endif
+    ChannelIdleSignalHandler<TSU_Base> __channel_idle_signal_handler;
+    ChipIdleSignalHandler<TSU_Base>    __chip_idle_signal_handler;
 
-    /*When an MQSim needs to send a set of transactions for execution, the following
-    * three funcitons should be invoked in this order:
-    * Prepare_for_transaction_submit()
-    * Submit_transaction(transaction)
-    * .....
-    * Submit_transaction(transaction)
-    * Schedule()
-    *
-    * The above mentioned mechanism helps to exploit die-level and plane-level parallelism.
-    * More precisely, first the transactions are queued and then, when the Schedule function
-    * is invoked, the TSU has that opportunity to schedule them together to exploit multiplane
-    * and die-interleaved execution.
-    */
-    virtual void Prepare_for_transaction_submit() = 0;
-    virtual void Submit_transaction(NvmTransactionFlash* transaction) = 0;
-    
-    /* Shedules the transactions currently stored in inputTransactionSlots. The transactions could
-    * be mixes of reads, writes, and erases.
-    */
-    virtual void Schedule() = 0;
+    Flash_Scheduling_Type __type;
+
+    // Used for round-robin service of the chips in channels
+    ChipIDs __channel_rr_turn;
+
+  protected:
+    const uint32_t channel_count;
+    const uint32_t chip_no_per_channel;
+    const uint32_t die_no_per_chip;
+    const uint32_t plane_no_per_die;
+    const bool eraseSuspensionEnabled;
+    const bool programSuspensionEnabled;
+    const sim_time_type writeReasonableSuspensionTimeForRead;
+    const sim_time_type eraseReasonableSuspensionTimeForRead;//the time period
+    const sim_time_type eraseReasonableSuspensionTimeForWrite;
+
+    FTL& ftl;
+    NVM_PHY_ONFI* _NVMController;
+
+    std::list<NvmTransactionFlash*> transaction_receive_slots;//Stores the transactions that are received for sheduling
+    std::list<NvmTransactionFlash*> transaction_dispatch_slots;//Used to submit transactions to the channel controller
+    int opened_scheduling_reqs;
 
   private:
-    FlashTransactionHandler<TSU_Base> __transaction_service_handler;
-    ChannelIdleSignalHandler<TSU_Base>  __channel_idle_signal_handler;
-    ChipIdleSignalHandler<TSU_Base>     __chip_idle_signal_handler;
-
+#if UNBLOCK_NOT_IN_USE
     void __handle_transaction_serviced_signal(NvmTransactionFlash* transaction);
+#endif
     void __handle_channel_idle_signal(flash_channel_ID_type channelID);
     void __handle_chip_idle_signal(const NVM::FlashMemory::Flash_Chip& chip);
 
@@ -68,30 +63,52 @@ namespace SSD_Components
     void _update_rr_turn(uint32_t channelID);
     void _handle_idle_channel(flash_channel_ID_type channelID);
 
-    FTL* ftl;
-    NVM_PHY_ONFI_NVDDR2* _NVMController;
-    Flash_Scheduling_Type type;
-    uint32_t channel_count;
-    uint32_t chip_no_per_channel;
-    uint32_t die_no_per_chip;
-    uint32_t plane_no_per_die;
-    bool eraseSuspensionEnabled, programSuspensionEnabled;
-    sim_time_type writeReasonableSuspensionTimeForRead;
-    sim_time_type eraseReasonableSuspensionTimeForRead;//the time period 
-    sim_time_type eraseReasonableSuspensionTimeForWrite;
-
-  private:
-    flash_chip_ID_type* __channel_rr_turn;//Used for round-robin service of the chips in channels
-
-  protected:
-    std::list<NvmTransactionFlash*> transaction_receive_slots;//Stores the transactions that are received for sheduling
-    std::list<NvmTransactionFlash*> transaction_dispatch_slots;//Used to submit transactions to the channel controller
     virtual bool service_read_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
     virtual bool service_write_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
     virtual bool service_erase_transaction(const NVM::FlashMemory::Flash_Chip& chip) = 0;
 
-    int opened_scheduling_reqs;
+  public:
+    TSU_Base(const sim_object_id_type& id,
+             FTL& ftl,
+             NVM_PHY_ONFI* NVMController,
+             Flash_Scheduling_Type Type,
+             uint32_t Channel_no,
+             uint32_t chip_no_per_channel,
+             uint32_t DieNoPerChip,
+             uint32_t PlaneNoPerDie,
+             bool EraseSuspensionEnabled,
+             bool ProgramSuspensionEnabled,
+             sim_time_type WriteReasonableSuspensionTimeForRead,
+             sim_time_type EraseReasonableSuspensionTimeForRead,
+             sim_time_type EraseReasonableSuspensionTimeForWrite);
+    ~TSU_Base() override = default;
 
+    void Setup_triggers() final;
+
+    /*
+     * When an MQSim needs to send a set of transactions for execution, the
+     * following three functions should be invoked in this order:
+     *
+     * Prepare_for_transaction_submit()
+     * Submit_transaction(transaction)
+     * .....
+     * Submit_transaction(transaction)
+     * Schedule()
+     *
+     * The above mentioned mechanism helps to exploit die-level and plane-level
+     * parallelism. More precisely, first the transactions are queued and then,
+     * when the Schedule function is invoked, the TSU has that opportunity to
+     * schedule them together to exploit multi-plane and die-interleaved
+     * execution.
+     */
+    virtual void Prepare_for_transaction_submit() = 0;
+    virtual void Submit_transaction(NvmTransactionFlash* transaction) = 0;
+
+    /*
+     * Schedule the transactions currently stored in inputTransactionSlots.
+     * The transactions could be mixes of reads, writes, and erases.
+     */
+    virtual void Schedule() = 0;
   };
 
   force_inline bool
@@ -148,7 +165,15 @@ namespace SSD_Components
     }
   }
 
+  // ------------------------------
+  // TSU builder and its shared_ptr
+  // ------------------------------
   typedef std::shared_ptr<TSU_Base> TSUPtr;
+
+  TSUPtr build_tsu_object(const sim_object_id_type& id,
+                          FTL& ftl,
+                          NVM_PHY_ONFI* nvm_controller,
+                          const DeviceParameterSet& params);
 }
 
 #endif //TSU_H

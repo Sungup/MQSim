@@ -9,18 +9,11 @@
 #include "Data_Cache_Manager_Base.h"
 #include "../NvmTransactionFlash.h"
 
+// Refined header list
+#include "DataCacheSlot.h"
+
 namespace SSD_Components
 {
-  enum class Cache_Slot_Status { EMPTY, CLEAN, DIRTY_NO_FLASH_WRITEBACK, DIRTY_FLASH_WRITEBACK };
-  struct Data_Cache_Slot_Type
-  {
-    unsigned long long State_bitmap_of_existing_sectors;
-    LPA_type LPA;
-    data_cache_content_type Content;
-    data_timestamp_type Timestamp;
-    Cache_Slot_Status Status;
-    std::list<std::pair<LPA_type, Data_Cache_Slot_Type*>>::iterator lru_list_ptr;//used for fast implementation of LRU
-  };
   enum class Data_Cache_Simulation_Event_Type {
     MEMORY_READ_FOR_CACHE_EVICTION_FINISHED,
     MEMORY_WRITE_FOR_CACHE_FINISHED,

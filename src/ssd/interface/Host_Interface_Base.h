@@ -222,7 +222,6 @@ namespace SSD_Components
                                          request,
                                          0,
                                          access_status_bitmap,
-                                         CurrentTimeStamp,
                                          lpa);
 
     request->Transaction_list.emplace_back(tr);

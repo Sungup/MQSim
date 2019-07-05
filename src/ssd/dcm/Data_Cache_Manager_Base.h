@@ -1,16 +1,22 @@
 #ifndef DATA_CACHE_MANAGER_BASE_H
 #define DATA_CACHE_MANAGER_BASE_H
 
-#include <vector>
-#include "../../sim/Sim_Object.h"
-#include "../interface/Host_Interface_Base.h"
 #include "../request/UserRequest.h"
-#include "../NVM_Firmware.h"
 #include "../phy/NVM_PHY_ONFI.h"
 #include "../../utils/Workload_Statistics.h"
 
-#include "DataCacheDefs.h"
 #include "../interface/HostInterfaceHandler.h"
+
+// Refined header list
+#include <cstdint>
+#include <vector>
+
+#include "../../utils/InlineTools.h"
+#include "../NvmTransactionFlashWR.h"
+#include "DataCacheDefs.h"
+
+#include "../../sim/Sim_Object.h"
+
 
 namespace SSD_Components
 {
@@ -57,6 +63,11 @@ namespace SSD_Components
     void broadcast_user_request_serviced_signal(UserRequest* user_request);
     void broadcast_user_memory_transaction_serviced_signal(NvmTransaction* transaction);
 
+    NvmTransactionFlashWR* _make_evict_tr(Transaction_Source_Type source,
+                                          stream_id_type stream_id,
+                                          uint32_t data_size_in_byte,
+                                          const Data_Cache_Slot_Type& evicted);
+
     virtual void process_new_user_request(UserRequest* user_request) = 0;
 
   public:
@@ -94,6 +105,20 @@ namespace SSD_Components
   Data_Cache_Manager_Base::connect_to_user_transaction_service_handler(NvmTransactionHandlerBase& handler)
   {
     __user_mem_tr_svc_handler.emplace_back(&handler);
+  }
+
+  force_inline NvmTransactionFlashWR*
+  Data_Cache_Manager_Base::_make_evict_tr(Transaction_Source_Type source,
+                                          stream_id_type stream_id,
+                                          uint32_t data_size_in_byte,
+                                          const Data_Cache_Slot_Type& evicted)
+  {
+    auto* tr = new NvmTransactionFlashWR(source,
+                                         stream_id,
+                                         data_size_in_byte,
+                                         evicted);
+
+    return tr;
   }
 
   force_inline sim_time_type

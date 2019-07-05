@@ -1,9 +1,6 @@
 #ifndef SSD_DEVICE_H
 #define SSD_DEVICE_H
 
-#include <vector>
-#include "../sim/Sim_Object.h"
-#include "../sim/Sim_Reporter.h"
 #include "../ssd/SSD_Defs.h"
 #include "../ssd/interface/Host_Interface_Base.h"
 #include "../ssd/interface/Host_Interface_SATA.h"
@@ -11,13 +8,22 @@
 #include "../ssd/dcm/Data_Cache_Manager_Base.h"
 #include "../ssd/dcm/Data_Cache_Flash.h"
 #include "../ssd/FTL.h"
-#include "../ssd/phy/NVM_PHY_Base.h"
-#include "../ssd/ONFI_Channel_Base.h"
 #include "../host/PCIe_Switch.h"
 #include "../nvm_chip/NVM_Types.h"
 #include "params/DeviceParameterSet.h"
 #include "params/IOFlowParamSet.h"
 #include "../utils/Workload_Statistics.h"
+
+// Refine header list
+#include <vector>
+
+#include "../nvm_chip/flash_memory/Flash_Chip.h"
+#include "../ssd/phy/NVM_PHY_ONFI.h"
+#include "../ssd/FTL.h"
+#include "../ssd/ONFI_Channel_Base.h"
+
+#include "../sim/Sim_Object.h"
+
 
 /*********************************************************************************************************
 * An SSD device has the following components:
@@ -30,9 +36,12 @@
 
 class SSD_Device : public MQSimEngine::Sim_Object
 {
-public:
-  SSD_Components::FTL ftl;
+  SSD_Components::Stats __stats;
+  SSD_Components::OnfiChannelList __channels;
+  SSD_Components::FTL __ftl;
+  SSD_Components::OnfiPhyPtr __phy;
 
+public:
   const bool Preconditioning_required;
   const NVM::NVM_Type Memory_Type;
 
@@ -44,8 +53,6 @@ public:
 
   SSD_Components::Host_Interface_Base *Host_interface;
   SSD_Components::Data_Cache_Manager_Base *Cache_manager;
-  SSD_Components::NVM_PHY_Base* PHY;
-  std::vector<SSD_Components::ONFI_Channel_Base*> Channels;
 
 public:
   SSD_Device(DeviceParameterSet& parameters, IOFlowScenario& io_flows);

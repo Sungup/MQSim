@@ -6,7 +6,8 @@ using namespace SSD_Components;
 
 NvmFirmwarePtr
 SSD_Components::build_firmware(const sim_object_id_type& id,
-                               const DeviceParameterSet& params)
+                               const DeviceParameterSet& params,
+                               const Stats& stats)
 {
-  return std::make_shared<FTL>(id, params);
+  return std::make_shared<FTL>(id, params, stats);
 }

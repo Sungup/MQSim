@@ -2,10 +2,10 @@
 #define TSU_OUTOFORDER_H
 
 #include <list>
-#include "TSU_Base.h"
+#include "../Flash_Transaction_Queue.h"
 #include "../NvmTransactionFlash.h"
-#include "../phy/NVM_PHY_ONFI_NVDDR2.h"
-#include "../FTL.h"
+
+#include "TSU_Base.h"
 
 namespace SSD_Components
 {
@@ -21,22 +21,6 @@ namespace SSD_Components
   */
   class TSU_OutOfOrder : public TSU_Base
   {
-  public:
-    TSU_OutOfOrder(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, uint32_t Channel_no, uint32_t chip_no_per_channel,
-      uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
-      sim_time_type WriteReasonableSuspensionTimeForRead,
-      sim_time_type EraseReasonableSuspensionTimeForRead,
-      sim_time_type EraseReasonableSuspensionTimeForWrite,
-      bool EraseSuspensionEnabled, bool ProgramSuspensionEnabled);
-    ~TSU_OutOfOrder();
-    void Prepare_for_transaction_submit();
-    void Submit_transaction(NvmTransactionFlash* transaction);
-    void Schedule();
-
-    void Start_simulation();
-    void Validate_simulation_config();
-    void Execute_simulator_event(MQSimEngine::SimEvent*);
-    void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
   private:
     Flash_Transaction_Queue** UserReadTRQueue;
     Flash_Transaction_Queue** UserWriteTRQueue;
@@ -46,9 +30,32 @@ namespace SSD_Components
     Flash_Transaction_Queue** MappingReadTRQueue;
     Flash_Transaction_Queue** MappingWriteTRQueue;
 
+  protected:
     bool service_read_transaction(const NVM::FlashMemory::Flash_Chip& chip) final;
     bool service_write_transaction(const NVM::FlashMemory::Flash_Chip& chip) final;
     bool service_erase_transaction(const NVM::FlashMemory::Flash_Chip& chip) final;
+
+  public:
+    TSU_OutOfOrder(const sim_object_id_type& id,
+                   FTL& ftl,
+                   NVM_PHY_ONFI* NVMController,
+                   uint32_t Channel_no,
+                   uint32_t chip_no_per_channel,
+                   uint32_t DieNoPerChip,
+                   uint32_t PlaneNoPerDie,
+                   sim_time_type WriteReasonableSuspensionTimeForRead,
+                   sim_time_type EraseReasonableSuspensionTimeForRead,
+                   sim_time_type EraseReasonableSuspensionTimeForWrite,
+                   bool EraseSuspensionEnabled,
+                   bool ProgramSuspensionEnabled);
+
+    ~TSU_OutOfOrder() final;
+    void Prepare_for_transaction_submit() final;
+    void Submit_transaction(NvmTransactionFlash* transaction) final;
+    void Schedule() final;
+
+    void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) final;
+
   };
 }
 

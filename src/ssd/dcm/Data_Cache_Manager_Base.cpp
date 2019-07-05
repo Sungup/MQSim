@@ -1,5 +1,7 @@
 #include "Data_Cache_Manager_Base.h"
 #include "../FTL.h"
+#include "../NVM_Firmware.h"
+#include "../interface/Host_Interface_Base.h"
 
 using namespace SSD_Components;
 

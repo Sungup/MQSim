@@ -1,9 +1,13 @@
 #ifndef ONFI_CHANNEL_BASE_H
 #define ONFI_CHANNEL_BASE_H
 
+#include <memory>
+
 #include "../nvm_chip/flash_memory/Flash_Chip.h"
 #include "../utils/InlineTools.h"
+
 #include "ONFIChannelDefs.h"
+#include "../exec/params/DeviceParameterSet.h"
 
 namespace SSD_Components {
   enum class BusChannelStatus {
@@ -13,11 +17,10 @@ namespace SSD_Components {
 
   class ONFI_Channel_Base {
   public:
-    flash_channel_ID_type ChannelID;
+    const flash_channel_ID_type ChannelID;
+    const ONFI_Protocol Type;
 
-    NVM::FlashMemory::Flash_Chip** Chips;
-
-    ONFI_Protocol Type;
+    NVM::FlashMemory::FlashChipList Chips;
 
   private:
     BusChannelStatus __status;
@@ -25,8 +28,9 @@ namespace SSD_Components {
     NVM::FlashMemory::Flash_Chip* __current_active;
 
   public:
-    ONFI_Channel_Base(flash_channel_ID_type channelID,
-                      NVM::FlashMemory::Flash_Chip** flashChips,
+    ONFI_Channel_Base(const DeviceParameterSet& params,
+                      const sim_object_id_type& id,
+                      flash_channel_ID_type channelID,
                       ONFI_Protocol type);
 
     BusChannelStatus GetStatus();
@@ -61,6 +65,14 @@ namespace SSD_Components {
                          ? target_chip
                          : nullptr;
   }
+
+  // Builder for ONFI Channel
+  // typedef std::shared_ptr<ONFI_Channel_Base> OnfiChannelPtr;
+  typedef std::vector<ONFI_Channel_Base>     OnfiChannelList;
+
+  OnfiChannelList build_onfi_channels(const DeviceParameterSet& params,
+                                      const sim_object_id_type& id);
+
 }
 
 #endif // !CHANNEL_H

@@ -2,16 +2,14 @@
 #define ONFI_CHANNEL_NVDDR2_H
 
 #include "../nvm_chip/flash_memory/FlashTypes.h"
-#include "ONFI_Channel_Base.h"
+#include "../sim/Sim_Defs.h"
 
-
-#define NVDDR2DataInTransferTime(X,Y) ((X / Y->ChannelWidth / 2) * Y->TwoUnitDataInTime)
-#define NVDDR2DataOutTransferTime(X,Y) ((X / Y->ChannelWidth / 2) * Y->TwoUnitDataOutTime)
-
+#define NVDDR2DataInTransferTime(X,Y) ((X / Y.ChannelWidth / 2) * Y.TwoUnitDataInTime)
+#define NVDDR2DataOutTransferTime(X,Y) ((X / Y.ChannelWidth / 2) * Y.TwoUnitDataOutTime)
 
 namespace SSD_Components
 {
-  class ONFI_Channel_NVDDR2 : public ONFI_Channel_Base {
+  class OnfiNvddr2Spec {
   public:
 #if 0 // Currently not in use
     const sim_time_type ReadDataOutSetupTime;
@@ -63,27 +61,24 @@ namespace SSD_Components
      *     - t_WPST: DQS write postamble, e.g. 6ns
      *     - t_WPSTH: DQS write postamble hold time, e.g. 15ns
      */
-    ONFI_Channel_NVDDR2(flash_channel_ID_type channelID,
-                        NVM::FlashMemory::Flash_Chip** flashChips,
-                        uint32_t ChannelWidth,
-                        sim_time_type t_RC = 6,
-                        sim_time_type t_DSC = 6,
-                        sim_time_type t_DBSY = 500,
-                        sim_time_type t_CS = 20,
-                        sim_time_type t_RR = 20,
-                        sim_time_type t_WB = 100,
-                        sim_time_type t_WC = 25,
-                        sim_time_type t_ADL = 70,
-                        sim_time_type t_CALS = 15,
+    explicit OnfiNvddr2Spec(uint32_t ChannelWidth,
+                            sim_time_type t_RC = 6,
+                            sim_time_type t_DSC = 6,
+                            sim_time_type t_DBSY = 500,
+                            sim_time_type t_CS = 20,
+                            sim_time_type t_RR = 20,
+                            sim_time_type t_WB = 100,
+                            sim_time_type t_WC = 25,
+                            sim_time_type t_ADL = 70,
+                            sim_time_type t_CALS = 15,
 #if 0 // Currently not in use
-                        sim_time_type t_DQSRE = 15,
-                        sim_time_type t_RPRE = 15,
-                        sim_time_type t_RHW = 100,
-                        sim_time_type t_CCS = 300,
+                            sim_time_type t_DQSRE = 15,
+                            sim_time_type t_RPRE = 15,
+                            sim_time_type t_RHW = 100,
+                            sim_time_type t_CCS = 300,
 #endif
-                        sim_time_type t_WPST = 6,
-                        sim_time_type t_WPSTH = 15);
-
+                            sim_time_type t_WPST = 6,
+                            sim_time_type t_WPSTH = 15);
   };
 }
 

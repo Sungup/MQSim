@@ -3,7 +3,9 @@
 
 #include <cstdint>
 #include <vector>
+#include "../sim/Sim_Defs.h"
 #include "../ssd/SSD_Defs.h"
+#include "../nvm_chip/flash_memory/FlashTypes.h"
 #include "../ssd/interface/Host_Interface_Defs.h"
 #include "InlineTools.h"
 

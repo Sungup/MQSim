@@ -7,9 +7,12 @@
 #include "../../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
 #include "../SSD_Defs.h"
-#include "../NvmTransactionFlash.h"
-#include "../phy/NVM_PHY_ONFI_NVDDR2.h"
 #include "../Stats.h"
+
+// Refine header list
+#include "../NvmTransaction.h"
+#include "../NvmTransactionFlashRD.h"
+#include "../NvmTransactionFlashWR.h"
 
 #include "AddressMappingUnitDefs.h"
 
@@ -17,6 +20,7 @@ namespace SSD_Components
 {
   class FTL;
   class Flash_Block_Manager_Base;
+  class NVM_PHY_ONFI;
 
   class Address_Mapping_Unit_Base : public MQSimEngine::Sim_Object
   {
@@ -169,9 +173,24 @@ namespace SSD_Components
     NvmTransactionFlashRD* _make_mapping_read_tr(stream_id_type stream_id,
                                                  uint32_t data_size,
                                                  NVM::memory_content_type content,
-                                                 page_status_type read_sectors_bitmap,
-                                                 LPA_type lpa = NO_LPA,
-                                                 PPA_type ppa = NO_PPA);
+                                                 page_status_type sectors_bitmap,
+                                                 PPA_type ppa,
+                                                 LPA_type lpa = NO_LPA);
+
+    NvmTransactionFlashWR* _make_mapping_write_tr(stream_id_type stream_id,
+                                                  uint32_t data_size,
+                                                  NVM::memory_content_type content,
+                                                  page_status_type sectors_bitmap,
+                                                  PPA_type ppa,
+                                                  LPA_type lpa,
+                                                  NvmTransactionFlashRD* read_tr = nullptr);
+
+    NvmTransactionFlashRD* _make_update_read_tr(NvmTransactionFlashWR* write_tr,
+                                                page_status_type clean_map,
+                                                data_timestamp_type timestamp,
+                                                PPA_type old_ppa);
+
+    NvmTransactionFlashWR* _make_dummy_write_tr();
 
     virtual bool query_cmt(NvmTransactionFlash* transaction) = 0;
 
@@ -197,22 +216,72 @@ namespace SSD_Components
   Address_Mapping_Unit_Base::_make_mapping_read_tr(stream_id_type stream_id,
                                                    uint32_t data_size,
                                                    NVM::memory_content_type content,
-                                                   page_status_type read_sectors_bitmap,
-                                                   LPA_type lpa,
-                                                   PPA_type ppa)
+                                                   page_status_type sectors_bitmap,
+                                                   PPA_type ppa,
+                                                   LPA_type lpa)
   {
     auto* tr = new NvmTransactionFlashRD(Transaction_Source_Type::MAPPING,
                                          stream_id,
                                          data_size,
                                          nullptr,
                                          content,
-                                         read_sectors_bitmap,
-                                         CurrentTimeStamp,
+                                         sectors_bitmap,
                                          lpa,
                                          ppa);
 
+    Convert_ppa_to_address(ppa, tr->Address);
+
     return tr;
   }
+
+  force_inline NvmTransactionFlashWR*
+  Address_Mapping_Unit_Base::_make_mapping_write_tr(stream_id_type stream_id,
+                                                    uint32_t data_size,
+                                                    NVM::memory_content_type content,
+                                                    page_status_type sectors_bitmap,
+                                                    PPA_type ppa,
+                                                    LPA_type lpa,
+                                                    NvmTransactionFlashRD* read_tr)
+  {
+    auto* tr = new NvmTransactionFlashWR(Transaction_Source_Type::MAPPING,
+                                         stream_id,
+                                         data_size,
+                                         nullptr,
+                                         content,
+                                         sectors_bitmap,
+                                         CurrentTimeStamp,
+                                         lpa,
+                                         ppa,
+                                         read_tr);
+
+    return tr;
+  }
+
+  force_inline NvmTransactionFlashRD*
+  Address_Mapping_Unit_Base::_make_update_read_tr(NvmTransactionFlashWR* write_tr,
+                                                  page_status_type clean_map,
+                                                  data_timestamp_type timestamp,
+                                                  PPA_type old_ppa)
+  {
+    auto* tr = new NvmTransactionFlashRD(write_tr,
+                                         count_sector_no_from_status_bitmap(clean_map) * SECTOR_SIZE_IN_BYTE,
+                                         clean_map,
+                                         timestamp,
+                                         old_ppa);
+
+    Convert_ppa_to_address(old_ppa, tr->Address);
+
+    return tr;
+  }
+
+
+  force_inline NvmTransactionFlashWR*
+  Address_Mapping_Unit_Base::_make_dummy_write_tr()
+  {
+    return new NvmTransactionFlashWR(Transaction_Source_Type::MAPPING,
+                                     0, 0, nullptr, 0, 0, 0, NO_LPA, 0);
+  }
+
 }
 
 #endif // !ADDRESS_MAPPING_UNIT_BASE_H

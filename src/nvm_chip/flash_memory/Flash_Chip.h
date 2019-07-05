@@ -52,7 +52,6 @@ namespace NVM
     {
       enum class Internal_Status { IDLE, BUSY };
       enum class Chip_Sim_Event_Type { COMMAND_FINISHED };
-      typedef void(*ChipReadySignalHandlerType) (Flash_Chip* targetChip, FlashCommand* command);
 
     public:
       flash_channel_ID_type ChannelID;
@@ -86,7 +85,7 @@ namespace NVM
       void broadcast_ready_signal(FlashCommand* command);
 
     public:
-      Flash_Chip(const sim_object_id_type&,
+      Flash_Chip(const sim_object_id_type& id,
                  const FlashParameterSet& param,
                  flash_channel_ID_type channelID,
                  flash_chip_ID_type localChipID,
@@ -153,7 +152,6 @@ namespace NVM
       void Validate_simulation_config();
       void Setup_triggers();
       void Execute_simulator_event(MQSimEngine::SimEvent*);
-      void Connect_to_chip_ready_signal(ChipReadySignalHandlerType);
       sim_time_type Get_command_execution_latency(command_code_type CMDCode, flash_page_ID_type pageID)
       {
         int latencyType = 0;

@@ -2,7 +2,9 @@
 #define NVM_TRANSACTION_FLASH_WR
 
 #include "../nvm_chip/flash_memory/FlashTypes.h"
-#include "../nvm_chip/NVM_Types.h"
+#include "../utils/InlineTools.h"
+
+#include "dcm/DataCacheSlot.h"
 
 #include "NvmTransactionFlash.h"
 
@@ -43,10 +45,15 @@ namespace SSD_Components
     // Constructor for GC
     NvmTransactionFlashWR(Transaction_Source_Type source,
                           stream_id_type stream_id,
-                          uint32_t sectors_on_page,
+                          uint32_t data_size_in_byte,
                           const NVM::FlashMemory::Physical_Page_Address& address,
                           NvmTransactionFlashRD* related_read);
 
+    // Constructor for DCM
+    NvmTransactionFlashWR(Transaction_Source_Type source,
+                          stream_id_type stream_id,
+                          uint32_t data_size_in_byte,
+                          const Data_Cache_Slot_Type& evicted_slot);
   };
 
   force_inline
@@ -95,6 +102,26 @@ namespace SSD_Components
       RelatedErase(nullptr),
       write_sectors_bitmap(0),
       DataTimeStamp(INVALID_TIME_STAMP),
+      ExecutionMode(WriteExecutionModeType::SIMPLE)
+  { }
+
+  force_inline
+  NvmTransactionFlashWR::NvmTransactionFlashWR(Transaction_Source_Type source,
+                                               stream_id_type stream_id,
+                                               uint32_t data_size_in_byte,
+                                               const Data_Cache_Slot_Type& evicted)
+    : NvmTransactionFlash(source,
+                          Transaction_Type::WRITE,
+                          stream_id,
+                          data_size_in_byte,
+                          evicted.LPA,
+                          NO_PPA,
+                          nullptr),
+      Content(evicted.Content),
+      RelatedRead(nullptr),
+      RelatedErase(nullptr),
+      write_sectors_bitmap(evicted.State_bitmap_of_existing_sectors),
+      DataTimeStamp(evicted.Timestamp),
       ExecutionMode(WriteExecutionModeType::SIMPLE)
   { }
 }

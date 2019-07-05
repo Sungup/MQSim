@@ -2,10 +2,6 @@
 #define SSD_DEFS_H
 
 #include <cstdint>
-#include <string>
-#include "../sim/Sim_Defs.h"
-#include "../nvm_chip/flash_memory/FlashTypes.h"
-#include "../utils/InlineTools.h"
 
 //enum class Memory_Type {FLASH};
 
@@ -27,21 +23,5 @@ typedef uint64_t data_cache_content_type;
 */
 #define LPN_TO_UNIQUE_KEY(STREAM,LPN) ((((LPA_type)STREAM)<<56U)|LPN)
 #define UNIQUE_KEY_TO_LPN(STREAM,LPN) ((~(((LPA_type)STREAM)<<56U))&LPN)
-
-
-force_inline uint32_t
-count_sector_no_from_status_bitmap(page_status_type page_status)
-{
-  uint32_t size = 0;
-
-  while (page_status) {
-    size += 0x01ULL & page_status;
-
-    page_status = (page_status >> 1U);
-  }
-
-  return size;
-}
-
 
 #endif // !SSD_DEFS_H

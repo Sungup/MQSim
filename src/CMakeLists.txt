@@ -99,6 +99,7 @@ set(MQSIM_SSD_SOURCES
     ssd/dcm/Data_Cache_Manager_Flash_Simple.cpp
     ssd/dcm/Data_Cache_Manager_Flash_Simple.h
     ssd/dcm/DataCacheDefs.h
+    ssd/dcm/DataCacheSlot.h
     ssd/fbm/BlockPoolSlotType.h
     ssd/fbm/Flash_Block_Manager.cpp
     ssd/fbm/Flash_Block_Manager.h

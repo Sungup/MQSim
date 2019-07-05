@@ -178,16 +178,16 @@ Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(UserRequest& user_reque
         Data_Cache_Slot_Type evicted_slot = data_cache->Evict_one_slot_lru();
         if (evicted_slot.Status == Cache_Slot_Status::DIRTY_NO_FLASH_WRITEBACK)
         {
-          evicted_cache_slots->push_back(new NvmTransactionFlashWR(Transaction_Source_Type::CACHE,
-                                                                   tr->Stream_id,
-                                                                   count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE,
-                                                                   nullptr,
-                                                                   evicted_slot.Content,
-                                                                   evicted_slot.State_bitmap_of_existing_sectors,
-                                                                   evicted_slot.Timestamp,
-                                                                   evicted_slot.LPA));
-          cache_eviction_read_size_in_sectors += count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors);
-          //DEBUG2("Evicting page" << evicted_slot.LPA << " from write buffer ")
+          auto evicted_sectors = count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors);
+
+          evicted_cache_slots->emplace_back(
+            _make_evict_tr(Transaction_Source_Type::CACHE,
+                           tr->Stream_id,
+                           evicted_sectors * SECTOR_SIZE_IN_BYTE,
+                           evicted_slot)
+          );
+
+          cache_eviction_read_size_in_sectors += evicted_sectors;
         }
       }
       data_cache->Insert_write_data(tr->Stream_id, tr->LPA, tr->Content, tr->DataTimeStamp, tr->write_sectors_bitmap);

@@ -1,24 +1,27 @@
 #ifndef ADDRESS_MAPPING_UNIT_PAGE_LEVEL
 #define ADDRESS_MAPPING_UNIT_PAGE_LEVEL
 
-#include <unordered_map>
-#include <map>
-#include <queue>
-#include <set>
-#include <list>
-#include "Address_Mapping_Unit_Base.h"
 #include "../fbm/Flash_Block_Manager_Base.h"
 #include "../SSD_Defs.h"
 #include "../NvmTransactionFlashRD.h"
 #include "../NvmTransactionFlashWR.h"
 
-#include "AddressMappingUnitDefs.h"
 #include "AllocationScheme.h"
+
+// Refined header list
+#include <cstdint>
+#include <list>
+#include <map>
+#include <set>
+#include <unordered_map>
+
+#include "../phy/PhyHandler.h"
+#include "AddressMappingUnitDefs.h"
+
+#include "Address_Mapping_Unit_Base.h"
 
 namespace SSD_Components
 {
-#define MAKE_TABLE_INDEX(LPN,STREAM)
-
   enum class CMTEntryStatus {FREE, WAITING, VALID};
 
   struct GTDEntryType //Entry type for the Global Translation Directory

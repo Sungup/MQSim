@@ -1,9 +1,11 @@
 #include "TSU_OutofOrder.h"
 
+#include "../FTL.h"
+
 namespace SSD_Components
 {
 
-  TSU_OutOfOrder::TSU_OutOfOrder(const sim_object_id_type& id, FTL* ftl, NVM_PHY_ONFI_NVDDR2* NVMController, uint32_t ChannelCount, uint32_t chip_no_per_channel,
+  TSU_OutOfOrder::TSU_OutOfOrder(const sim_object_id_type& id, FTL& ftl, NVM_PHY_ONFI* NVMController, uint32_t ChannelCount, uint32_t chip_no_per_channel,
     uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
     sim_time_type WriteReasonableSuspensionTimeForRead,
     sim_time_type EraseReasonableSuspensionTimeForRead,
@@ -62,12 +64,6 @@ namespace SSD_Components
     delete[] MappingReadTRQueue;
     delete[] MappingWriteTRQueue;
   }
-
-  void TSU_OutOfOrder::Start_simulation() {}
-
-  void TSU_OutOfOrder::Validate_simulation_config() {}
-
-  void TSU_OutOfOrder::Execute_simulator_event(MQSimEngine::SimEvent* event) {}
 
   void TSU_OutOfOrder::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
   {
@@ -204,12 +200,12 @@ namespace SSD_Components
       //Flash transactions that are related to FTL mapping data have the highest priority
       sourceQueue1 = &MappingReadTRQueue[chip.ChannelID][chip.ChipID];
 
-      if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip) && GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+      if (ftl.GC_and_WL_Unit->GC_is_in_urgent_mode(&chip) && GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         sourceQueue2 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
       else if (UserReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         sourceQueue2 = &UserReadTRQueue[chip.ChannelID][chip.ChipID];
     }
-    else if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip)) {
+    else if (ftl.GC_and_WL_Unit->GC_is_in_urgent_mode(&chip)) {
       //If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
       if (GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {
@@ -322,7 +318,7 @@ namespace SSD_Components
   {
     Flash_Transaction_Queue *sourceQueue1 = nullptr, *sourceQueue2 = nullptr;
 
-    if (ftl->GC_and_WL_Unit->GC_is_in_urgent_mode(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
+    if (ftl.GC_and_WL_Unit->GC_is_in_urgent_mode(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
     {
       if (GCWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {

@@ -8,6 +8,7 @@
 #include "../sim/Sim_Object.h"
 #include "../utils/InlineTools.h"
 #include "../utils/Workload_Statistics.h"
+#include "Stats.h"
 
 namespace SSD_Components
 {
@@ -56,7 +57,8 @@ namespace SSD_Components
   }
 
   NvmFirmwarePtr build_firmware(const sim_object_id_type& id,
-                                const DeviceParameterSet& params);
+                                const DeviceParameterSet& params,
+                                const Stats& stats);
 }
 
 #endif // !NVM_FIRMWARE_H
