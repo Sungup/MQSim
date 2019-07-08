@@ -52,7 +52,10 @@ FlashParameterSet::FlashParameterSet()
     Page_Metadata_Capacity(1872),
     read_latencies(),
     write_latencies(),
-    __page_size_in_sector(Page_Capacity / SECTOR_SIZE_IN_BYTE)
+    __page_size_in_sector(Page_Capacity / SECTOR_SIZE_IN_BYTE),
+    __plane_size_in_sector(Block_No_Per_Plane
+                             * Page_No_Per_Block
+                             * __page_size_in_sector)
 {
   __update_rw_lat();
 }
@@ -160,4 +163,7 @@ FlashParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 
   __update_rw_lat();
   __page_size_in_sector = Page_Capacity / SECTOR_SIZE_IN_BYTE;
+  __plane_size_in_sector = Block_No_Per_Plane
+                             * Page_No_Per_Block
+                             * __page_size_in_sector;
 }

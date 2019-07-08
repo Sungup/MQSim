@@ -8,7 +8,6 @@ HostParameterSet::HostParameterSet()
     SATA_Processing_Delay(400000),
     Enable_ResponseTime_Logging(false),
     ResponseTime_Logging_Period_Length(400000),
-    IO_Flow_Definitions(),
     Input_file_path()
 { }
 

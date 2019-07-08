@@ -265,6 +265,7 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                                                                  FTL* ftl,
                                                                  NVM_PHY_ONFI* flash_controller,
                                                                  Flash_Block_Manager_Base* block_manager,
+                                                                 const Utils::LogicalAddressPartitionUnit& lapu,
                                                                  Stats& stats,
                                                                  bool ideal_mapping_table,
                                                                  uint32_t cmt_capacity_in_byte,
@@ -303,7 +304,8 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                               Overprovisioning_ratio,
                               sharing_mode,
                               fold_large_addresses),
-    __transaction_service_handler(this, &Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal)
+    __transaction_service_handler(this, &Address_Mapping_Unit_Page_Level::__handle_transaction_service_signal),
+    __logical_addr_partition_unit(lapu)
 {
   Write_transactions_for_overfull_planes = new std::set<NvmTransactionFlashWR*>***[channel_count];
   for (uint32_t channel_id = 0; channel_id < channel_count; channel_id++)
@@ -376,8 +378,8 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                          stream_chip_ids[domainID],
                          stream_die_ids[domainID],
                          stream_plane_ids[domainID],
-                         Utils::Logical_Address_Partitioning_Unit::PDA_count_allocate_to_flow(domainID),
-                         Utils::Logical_Address_Partitioning_Unit::LHA_count_allocate_to_flow_from_device_view(domainID),
+                         __logical_addr_partition_unit.flow_allocated_pda_count(domainID),
+                         __logical_addr_partition_unit.flow_allocated_lha_count_from_device(domainID),
                          sector_no_per_page);
   }
 }
@@ -937,7 +939,7 @@ Address_Mapping_Unit_Page_Level::Allocate_address_for_preconditioning(stream_id_
     if (ppa != NO_LPA)
     PRINT_ERROR("Calling address allocation for a previously allocated LPA during preconditioning!")
     allocate_plane_for_preconditioning(stream_id, (*lpa).first, plane_address);
-    if (LPA_type(Utils::Logical_Address_Partitioning_Unit::Get_share_of_physcial_pages_in_plane(plane_address.ChannelID, plane_address.ChipID, plane_address.DieID, plane_address.PlaneID) * page_no_per_plane)
+    if (LPA_type(__logical_addr_partition_unit.share_of_physical_pages(plane_address.ChannelID, plane_address.ChipID, plane_address.DieID, plane_address.PlaneID) * page_no_per_plane)
         > assigned_lpas[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID].size())
     {
       assigned_lpas[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID].push_back((*lpa).first);
@@ -963,7 +965,7 @@ Address_Mapping_Unit_Page_Level::Allocate_address_for_preconditioning(stream_id_
           plane_address.PlaneID = domain.Plane_ids[plane_cntr];
 
           uint32_t physical_block_consumption_goal = (uint32_t)(double(block_no_per_plane - ftl->GC_and_WL_Unit->Get_minimum_number_of_free_pages_before_GC() / 2)
-                                                                * Utils::Logical_Address_Partitioning_Unit::Get_share_of_physcial_pages_in_plane(plane_address.ChannelID, plane_address.ChipID, plane_address.DieID, plane_address.PlaneID));
+                                                                * __logical_addr_partition_unit.share_of_physical_pages(plane_address.ChannelID, plane_address.ChipID, plane_address.DieID, plane_address.PlaneID));
 
           //Adjust the average
           double model_average = 0;

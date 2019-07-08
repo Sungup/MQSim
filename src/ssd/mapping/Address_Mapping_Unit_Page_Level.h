@@ -15,6 +15,7 @@
 #include <set>
 #include <unordered_map>
 
+#include "../../utils/Logical_Address_Partitioning_Unit.h"
 #include "../phy/PhyHandler.h"
 #include "AddressMappingUnitDefs.h"
 
@@ -159,6 +160,8 @@ namespace SSD_Components
   private:
     FlashTransactionHandler<Address_Mapping_Unit_Page_Level> __transaction_service_handler;
 
+    const Utils::LogicalAddressPartitionUnit& __logical_addr_partition_unit;
+
     uint32_t cmt_capacity;
 
     std::vector<AddressMappingDomain> domains;
@@ -205,6 +208,7 @@ namespace SSD_Components
                                     FTL* ftl,
                                     NVM_PHY_ONFI* flash_controller,
                                     Flash_Block_Manager_Base* block_manager,
+                                    const Utils::LogicalAddressPartitionUnit& lapu,
                                     Stats& stats,
                                     bool ideal_mapping_table,
                                     uint32_t cmt_capacity_in_byte,

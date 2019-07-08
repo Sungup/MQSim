@@ -10,6 +10,7 @@
 #include "exec/Host_System.h"
 #include "utils/rapidxml/rapidxml.hpp"
 #include "utils/DistributionTypes.h"
+#include "utils/Logical_Address_Partitioning_Unit.h"
 
 using namespace std;
 
@@ -191,7 +192,8 @@ int main(int argc, char* argv[])
   ExecParameterSet exec_params(ssd_config_file_path);
   IOFlowScenariosList io_scenarios;
 
-  __read_workload_definitions(workload_defs_file_path, io_scenarios);
+  __read_workload_definitions(workload_defs_file_path,
+                              io_scenarios);
 
   int s_no = 0;
   for (auto& io_scen : io_scenarios) {
@@ -206,18 +208,28 @@ int main(int argc, char* argv[])
     //The simulator should always be reset, before starting the actual simulation
     Simulator->Reset();
 
-    exec_params.Host_Configuration.IO_Flow_Definitions.assign(io_scen.begin(), io_scen.end());
+    // Create LogicalAddressPartitioningUnit
+    StreamIdInfo stream_info(exec_params.SSD_Device_Configuration,
+                             io_scen);
+
+    Utils::LogicalAddressPartitionUnit addr_partitioner(exec_params.SSD_Device_Configuration,
+                                                        stream_info,
+                                                        io_scen.size());
 
     // Create SSD_Device based on the specified parameters
     SSD_Device ssd(exec_params.SSD_Device_Configuration,
-                   exec_params.Host_Configuration.IO_Flow_Definitions);
+                   io_scen,
+                   addr_partitioner,
+                   stream_info);
 
     //Create Host_System based on the specified parameters
-    exec_params.Host_Configuration.Input_file_path = workload_defs_file_path.substr(0, workload_defs_file_path.find_last_of("."));
+    exec_params.Host_Configuration.Input_file_path = workload_defs_file_path.substr(0, workload_defs_file_path.find_last_of('.'));
 
     Host_System host(&exec_params.Host_Configuration,
+                     io_scen,
                      exec_params.SSD_Device_Configuration.Enabled_Preconditioning,
-                     ssd.Host_interface);
+                     ssd.Host_interface,
+                     addr_partitioner);
 
     host.Attach_ssd_device(&ssd);
 

@@ -5,7 +5,7 @@
 namespace SSD_Components
 {
 
-  TSU_OutOfOrder::TSU_OutOfOrder(const sim_object_id_type& id, FTL& ftl, NVM_PHY_ONFI* NVMController, uint32_t ChannelCount, uint32_t chip_no_per_channel,
+  TSU_OutOfOrder::TSU_OutOfOrder(const sim_object_id_type& id, FTL& ftl, NVM_PHY_ONFI& NVMController, uint32_t ChannelCount, uint32_t chip_no_per_channel,
     uint32_t DieNoPerChip, uint32_t PlaneNoPerDie,
     sim_time_type WriteReasonableSuspensionTimeForRead,
     sim_time_type EraseReasonableSuspensionTimeForRead,
@@ -240,22 +240,22 @@ namespace SSD_Components
     /// false except IDLE status. Commented break phrase has been added by
     /// sungup at 2019.07.02. Is this right procedure?
     bool suspensionRequired = false;
-    ChipStatus cs = _NVMController->GetChipStatus(chip);
+    ChipStatus cs = _NVMController.GetChipStatus(chip);
     switch (cs)
     {
     case ChipStatus::IDLE:
       break;
     case ChipStatus::WRITING:
-      if (!programSuspensionEnabled || _NVMController->HasSuspendedCommand(chip))
+      if (!programSuspensionEnabled || _NVMController.HasSuspendedCommand(chip))
         return false;
-      if (_NVMController->Expected_finish_time(chip) - Simulator->Time() < writeReasonableSuspensionTimeForRead)
+      if (_NVMController.Expected_finish_time(chip) - Simulator->Time() < writeReasonableSuspensionTimeForRead)
         return false;
       suspensionRequired = true;
       // break;
     case ChipStatus::ERASING:
-      if (!eraseSuspensionEnabled || _NVMController->HasSuspendedCommand(chip))
+      if (!eraseSuspensionEnabled || _NVMController.HasSuspendedCommand(chip))
         return false;
-      if (_NVMController->Expected_finish_time(chip) - Simulator->Time() < eraseReasonableSuspensionTimeForRead)
+      if (_NVMController.Expected_finish_time(chip) - Simulator->Time() < eraseReasonableSuspensionTimeForRead)
         return false;
       suspensionRequired = true;
       // break;
@@ -305,7 +305,7 @@ namespace SSD_Components
         }
 
       if (!transaction_dispatch_slots.empty())
-        _NVMController->Send_command_to_chip(transaction_dispatch_slots);
+        _NVMController.Send_command_to_chip(transaction_dispatch_slots);
 
       transaction_dispatch_slots.clear();
       dieID = (dieID + 1) % die_no_per_chip;
@@ -347,15 +347,15 @@ namespace SSD_Components
 
 
     bool suspensionRequired = false;
-    ChipStatus cs = _NVMController->GetChipStatus(chip);
+    ChipStatus cs = _NVMController.GetChipStatus(chip);
     switch (cs)
     {
     case ChipStatus::IDLE:
       break;
     case ChipStatus::ERASING:
-      if (!eraseSuspensionEnabled || _NVMController->HasSuspendedCommand(chip))
+      if (!eraseSuspensionEnabled || _NVMController.HasSuspendedCommand(chip))
         return false;
-      if (_NVMController->Expected_finish_time(chip) - Simulator->Time() < eraseReasonableSuspensionTimeForWrite)
+      if (_NVMController.Expected_finish_time(chip) - Simulator->Time() < eraseReasonableSuspensionTimeForWrite)
         return false;
       suspensionRequired = true;
     default:
@@ -404,7 +404,7 @@ namespace SSD_Components
         }
 
       if (transaction_dispatch_slots.size() > 0)
-        _NVMController->Send_command_to_chip(transaction_dispatch_slots);
+        _NVMController.Send_command_to_chip(transaction_dispatch_slots);
       transaction_dispatch_slots.clear();
       dieID = (dieID + 1) % die_no_per_chip;
     }
@@ -413,7 +413,7 @@ namespace SSD_Components
 
   bool TSU_OutOfOrder::service_erase_transaction(const NVM::FlashMemory::Flash_Chip& chip)
   {
-    if (_NVMController->GetChipStatus(chip) != ChipStatus::IDLE)
+    if (_NVMController.GetChipStatus(chip) != ChipStatus::IDLE)
       return false;
 
     Flash_Transaction_Queue* source_queue = &GCEraseTRQueue[chip.ChannelID][chip.ChipID];
@@ -438,7 +438,7 @@ namespace SSD_Components
         it++;
       }
       if (transaction_dispatch_slots.size() > 0)
-        _NVMController->Send_command_to_chip(transaction_dispatch_slots);
+        _NVMController.Send_command_to_chip(transaction_dispatch_slots);
       transaction_dispatch_slots.clear();
       dieID = (dieID + 1) % die_no_per_chip;
     }

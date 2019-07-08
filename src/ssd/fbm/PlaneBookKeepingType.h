@@ -9,6 +9,7 @@
 #ifndef __MQSim__PlaneBookKeepingType__
 #define __MQSim__PlaneBookKeepingType__
 
+#include <map>
 #include <set>
 #include <queue>
 

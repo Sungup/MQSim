@@ -351,3 +351,74 @@ TraceFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 
   }
 }
+
+// ---------------------
+// StreamIdInfo Definition
+// ---------------------
+
+template <typename T>
+force_inline T
+__build_id_list(uint32_t count)
+{
+  T id_list(count);
+  std::iota(id_list.begin(), id_list.end(), 0);
+
+  return id_list;
+}
+
+force_inline void
+StreamIdInfo::__init_sata_stream(const DeviceParameterSet& params,
+                               uint32_t flow_count)
+{
+  for (uint32_t i = 0; i < flow_count; ++i) {
+    __stream_channel_ids.emplace_back(
+      __build_id_list<ChannelIDs>(params.Flash_Channel_Count)
+    );
+
+    __stream_chip_ids.emplace_back(
+      __build_id_list<ChipIDs>(params.Chip_No_Per_Channel)
+    );
+
+    __stream_die_ids.emplace_back(
+      __build_id_list<DieIDs>(params.Flash_Parameters.Die_No_Per_Chip)
+    );
+
+    __stream_plane_ids.emplace_back(
+      __build_id_list<PlaneIDs>(params.Flash_Parameters.Plane_No_Per_Die)
+    );
+  }
+}
+
+force_inline void
+StreamIdInfo::__init_nvme_stream(IOFlowScenario& io_flows)
+{
+  for (auto& flow : io_flows) {
+    __stream_channel_ids.emplace_back(
+      ChannelIDs(flow->Channel_IDs.begin(), flow->Channel_IDs.end())
+    );
+
+    __stream_chip_ids.emplace_back(
+      ChipIDs(flow->Chip_IDs.begin(), flow->Chip_IDs.end())
+    );
+
+    __stream_die_ids.emplace_back(
+      DieIDs(flow->Die_IDs.begin(), flow->Die_IDs.end())
+    );
+
+    __stream_plane_ids.emplace_back(
+      PlaneIDs(flow->Plane_IDs.begin(), flow->Plane_IDs.end())
+    );
+  }
+}
+
+StreamIdInfo::StreamIdInfo(const DeviceParameterSet& params,
+                           IOFlowScenario& io_flows)
+  : stream_count(params.HostInterface_Type == HostInterface_Types::SATA
+                 ? 1U
+                 : io_flows.size())
+{
+  if (params.HostInterface_Type == HostInterface_Types::SATA)
+    __init_sata_stream(params, io_flows.size());
+  else
+    __init_nvme_stream(io_flows);
+}

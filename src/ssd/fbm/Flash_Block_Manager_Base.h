@@ -1,13 +1,9 @@
 #ifndef BLOCK_POOL_MANAGER_BASE_H
 #define BLOCK_POOL_MANAGER_BASE_H
 
-#include <list>
 #include <cstdint>
-#include <map>
-#include <queue>
-#include <set>
-#include <sstream>
-#include "../../nvm_chip/flash_memory/FlashTypes.h"
+#include <memory>
+
 #include "../../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "../Stats.h"
 
@@ -65,6 +61,12 @@ namespace SSD_Components
 
     void program_transaction_issued(const NVM::FlashMemory::Physical_Page_Address& page_address);//Updates the block bookkeeping record
   };
+
+  typedef std::shared_ptr<Flash_Block_Manager_Base> FlashBlockManagerPtr;
+
+  FlashBlockManagerPtr build_fbm_object(const DeviceParameterSet& params,
+                                        uint32_t concurrent_stream_count,
+                                        Stats& stats);
 }
 
 #endif//!BLOCK_POOL_MANAGER_BASE_H

@@ -19,7 +19,6 @@ public:
 
   bool Enable_ResponseTime_Logging;
   sim_time_type ResponseTime_Logging_Period_Length; // nanoseconds
-  IOFlowScenario IO_Flow_Definitions;
 
   // This parameter is not serialized. This is used to inform the Host_System
   // class about the input file path.

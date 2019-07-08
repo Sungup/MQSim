@@ -1,7 +1,5 @@
 #include "TSU_Base.h"
 
-#include <string>
-
 #include "../FTL.h"
 
 // Children classes for builder
@@ -11,7 +9,7 @@ using namespace SSD_Components;
 
 TSU_Base::TSU_Base(const sim_object_id_type& id,
                    FTL& ftl,
-                   NVM_PHY_ONFI* NVMController,
+                   NVM_PHY_ONFI& NVMController,
                    Flash_Scheduling_Type Type,
                    uint32_t ChannelCount,
                    uint32_t chip_no_per_channel,
@@ -51,8 +49,8 @@ void TSU_Base::Setup_triggers()
 #if UNBLOCK_NOT_IN_USE
   _NVMController->connect_to_transaction_service_signal(__transaction_service_handler);
 #endif
-  _NVMController->connect_to_channel_idle_signal(__channel_idle_signal_handler);
-  _NVMController->connect_to_chip_idle_signal(__chip_idle_signal_handler);
+  _NVMController.connect_to_channel_idle_signal(__channel_idle_signal_handler);
+  _NVMController.connect_to_chip_idle_signal(__chip_idle_signal_handler);
 }
 
 #if UNBLOCK_NOT_IN_USE
@@ -76,9 +74,9 @@ TSU_Base::__handle_chip_idle_signal(const NVM::FlashMemory::Flash_Chip& chip)
 
 TSUPtr
 SSD_Components::build_tsu_object(const sim_object_id_type& id,
+                                 const DeviceParameterSet& params,
                                  FTL& ftl,
-                                 NVM_PHY_ONFI* nvm_controller,
-                                 const DeviceParameterSet& params)
+                                 NVM_PHY_ONFI& nvm_controller)
 {
   return std::make_shared<TSU_OutOfOrder>(id, ftl, nvm_controller,
                                           params.Flash_Channel_Count,

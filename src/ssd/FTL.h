@@ -3,7 +3,6 @@
 
 #include "../utils/RandomGenerator.h"
 #include "mapping/Address_Mapping_Unit_Base.h"
-#include "fbm/Flash_Block_Manager_Base.h"
 #include "gc_and_wl/GC_and_WL_Unit_Base.h"
 #include "phy/NVM_PHY_ONFI.h"
 #include "Stats.h"
@@ -11,6 +10,7 @@
 // Refined header list
 #include "../exec/params/DeviceParameterSet.h"
 #include "tsu/TSU_Base.h"
+#include "fbm/Flash_Block_Manager_Base.h"
 #include "NvmTransactionFlash.h"
 
 #include "NVM_Firmware.h"
@@ -19,10 +19,8 @@ namespace SSD_Components
 {
   enum class SimulationMode { STANDALONE, FULL_SYSTEM };
 
-  class Flash_Block_Manager_Base;
   class Address_Mapping_Unit_Base;
   class GC_and_WL_Unit_Base;
-  class TSU_Base;
 
   class FTL : public NVM_Firmware {
   private:
@@ -41,11 +39,11 @@ namespace SSD_Components
 
   public:
     Address_Mapping_Unit_Base* Address_Mapping_Unit;
-    Flash_Block_Manager_Base* BlockManager;
     GC_and_WL_Unit_Base* GC_and_WL_Unit;
 
   private:
     TSUPtr __tsu;
+    FlashBlockManagerPtr __block_manager;
 
   public:
     FTL(const sim_object_id_type& id,
@@ -65,6 +63,10 @@ namespace SSD_Components
     void preparing_for_transaction_submit();
     void submit_transaction(NvmTransactionFlash* transaction);
     void schedule_transaction();
+
+    // FBM related passing functions
+    void assign_fbm(FlashBlockManagerPtr& fbm);
+
   };
 
   force_inline void
@@ -82,6 +84,10 @@ namespace SSD_Components
   force_inline void
   FTL::schedule_transaction()
   { __tsu->Schedule(); }
+
+  force_inline void
+  FTL::assign_fbm(FlashBlockManagerPtr& fbm)
+  { __block_manager = fbm; }
 
 }
 

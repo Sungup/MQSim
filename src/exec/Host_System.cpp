@@ -8,8 +8,13 @@
 #include "../utils/StringTools.h"
 #include "../utils/Logical_Address_Partitioning_Unit.h"
 
-Host_System::Host_System(HostParameterSet* parameters, bool preconditioning_required, SSD_Components::Host_Interface_Base* ssd_host_interface):
-  MQSimEngine::Sim_Object("Host"), preconditioning_required(preconditioning_required)
+Host_System::Host_System(HostParameterSet* parameters,
+                         const IOFlowScenario& scenario,
+                         bool preconditioning_required,
+                         SSD_Components::Host_Interface_Base* ssd_host_interface,
+                         const Utils::LogicalAddressPartitionUnit& lapu)
+  : MQSimEngine::Sim_Object("Host"),
+    preconditioning_required(preconditioning_required)
 {
   Simulator->AddObject(this);
 
@@ -27,7 +32,7 @@ Host_System::Host_System(HostParameterSet* parameters, bool preconditioning_requ
 
   //Create IO flows
   // LHA_type address_range_per_flow = ssd_host_interface->Get_max_logical_sector_address() / parameters->IO_Flow_Definitions.size();
-  for (uint16_t flow_id = 0; flow_id < parameters->IO_Flow_Definitions.size(); flow_id++)
+  for (uint16_t flow_id = 0; flow_id < scenario.size(); flow_id++)
   {
     Host_Components::IO_Flow_Base* io_flow = NULL;
     //No flow should ask for I/O queue id 0, it is reserved for NVMe Admin command queue pair
@@ -42,16 +47,16 @@ Host_System::Host_System(HostParameterSet* parameters, bool preconditioning_requ
     default:
       break;
     }
-    switch (parameters->IO_Flow_Definitions[flow_id]->Type)
+    switch (scenario[flow_id]->Type)
     {
     case Flow_Type::SYNTHETIC:
     {
-      SyntheticFlowParamSet* flow_param = (SyntheticFlowParamSet*)parameters->IO_Flow_Definitions[flow_id].get();
+      SyntheticFlowParamSet* flow_param = (SyntheticFlowParamSet*)scenario[flow_id].get();
       if (flow_param->Working_Set_Percentage > 100 || flow_param->Working_Set_Percentage < 1)
         flow_param->Working_Set_Percentage = 100;
       io_flow = new Host_Components::IO_Flow_Synthetic(this->ID() + ".IO_Flow.Synth.No_" + std::to_string(flow_id), flow_id,
-        Utils::Logical_Address_Partitioning_Unit::Start_lha_available_to_flow(flow_id),
-        Utils::Logical_Address_Partitioning_Unit::End_lha_available_to_flow(flow_id),
+        lapu.start_lha_available_to_flow(flow_id),
+        lapu.end_lha_available_to_flow(flow_id),
         ((double)flow_param->Working_Set_Percentage / 100.0), FLOW_ID_TO_Q_ID(flow_id), nvme_sq_size, nvme_cq_size,
         flow_param->Priority_Class, flow_param->Read_Percentage / double(100.0), flow_param->Address_Distribution, flow_param->Percentage_of_Hot_Region / double(100.0),
         flow_param->Request_Size_Distribution, flow_param->Average_Request_Size, flow_param->Variance_Request_Size,
@@ -64,9 +69,10 @@ Host_System::Host_System(HostParameterSet* parameters, bool preconditioning_requ
     }
     case Flow_Type::TRACE:
     {
-      TraceFlowParameterSet * flow_param = (TraceFlowParameterSet*)parameters->IO_Flow_Definitions[flow_id].get();
+      TraceFlowParameterSet * flow_param = (TraceFlowParameterSet*)scenario[flow_id].get();
       io_flow = new Host_Components::IO_Flow_Trace_Based(this->ID() + ".IO_Flow.Trace." + flow_param->File_Path, flow_id,
-        Utils::Logical_Address_Partitioning_Unit::Start_lha_available_to_flow(flow_id), Utils::Logical_Address_Partitioning_Unit::End_lha_available_to_flow(flow_id),
+        lapu.start_lha_available_to_flow(flow_id),
+        lapu.end_lha_available_to_flow(flow_id),
         FLOW_ID_TO_Q_ID(flow_id), nvme_sq_size, nvme_cq_size,
         flow_param->Priority_Class, flow_param->Initial_Occupancy_Percentage / double(100.0),
         flow_param->File_Path, flow_param->Time_Unit, flow_param->Relay_Count, flow_param->Percentage_To_Be_Executed,

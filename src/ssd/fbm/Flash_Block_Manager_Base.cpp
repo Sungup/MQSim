@@ -1,3 +1,6 @@
+#include "Flash_Block_Manager_Base.h"
+
+// Children classes
 #include "Flash_Block_Manager.h"
 
 using namespace SSD_Components;
@@ -144,4 +147,21 @@ void Flash_Block_Manager_Base::GC_WL_finished(const NVM::FlashMemory::Physical_P
 bool Flash_Block_Manager_Base::Is_page_valid(const Block_Pool_Slot_Type& block, flash_page_ID_type page_id)
 {
   return ((block.Invalid_page_bitmap[page_id / 64] & (((uint64_t)1) << page_id)) == 0);
+}
+
+FlashBlockManagerPtr
+SSD_Components::build_fbm_object(const DeviceParameterSet& params,
+                                 uint32_t concurrent_stream_count,
+                                 Stats& stats)
+{
+  return std::make_shared<Flash_Block_Manager>(nullptr,
+                                               stats,
+                                               params.Flash_Parameters.Block_PE_Cycles_Limit,
+                                               concurrent_stream_count,
+                                               params.Flash_Channel_Count,
+                                               params.Chip_No_Per_Channel,
+                                               params.Flash_Parameters.Die_No_Per_Chip,
+                                               params.Flash_Parameters.Plane_No_Per_Die,
+                                               params.Flash_Parameters.Block_No_Per_Plane,
+                                               params.Flash_Parameters.Page_No_Per_Block);
 }

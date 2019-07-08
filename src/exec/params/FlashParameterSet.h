@@ -48,12 +48,14 @@ public:
 
 private:
   uint32_t __page_size_in_sector;
+  uint64_t __plane_size_in_sector;
 
   void __update_rw_lat();
 public:
   FlashParameterSet();
 
   uint32_t page_size_in_sector() const;
+  uint64_t plane_size_in_sector() const;
 
   sim_time_type avg_read_latency() const;
   sim_time_type avg_write_latency() const;
@@ -69,6 +71,12 @@ force_inline uint32_t
 FlashParameterSet::page_size_in_sector() const
 {
   return __page_size_in_sector;
+}
+
+force_inline uint64_t
+FlashParameterSet::plane_size_in_sector() const
+{
+  return __plane_size_in_sector;
 }
 
 force_inline sim_time_type

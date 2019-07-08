@@ -13,6 +13,7 @@
 #include "../../utils/Workload_Statistics.h"
 
 #include "ParameterSetBase.h"
+#include "DeviceParameterSet.h"
 
 enum class Flow_Type {
   SYNTHETIC,
@@ -130,5 +131,49 @@ public:
   void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
   void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
+
+// ---------------------
+// StreamIdInfo Definition
+// ---------------------
+class StreamIdInfo {
+private:
+  StreamChannelIDs __stream_channel_ids;
+  StreamChipIDs    __stream_chip_ids;
+  StreamDieIDs     __stream_die_ids;
+  StreamPlaneIDs   __stream_plane_ids;
+
+public:
+  const uint32_t   stream_count;
+
+private:
+  void __init_sata_stream(const DeviceParameterSet& params,
+                          uint32_t flow_count);
+  void __init_nvme_stream(IOFlowScenario& io_flows);
+
+public:
+  StreamIdInfo(const DeviceParameterSet& params,
+               IOFlowScenario& io_flows);
+
+  const StreamChannelIDs& stream_channel_ids() const;
+  const StreamChipIDs&    stream_chip_ids() const;
+  const StreamDieIDs&     stream_die_ids() const;
+  const StreamPlaneIDs&   stream_plane_ids() const;
+};
+
+force_inline const StreamChannelIDs&
+StreamIdInfo::stream_channel_ids() const
+{ return __stream_channel_ids; }
+
+force_inline const StreamChipIDs&
+StreamIdInfo::stream_chip_ids() const
+{ return __stream_chip_ids; }
+
+force_inline const StreamDieIDs&
+StreamIdInfo::stream_die_ids() const
+{ return __stream_die_ids; }
+
+force_inline const StreamPlaneIDs&
+StreamIdInfo::stream_plane_ids() const
+{ return __stream_plane_ids; }
 
 #endif // !IO_FLOW_PARAMETER_SET_H

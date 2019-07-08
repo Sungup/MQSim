@@ -28,9 +28,9 @@ FTL::FTL(const sim_object_id_type& id,
     avg_flash_program_latency(params.Flash_Parameters.avg_write_latency()),
     __stats(stats),
     Address_Mapping_Unit(nullptr),
-    BlockManager(nullptr),
     GC_and_WL_Unit(nullptr),
-    __tsu()
+    __tsu(),
+    __block_manager()
 { }
 
 void
@@ -44,7 +44,7 @@ FTL::Validate_simulation_config()
   if (Address_Mapping_Unit == nullptr)
     throw std::logic_error("The mapping module is not set for FTL!");
 
-  if (BlockManager == nullptr)
+  if (!__block_manager)
     throw std::logic_error("The block manager is not set for FTL!");
 
   if (GC_and_WL_Unit == nullptr)

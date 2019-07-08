@@ -40,7 +40,7 @@ namespace SSD_Components
     const sim_time_type eraseReasonableSuspensionTimeForWrite;
 
     FTL& ftl;
-    NVM_PHY_ONFI* _NVMController;
+    NVM_PHY_ONFI& _NVMController;
 
     std::list<NvmTransactionFlash*> transaction_receive_slots;//Stores the transactions that are received for sheduling
     std::list<NvmTransactionFlash*> transaction_dispatch_slots;//Used to submit transactions to the channel controller
@@ -70,7 +70,7 @@ namespace SSD_Components
   public:
     TSU_Base(const sim_object_id_type& id,
              FTL& ftl,
-             NVM_PHY_ONFI* NVMController,
+             NVM_PHY_ONFI& NVMController,
              Flash_Scheduling_Type Type,
              uint32_t Channel_no,
              uint32_t chip_no_per_channel,
@@ -114,13 +114,13 @@ namespace SSD_Components
   force_inline bool
   TSU_Base::_is_busy_channel(flash_channel_ID_type channelID)
   {
-    return _NVMController->Get_channel_status(channelID) == BusChannelStatus::BUSY;
+    return _NVMController.Get_channel_status(channelID) == BusChannelStatus::BUSY;
   }
 
   force_inline bool
   TSU_Base::_is_idle_channel(flash_channel_ID_type channelID)
   {
-    return _NVMController->Get_channel_status(channelID) == BusChannelStatus::IDLE;
+    return _NVMController.Get_channel_status(channelID) == BusChannelStatus::IDLE;
   }
 
   force_inline void
@@ -136,7 +136,7 @@ namespace SSD_Components
   force_inline NVM::FlashMemory::Flash_Chip&
   TSU_Base::_get_chip_on_rr_turn(uint32_t channelID)
   {
-    return *(_NVMController->Get_chip(channelID, __channel_rr_turn[channelID]));
+    return *(_NVMController.Get_chip(channelID, __channel_rr_turn[channelID]));
   }
 
   force_inline void
@@ -171,9 +171,9 @@ namespace SSD_Components
   typedef std::shared_ptr<TSU_Base> TSUPtr;
 
   TSUPtr build_tsu_object(const sim_object_id_type& id,
+                          const DeviceParameterSet& params,
                           FTL& ftl,
-                          NVM_PHY_ONFI* nvm_controller,
-                          const DeviceParameterSet& params);
+                          NVM_PHY_ONFI& nvm_controller);
 }
 
 #endif //TSU_H

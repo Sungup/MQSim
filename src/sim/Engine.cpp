@@ -16,9 +16,6 @@ void Engine::Reset()
   _sim_time = 0;
   stop = false;
   started = false;
-
-  // TODO Move internal variables.
-  Utils::Logical_Address_Partitioning_Unit::Reset();
 }
 
 //Add an object to the simulator object list

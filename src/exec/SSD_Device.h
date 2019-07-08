@@ -23,6 +23,7 @@
 #include "../ssd/ONFI_Channel_Base.h"
 
 #include "../sim/Sim_Object.h"
+#include "../utils/Logical_Address_Partitioning_Unit.h"
 
 
 /*********************************************************************************************************
@@ -36,10 +37,12 @@
 
 class SSD_Device : public MQSimEngine::Sim_Object
 {
+  const Utils::LogicalAddressPartitionUnit& __addr_partitioner;
+
   SSD_Components::Stats __stats;
   SSD_Components::OnfiChannelList __channels;
-  SSD_Components::FTL __ftl;
   SSD_Components::OnfiPhyPtr __phy;
+  SSD_Components::FTL __ftl;
 
 public:
   const bool Preconditioning_required;
@@ -55,7 +58,10 @@ public:
   SSD_Components::Data_Cache_Manager_Base *Cache_manager;
 
 public:
-  SSD_Device(DeviceParameterSet& parameters, IOFlowScenario& io_flows);
+  SSD_Device(const DeviceParameterSet& parameters,
+             const IOFlowScenario& io_flows,
+             const Utils::LogicalAddressPartitionUnit& lapu,
+             const StreamIdInfo& stream_info);
   ~SSD_Device() final;
 
   void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) final;

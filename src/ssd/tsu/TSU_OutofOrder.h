@@ -2,6 +2,7 @@
 #define TSU_OUTOFORDER_H
 
 #include <list>
+
 #include "../Flash_Transaction_Queue.h"
 #include "../NvmTransactionFlash.h"
 
@@ -38,7 +39,7 @@ namespace SSD_Components
   public:
     TSU_OutOfOrder(const sim_object_id_type& id,
                    FTL& ftl,
-                   NVM_PHY_ONFI* NVMController,
+                   NVM_PHY_ONFI& NVMController,
                    uint32_t Channel_no,
                    uint32_t chip_no_per_channel,
                    uint32_t DieNoPerChip,

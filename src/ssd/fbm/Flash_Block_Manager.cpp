@@ -6,9 +6,16 @@
 
 namespace SSD_Components
 {
-  Flash_Block_Manager::Flash_Block_Manager(GC_and_WL_Unit_Base* gc_and_wl_unit, Stats& stats, uint32_t max_allowed_block_erase_count, uint32_t total_concurrent_streams_no,
-    uint32_t channel_count, uint32_t chip_no_per_channel, uint32_t die_no_per_chip, uint32_t plane_no_per_die,
-    uint32_t block_no_per_plane, uint32_t page_no_per_block)
+  Flash_Block_Manager::Flash_Block_Manager(GC_and_WL_Unit_Base* gc_and_wl_unit,
+                                           Stats& stats,
+                                           uint32_t max_allowed_block_erase_count,
+                                           uint32_t total_concurrent_streams_no,
+                                           uint32_t channel_count,
+                                           uint32_t chip_no_per_channel,
+                                           uint32_t die_no_per_chip,
+                                           uint32_t plane_no_per_die,
+                                           uint32_t block_no_per_plane,
+                                           uint32_t page_no_per_block)
     : Flash_Block_Manager_Base(gc_and_wl_unit, stats, max_allowed_block_erase_count, total_concurrent_streams_no, channel_count, chip_no_per_channel, die_no_per_chip,
       plane_no_per_die, block_no_per_plane, page_no_per_block)
   {

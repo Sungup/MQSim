@@ -18,7 +18,11 @@
 class Host_System : public MQSimEngine::Sim_Object
 {
 public:
-  Host_System(HostParameterSet* parameters, bool preconditioning_required, SSD_Components::Host_Interface_Base* ssd_host_interface);
+  Host_System(HostParameterSet* parameters,
+              const IOFlowScenario& scenario,
+              bool preconditioning_required,
+              SSD_Components::Host_Interface_Base* ssd_host_interface,
+              const Utils::LogicalAddressPartitionUnit& lapu);
   ~Host_System();
   void Start_simulation();
   void Validate_simulation_config();
