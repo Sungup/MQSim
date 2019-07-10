@@ -5,6 +5,15 @@
 
 using namespace SSD_Components;
 
+force_inline uint32_t
+DeviceParameterSet::__parallel_device_count() const
+{
+  return Flash_Channel_Count
+           * Chip_No_Per_Channel
+           * Flash_Parameters.Die_No_Per_Chip
+           * Flash_Parameters.Plane_No_Per_Die;
+}
+
 DeviceParameterSet::DeviceParameterSet()
   : Seed(123),
     Enabled_Preconditioning(true),
@@ -44,7 +53,9 @@ DeviceParameterSet::DeviceParameterSet()
     Channel_Transfer_Rate(300),
     Chip_No_Per_Channel(4),
     Flash_Comm_Protocol(ONFI_Protocol::NVDDR2),
-    Flash_Parameters()
+    Flash_Parameters(),
+    __back_pressure_buffer_max_depth(__parallel_device_count()
+                                       * Flash_Parameters.page_size_in_sector())
 { }
 
 void
@@ -231,6 +242,9 @@ DeviceParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
   } catch (...) {
     throw mqsim_error("Error in DeviceParameterSet!");
   }
+
+  __back_pressure_buffer_max_depth = __parallel_device_count()
+                                       * Flash_Parameters.page_size_in_sector();
 
   if(Overprovisioning_Ratio < 0.05)
     throw mqsim_error("The specified overprovisioning ratio is too small. "

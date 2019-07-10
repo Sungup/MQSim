@@ -43,19 +43,15 @@ class SSD_Device : public MQSimEngine::Sim_Object
   SSD_Components::OnfiChannelList __channels;
   SSD_Components::OnfiPhyPtr __phy;
   SSD_Components::FTL __ftl;
+  SSD_Components::DataCacheManagerPtr __cache_manager;
 
 public:
   const bool Preconditioning_required;
-  const NVM::NVM_Type Memory_Type;
-
-  const uint32_t Channel_count;
-  const uint32_t Chip_no_per_channel;
 
   const Utils::LhaToLpaConverter<SSD_Device>     lha_to_lpa_converter;
   const Utils::NvmAccessBitmapFinder<SSD_Device> nvm_access_bitmap_finder;
 
   SSD_Components::Host_Interface_Base *Host_interface;
-  SSD_Components::Data_Cache_Manager_Base *Cache_manager;
 
 public:
   SSD_Device(const DeviceParameterSet& parameters,

@@ -1,9 +1,4 @@
-#include <stdexcept>
-#include "../../nvm_chip/NVM_Types.h"
 #include "Data_Cache_Manager_Flash_Simple.h"
-#include "../NvmTransactionFlashRD.h"
-#include "../NvmTransactionFlashWR.h"
-#include "../FTL.h"
 
 using namespace SSD_Components;
 
@@ -36,14 +31,13 @@ Data_Cache_Manager_Flash_Simple::Data_Cache_Manager_Flash_Simple(const sim_objec
                             stream_count),
     flash_controller(flash_controller),
     capacity_in_bytes(total_capacity_in_bytes),
-    sector_no_per_page(sector_no_per_page),
     request_queue_turn(0),
     back_pressure_buffer_max_depth(back_pressure_buffer_max_depth),
     __user_transaction_handler(this, &Data_Cache_Manager_Flash_Simple::__handle_transaction_service)
 {
   capacity_in_pages = capacity_in_bytes / (SECTOR_SIZE_IN_BYTE * sector_no_per_page);
   data_cache = new Data_Cache_Flash(capacity_in_pages);
-  dram_execution_queue = new std::queue<Memory_Transfer_Info*>[stream_count];
+  dram_execution_queue = new std::queue<MemoryTransferInfo*>[stream_count];
   waiting_user_requests_queue_for_dram_free_slot = new std::list<UserRequest*>[stream_count];
   this->back_pressure_buffer_depth = 0;
   bloom_filter = new std::set<LPA_type>[stream_count];
@@ -55,7 +49,6 @@ Data_Cache_Manager_Flash_Simple::~Data_Cache_Manager_Flash_Simple()
   {
     while (!dram_execution_queue[i].empty())
     {
-      delete dram_execution_queue[i].front();
       dram_execution_queue[i].pop();
     }
   }
@@ -76,7 +69,7 @@ Data_Cache_Manager_Flash_Simple::process_new_user_request(UserRequest* user_requ
     switch (caching_mode_per_input_stream[user_request->Stream_id])
     {
     case Caching_Mode::TURNED_OFF:
-      static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
+      nvm_firmware->dispatch_transactions(user_request->Transaction_list);
       return;
     case Caching_Mode::WRITE_CACHE:
     {
@@ -105,15 +98,16 @@ Data_Cache_Manager_Flash_Simple::process_new_user_request(UserRequest* user_requ
       }
       if (user_request->Sectors_serviced_from_cache > 0)
       {
-        auto tr_info = new Memory_Transfer_Info;
-        tr_info->Size_in_bytes = user_request->Sectors_serviced_from_cache * SECTOR_SIZE_IN_BYTE;
-        tr_info->Related_request = user_request;
-        tr_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED;
-        tr_info->Stream_id = user_request->Stream_id;
+        auto tr_info = _mem_transfer_info_pool.construct(
+          user_request->Sectors_serviced_from_cache * SECTOR_SIZE_IN_BYTE,
+          Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED,
+          user_request->Stream_id,
+          user_request
+        );
         service_dram_access_request(*tr_info);
       }
       if (!user_request->Transaction_list.empty())
-        static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
+        nvm_firmware->dispatch_transactions(user_request->Transaction_list);
 
       return;
     }
@@ -126,7 +120,7 @@ Data_Cache_Manager_Flash_Simple::process_new_user_request(UserRequest* user_requ
     switch (caching_mode_per_input_stream[user_request->Stream_id])
     {
     case Caching_Mode::TURNED_OFF:
-      static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
+      nvm_firmware->dispatch_transactions(user_request->Transaction_list);
       return;
     case Caching_Mode::WRITE_CACHE://The data cache manger unit performs like a destage buffer
     {
@@ -208,26 +202,28 @@ Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(UserRequest& user_reque
 
   if (!evicted_cache_slots->empty())//Issue memory read for cache evictions
   {
-    auto read_transfer_info = new Memory_Transfer_Info;
-    read_transfer_info->Size_in_bytes = cache_eviction_read_size_in_sectors * SECTOR_SIZE_IN_BYTE;
-    read_transfer_info->Related_request = evicted_cache_slots;
-    read_transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED;
-    read_transfer_info->Stream_id = user_request.Stream_id;
+    auto read_transfer_info = _mem_transfer_info_pool.construct(
+      cache_eviction_read_size_in_sectors * SECTOR_SIZE_IN_BYTE,
+      Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED,
+      user_request.Stream_id,
+      evicted_cache_slots
+    );
     service_dram_access_request(*read_transfer_info);
   }
 
   if (dram_write_size_in_sectors)//Issue memory write to write data to DRAM
   {
-    auto write_transfer_info = new Memory_Transfer_Info;
-    write_transfer_info->Size_in_bytes = dram_write_size_in_sectors * SECTOR_SIZE_IN_BYTE;
-    write_transfer_info->Related_request = &user_request;
-    write_transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED;
-    write_transfer_info->Stream_id = user_request.Stream_id;
+    auto write_transfer_info = _mem_transfer_info_pool.construct(
+      dram_write_size_in_sectors * SECTOR_SIZE_IN_BYTE,
+      Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED,
+      user_request.Stream_id,
+      &user_request
+    );
     service_dram_access_request(*write_transfer_info);
   }
 
   if (!writeback_transactions.empty())//If any writeback should be performed, then issue flash write transactions
-    static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(writeback_transactions);
+    nvm_firmware->dispatch_transactions(writeback_transactions);
 
   auto sim_time = Simulator->Time();
 
@@ -239,7 +235,7 @@ Data_Cache_Manager_Flash_Simple::write_to_destage_buffer(UserRequest& user_reque
 }
 
 void
-Data_Cache_Manager_Flash_Simple::service_dram_access_request(Memory_Transfer_Info& request_info)
+Data_Cache_Manager_Flash_Simple::service_dram_access_request(MemoryTransferInfo& request_info)
 {
 
   dram_execution_queue[request_info.Stream_id].push(&request_info);
@@ -334,19 +330,19 @@ void
 Data_Cache_Manager_Flash_Simple::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 {
   auto eventType = (Data_Cache_Simulation_Event_Type)ev->Type;
-  auto* transfer_inf = (Memory_Transfer_Info*)ev->Parameters;
+  auto* transfer_inf = (MemoryTransferInfo*)ev->Parameters;
 
   switch (eventType)
   {
   case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED://A user read is service from DRAM cache
   case Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED:
-    ((UserRequest*)(transfer_inf)->Related_request)->Sectors_serviced_from_cache -= transfer_inf->Size_in_bytes / SECTOR_SIZE_IN_BYTE;
-    if (((UserRequest*)(transfer_inf)->Related_request)->is_finished())
-      broadcast_user_request_serviced_signal(((UserRequest*)(transfer_inf)->Related_request));
+    transfer_inf->related_user_request()->Sectors_serviced_from_cache -= transfer_inf->Size_in_bytes / SECTOR_SIZE_IN_BYTE;
+    if (transfer_inf->related_user_request()->is_finished())
+      broadcast_user_request_serviced_signal(transfer_inf->related_user_request());
     break;
   case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED://Reading data from DRAM and writing it back to the flash storage
-    static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(*((std::list<NvmTransaction*>*)(transfer_inf->Related_request)));
-    delete (std::list<NvmTransaction*>*)transfer_inf->Related_request;
+    nvm_firmware->dispatch_transactions(*transfer_inf->related_write_transactions());
+    transfer_inf->clear_eviction_list();
     break;
   case Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED://The recently read data from flash is written back to memory to support future user read requests
     break;
@@ -355,7 +351,7 @@ Data_Cache_Manager_Flash_Simple::Execute_simulator_event(MQSimEngine::SimEvent* 
   dram_execution_queue[transfer_inf->Stream_id].pop();
   if (!dram_execution_queue[transfer_inf->Stream_id].empty())
   {
-    Memory_Transfer_Info* new_transfer_info = dram_execution_queue[transfer_inf->Stream_id].front();
+    MemoryTransferInfo* new_transfer_info = dram_execution_queue[transfer_inf->Stream_id].front();
 
     auto sim = Simulator;
 
@@ -363,7 +359,7 @@ Data_Cache_Manager_Flash_Simple::Execute_simulator_event(MQSimEngine::SimEvent* 
       dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
       this, new_transfer_info, static_cast<int>(new_transfer_info->next_event_type));
   }
-  delete transfer_inf;
+  transfer_inf->release();
 }
 
 void

@@ -1,9 +1,4 @@
-#include <stdexcept>
-#include "../../nvm_chip/NVM_Types.h"
 #include "Data_Cache_Manager_Flash_Advanced.h"
-#include "../NvmTransactionFlashRD.h"
-#include "../NvmTransactionFlashWR.h"
-#include "../FTL.h"
 
 using namespace SSD_Components;
 
@@ -34,7 +29,6 @@ Data_Cache_Manager_Flash_Advanced::Data_Cache_Manager_Flash_Advanced(const sim_o
                             stream_count),
     flash_controller(flash_controller),
     capacity_in_bytes(total_capacity_in_bytes),
-    sector_no_per_page(sector_no_per_page),
     memory_channel_is_busy(false),
     dram_execution_list_turn(0),
     back_pressure_buffer_max_depth(back_pressure_buffer_max_depth),
@@ -49,7 +43,7 @@ Data_Cache_Manager_Flash_Advanced::Data_Cache_Manager_Flash_Advanced(const sim_o
     per_stream_cache = new Data_Cache_Flash*[stream_count];
     for (uint32_t i = 0; i < stream_count; i++)
       per_stream_cache[i] = sharedCache;
-    dram_execution_queue = new std::queue<Memory_Transfer_Info*>[1];
+    dram_execution_queue = new std::queue<MemoryTransferInfo*>[1];
     waiting_user_requests_queue_for_dram_free_slot = new std::list<UserRequest*>[1];
     this->back_pressure_buffer_depth = new uint32_t[1];
     this->back_pressure_buffer_depth[0] = 0;
@@ -60,7 +54,7 @@ Data_Cache_Manager_Flash_Advanced::Data_Cache_Manager_Flash_Advanced(const sim_o
     per_stream_cache = new Data_Cache_Flash*[stream_count];
     for (uint32_t i = 0; i < stream_count; i++)
       per_stream_cache[i] = new Data_Cache_Flash(capacity_in_pages / stream_count);
-    dram_execution_queue = new std::queue<Memory_Transfer_Info*>[stream_count];
+    dram_execution_queue = new std::queue<MemoryTransferInfo*>[stream_count];
     waiting_user_requests_queue_for_dram_free_slot = new std::list<UserRequest*>[stream_count];
     this->back_pressure_buffer_depth = new uint32_t[stream_count];
     for (uint32_t i = 0; i < stream_count; i++)
@@ -83,7 +77,6 @@ Data_Cache_Manager_Flash_Advanced::~Data_Cache_Manager_Flash_Advanced()
     delete per_stream_cache[0];
     while (!dram_execution_queue[0].empty())
     {
-      delete dram_execution_queue[0].front();
       dram_execution_queue[0].pop();
     }
     break;
@@ -94,7 +87,6 @@ Data_Cache_Manager_Flash_Advanced::~Data_Cache_Manager_Flash_Advanced()
       delete per_stream_cache[i];
       while (!dram_execution_queue[i].empty())
       {
-        delete dram_execution_queue[i].front();
         dram_execution_queue[i].pop();
       }
     }
@@ -121,7 +113,7 @@ Data_Cache_Manager_Flash_Advanced::process_new_user_request(UserRequest* user_re
     switch (caching_mode_per_input_stream[user_request->Stream_id])
     {
       case Caching_Mode::TURNED_OFF:
-        static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
+        nvm_firmware->dispatch_transactions(user_request->Transaction_list);
         return;
       case Caching_Mode::WRITE_CACHE:
       case Caching_Mode::READ_CACHE:
@@ -152,15 +144,16 @@ Data_Cache_Manager_Flash_Advanced::process_new_user_request(UserRequest* user_re
         }
         if (user_request->Sectors_serviced_from_cache > 0)
         {
-          auto* transfer_info = new Memory_Transfer_Info;
-          transfer_info->Size_in_bytes = user_request->Sectors_serviced_from_cache * SECTOR_SIZE_IN_BYTE;
-          transfer_info->Related_request = user_request;
-          transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED;
-          transfer_info->Stream_id = user_request->Stream_id;
+          auto* transfer_info = _mem_transfer_info_pool.construct(
+            user_request->Sectors_serviced_from_cache * SECTOR_SIZE_IN_BYTE,
+            Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED,
+            user_request->Stream_id,
+            user_request
+          );
           service_dram_access_request(*transfer_info);
         }
         if (!user_request->Transaction_list.empty())
-          static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
+          nvm_firmware->dispatch_transactions(user_request->Transaction_list);
 
         return;
       }
@@ -172,7 +165,7 @@ Data_Cache_Manager_Flash_Advanced::process_new_user_request(UserRequest* user_re
     {
       case Caching_Mode::TURNED_OFF:
       case Caching_Mode::READ_CACHE:
-        static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(user_request->Transaction_list);
+        nvm_firmware->dispatch_transactions(user_request->Transaction_list);
         return;
       case Caching_Mode::WRITE_CACHE://The data cache manger unit performs like a destage buffer
       case Caching_Mode::WRITE_READ_CACHE:
@@ -259,26 +252,28 @@ Data_Cache_Manager_Flash_Advanced::write_to_destage_buffer(UserRequest& user_req
 
   if (!evicted_cache_slots->empty())//Issue memory read for cache evictions
   {
-    auto read_transfer_info = new Memory_Transfer_Info;
-    read_transfer_info->Size_in_bytes = cache_eviction_read_size_in_sectors * SECTOR_SIZE_IN_BYTE;
-    read_transfer_info->Related_request = evicted_cache_slots;
-    read_transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED;
-    read_transfer_info->Stream_id = user_request.Stream_id;
+    auto read_transfer_info = _mem_transfer_info_pool.construct(
+      cache_eviction_read_size_in_sectors * SECTOR_SIZE_IN_BYTE,
+      Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED,
+      user_request.Stream_id,
+      evicted_cache_slots
+    );
     service_dram_access_request(*read_transfer_info);
   }
 
   if (dram_write_size_in_sectors)//Issue memory write to write data to DRAM
   {
-    auto write_transfer_info = new Memory_Transfer_Info;
-    write_transfer_info->Size_in_bytes = dram_write_size_in_sectors * SECTOR_SIZE_IN_BYTE;
-    write_transfer_info->Related_request = &user_request;
-    write_transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED;
-    write_transfer_info->Stream_id = user_request.Stream_id;
+    auto write_transfer_info = _mem_transfer_info_pool.construct(
+      dram_write_size_in_sectors * SECTOR_SIZE_IN_BYTE,
+      Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED,
+      user_request.Stream_id,
+      &user_request
+    );
     service_dram_access_request(*write_transfer_info);
   }
 
   if (!writeback_transactions.empty())//If any writeback should be performed, then issue flash write transactions
-    static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(writeback_transactions);
+    nvm_firmware->dispatch_transactions(writeback_transactions);
 
   auto sim_time = Simulator->Time();
 
@@ -290,7 +285,7 @@ Data_Cache_Manager_Flash_Advanced::write_to_destage_buffer(UserRequest& user_req
 }
 
 void
-Data_Cache_Manager_Flash_Advanced::service_dram_access_request(Memory_Transfer_Info& request_info)
+Data_Cache_Manager_Flash_Advanced::service_dram_access_request(MemoryTransferInfo& request_info)
 {
   if (memory_channel_is_busy)
   {
@@ -345,10 +340,12 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NvmTransactionFl
       case Caching_Mode::READ_CACHE:
       case Caching_Mode::WRITE_READ_CACHE:
       {
-        auto* transfer_info = new Memory_Transfer_Info;
-        transfer_info->Size_in_bytes = count_sector_no_from_status_bitmap(((NvmTransactionFlashRD*)transaction)->read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE;
-        transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED;
-        transfer_info->Stream_id = transaction->Stream_id;
+        auto* transfer_info = _mem_transfer_info_pool.construct(
+          count_sector_no_from_status_bitmap(((NvmTransactionFlashRD*)transaction)->read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE,
+          Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED,
+          transaction->Stream_id
+        );
+
         service_dram_access_request(*transfer_info);
 
         if (per_stream_cache[transaction->Stream_id]->Exists(transaction->Stream_id, transaction->LPA))
@@ -373,10 +370,15 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NvmTransactionFl
           {
             auto evicted_cache_slots = new std::list<NvmTransaction*>;
             Data_Cache_Slot_Type evicted_slot = per_stream_cache[transaction->Stream_id]->Evict_one_slot_lru();
+
             if (evicted_slot.Status == Cache_Slot_Status::DIRTY_NO_FLASH_WRITEBACK)
             {
-              auto tr_info = new Memory_Transfer_Info;
-              tr_info->Size_in_bytes = count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE;
+              auto tr_info = _mem_transfer_info_pool.construct(
+                count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE,
+                Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED,
+                transaction->Stream_id,
+                evicted_cache_slots
+              );
 
               evicted_cache_slots->emplace_back(
                 _make_evict_tr(Transaction_Source_Type::USERIO,
@@ -385,9 +387,6 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NvmTransactionFl
                                evicted_slot)
               );
 
-              tr_info->Related_request = evicted_cache_slots;
-              tr_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED;
-              tr_info->Stream_id = transaction->Stream_id;
               service_dram_access_request(*tr_info);
             }
           }
@@ -396,10 +395,11 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NvmTransactionFl
                                                                      ((NvmTransactionFlashRD*)transaction)->DataTimeStamp,
                                                                      ((NvmTransactionFlashRD*)transaction)->read_sectors_bitmap);
 
-          auto tr_info = new Memory_Transfer_Info;
-          tr_info->Size_in_bytes = count_sector_no_from_status_bitmap(((NvmTransactionFlashRD*)transaction)->read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE;
-          tr_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED;
-          tr_info->Stream_id = transaction->Stream_id;
+          auto tr_info = _mem_transfer_info_pool.construct(
+            count_sector_no_from_status_bitmap(((NvmTransactionFlashRD*)transaction)->read_sectors_bitmap) * SECTOR_SIZE_IN_BYTE,
+            Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED,
+            transaction->Stream_id
+          );
           service_dram_access_request(*tr_info);
         }
 
@@ -450,37 +450,6 @@ Data_Cache_Manager_Flash_Advanced::__handle_transaction_service(NvmTransactionFl
             break;
         }
 
-
-        /*if (back_pressure_buffer_depth[sharing_id] < back_pressure_buffer_max_depth)//The traffic load on the backend is low and the waiting requests can be serviced
-        {
-          std::list<NvmTransaction*>* evicted_cache_slots = new std::list<NvmTransaction*>;
-          while (!per_stream_cache[transaction->Stream_id]->Empty())
-          {
-            DataCacheSlotType evicted_slot = per_stream_cache[transaction->Stream_id]->Evict_one_dirty_slot();
-            if (evicted_slot.Status != CacheSlotStatus::EMPTY)
-            {
-              evicted_cache_slots->push_back(new NvmTransactionFlashWR(Transaction_Source_Type::CACHE,
-                transaction->Stream_id, count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors) * SECTOR_SIZE_IN_BYTE,
-                evicted_slot.LPA, nullptr, evicted_slot.Content, evicted_slot.State_bitmap_of_existing_sectors, evicted_slot.Timestamp));
-              back_pressure_buffer_depth[sharing_id] += count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors);
-              cache_eviction_read_size_in_sectors += count_sector_no_from_status_bitmap(evicted_slot.State_bitmap_of_existing_sectors);
-            }
-            else break;
-            if (back_pressure_buffer_depth[sharing_id] >= back_pressure_buffer_max_depth)
-              break;
-          }
-
-          if (cache_eviction_read_size_in_sectors > 0)
-          {
-            Memory_Transfer_Info* read_transfer_info = new Memory_Transfer_Info;
-            read_transfer_info->Size_in_bytes = cache_eviction_read_size_in_sectors * SECTOR_SIZE_IN_BYTE;
-            read_transfer_info->Related_request = evicted_cache_slots;
-            read_transfer_info->next_event_type = Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED;
-            read_transfer_info->Stream_id = transaction->Stream_id;
-            service_dram_access_request(read_transfer_info);
-          }
-        }*/
-
         break;
       }
     }
@@ -492,24 +461,25 @@ void
 Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 {
   auto eventType = (Data_Cache_Simulation_Event_Type)ev->Type;
-  auto transfer_info = (Memory_Transfer_Info*)ev->Parameters;
+  auto transfer_info = (MemoryTransferInfo*)ev->Parameters;
 
   switch (eventType)
   {
     case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_USERIO_FINISHED://A user read is service from DRAM cache
     case Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_USERIO_FINISHED:
-      ((UserRequest*)(transfer_info)->Related_request)->Sectors_serviced_from_cache -= transfer_info->Size_in_bytes / SECTOR_SIZE_IN_BYTE;
-      if (((UserRequest*)(transfer_info)->Related_request)->is_finished())
-        broadcast_user_request_serviced_signal(((UserRequest*)(transfer_info)->Related_request));
+      transfer_info->related_user_request()->Sectors_serviced_from_cache -= transfer_info->Size_in_bytes / SECTOR_SIZE_IN_BYTE;
+      if (transfer_info->related_user_request()->is_finished())
+        broadcast_user_request_serviced_signal(transfer_info->related_user_request());
       break;
     case Data_Cache_Simulation_Event_Type::MEMORY_READ_FOR_CACHE_EVICTION_FINISHED://Reading data from DRAM and writing it back to the flash storage
-      static_cast<FTL*>(nvm_firmware)->Address_Mapping_Unit->Translate_lpa_to_ppa_and_dispatch(*((std::list<NvmTransaction*>*)(transfer_info->Related_request)));
-      delete (std::list<NvmTransaction*>*)transfer_info->Related_request;
+      nvm_firmware->dispatch_transactions(*transfer_info->related_write_transactions());
+      transfer_info->clear_eviction_list();
       break;
     case Data_Cache_Simulation_Event_Type::MEMORY_WRITE_FOR_CACHE_FINISHED://The recently read data from flash is written back to memory to support future user read requests
       break;
   }
-  delete transfer_info;
+
+  transfer_info->release();
 
   memory_channel_is_busy = false;
 
@@ -519,7 +489,7 @@ Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::SimEvent
   {
     if (!dram_execution_queue[0].empty())
     {
-      Memory_Transfer_Info* info = dram_execution_queue[0].front();
+      MemoryTransferInfo* info = dram_execution_queue[0].front();
       dram_execution_queue[0].pop();
       sim->Register_sim_event(sim->Time() + estimate_dram_access_time(info->Size_in_bytes, dram_row_size, dram_busrt_size,
                                                                       dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),
@@ -535,7 +505,7 @@ Data_Cache_Manager_Flash_Advanced::Execute_simulator_event(MQSimEngine::SimEvent
       dram_execution_list_turn %= stream_count;
       if (!dram_execution_queue[dram_execution_list_turn].empty())
       {
-        Memory_Transfer_Info* info = dram_execution_queue[dram_execution_list_turn].front();
+        MemoryTransferInfo* info = dram_execution_queue[dram_execution_list_turn].front();
         dram_execution_queue[dram_execution_list_turn].pop();
         sim->Register_sim_event(sim->Time() + estimate_dram_access_time(info->Size_in_bytes, dram_row_size, dram_busrt_size,
                                                                         dram_burst_transfer_time_ddr, dram_tRCD, dram_tCL, dram_tRP),

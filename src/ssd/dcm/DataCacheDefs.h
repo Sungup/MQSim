@@ -10,6 +10,7 @@
 #define __MQSim__DataCacheDefs__
 
 #include <string>
+#include <vector>
 
 #include "../../utils/Exception.h"
 #include "../../utils/InlineTools.h"
@@ -25,6 +26,8 @@ namespace SSD_Components {
     WRITE_READ_CACHE,
     TURNED_OFF
   };
+
+  typedef std::vector<Caching_Mode> CachingModeList;
 
   enum class Caching_Mechanism {
     SIMPLE,

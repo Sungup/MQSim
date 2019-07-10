@@ -3,6 +3,10 @@
 #include "../NVM_Firmware.h"
 #include "../interface/Host_Interface_Base.h"
 
+// Children classes for builder
+#include "Data_Cache_Manager_Flash_Simple.h"
+#include "Data_Cache_Manager_Flash_Advanced.h"
+
 using namespace SSD_Components;
 
 Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
@@ -21,6 +25,7 @@ Data_Cache_Manager_Base::Data_Cache_Manager_Base(const sim_object_id_type& id,
     __user_request_handler(this, &Data_Cache_Manager_Base::__handle_user_request),
     __user_req_svc_handler(),
     __user_mem_tr_svc_handler(),
+    _mem_transfer_info_pool(),
     caching_mode_per_input_stream(caching_mode_per_istream,
                                   caching_mode_per_istream + stream_count),
     host_interface(host_interface),
@@ -74,3 +79,52 @@ Data_Cache_Manager_Base::Set_host_interface(Host_Interface_Base* interface)
 void
 Data_Cache_Manager_Base::Do_warmup(const std::vector<Utils::Workload_Statistics *>& workload_stats)
 { /* Default do nothing */}
+
+DataCacheManagerPtr
+SSD_Components::build_dcm_object(const sim_object_id_type& id,
+                                 const DeviceParameterSet& params,
+                                 NVM_Firmware& firmware,
+                                 NVM_PHY_ONFI& phy,
+                                 CachingModeList& caching_modes)
+{
+  switch (params.Caching_Mechanism) {
+  case SSD_Components::Caching_Mechanism::SIMPLE:
+    return std::make_shared<Data_Cache_Manager_Flash_Simple>(
+      id,
+      nullptr,
+      &firmware,
+      &phy,
+      params.Data_Cache_Capacity,
+      params.Data_Cache_DRAM_Row_Size,
+      params.Data_Cache_DRAM_Data_Rate,
+      params.Data_Cache_DRAM_Data_Busrt_Size,
+      params.Data_Cache_DRAM_tRCD,
+      params.Data_Cache_DRAM_tCL,
+      params.Data_Cache_DRAM_tRP,
+      caching_modes.data(),
+      caching_modes.size(),
+      params.Flash_Parameters.page_size_in_sector(),
+      params.back_pressure_buffer_max_depth()
+    );
+
+  case SSD_Components::Caching_Mechanism::ADVANCED:
+    return std::make_shared<Data_Cache_Manager_Flash_Advanced>(
+      id,
+      nullptr,
+      &firmware,
+      &phy,
+      params.Data_Cache_Capacity,
+      params.Data_Cache_DRAM_Row_Size,
+      params.Data_Cache_DRAM_Data_Rate,
+      params.Data_Cache_DRAM_Data_Busrt_Size,
+      params.Data_Cache_DRAM_tRCD,
+      params.Data_Cache_DRAM_tCL,
+      params.Data_Cache_DRAM_tRP,
+      caching_modes.data(),
+      params.Data_Cache_Sharing_Mode,
+      caching_modes.size(),
+      params.Flash_Parameters.page_size_in_sector(),
+      params.back_pressure_buffer_max_depth()
+    );
+  }
+}

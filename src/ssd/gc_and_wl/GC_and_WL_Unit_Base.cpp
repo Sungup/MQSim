@@ -4,6 +4,10 @@
 
 #include "../fbm/Flash_Block_Manager_Base.h"
 #include "../mapping/AddressMappingUnitDefs.h"
+#include "../FTL.h"
+
+// Include children
+#include "GC_and_WL_Unit_Page_Level.h"
 
 using namespace SSD_Components;
 
@@ -298,4 +302,43 @@ GC_and_WL_Unit_Base::Stop_servicing_writes(const NVM::FlashMemory::Physical_Page
 #endif
 
   return block_manager->Get_pool_size(plane_address) < max_ongoing_gc_reqs_per_plane;
+}
+
+// ----------------------
+// GC and WL Unit builder
+// ----------------------
+GCnWLUnitPtr
+SSD_Components::build_gc_and_wl_object(const DeviceParameterSet& params,
+                                       FTL& ftl,
+                                       Address_Mapping_Unit_Base& amu,
+                                       Flash_Block_Manager_Base& fbm,
+                                       TSU_Base& tsu,
+                                       NVM_PHY_ONFI& phy,
+                                       Stats& stats,
+                                       double rho,
+                                       uint32_t max_ongoing_gc_reqs_per_plane)
+{
+  return std::make_shared<GC_and_WL_Unit_Page_Level>(
+    ftl.ID() + ".GCandWLUnit",
+    &amu,
+    &fbm,
+    &tsu,
+    &phy,
+    stats,
+    params.GC_Block_Selection_Policy,
+    params.GC_Exec_Threshold,
+    params.Preemptible_GC_Enabled,
+    params.GC_Hard_Threshold,
+    params.Flash_Channel_Count,
+    params.Chip_No_Per_Channel,
+    params.Flash_Parameters.Die_No_Per_Chip,
+    params.Flash_Parameters.Plane_No_Per_Die,
+    params.Flash_Parameters.Block_No_Per_Plane,
+    params.Flash_Parameters.Page_No_Per_Block,
+    params.Flash_Parameters.page_size_in_sector(),
+    params.Use_Copyback_for_GC,
+    rho,
+    max_ongoing_gc_reqs_per_plane,
+    params.gen_seed()
+  );
 }

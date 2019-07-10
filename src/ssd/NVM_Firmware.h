@@ -1,6 +1,7 @@
 #ifndef NVM_FIRMWARE_H
 #define NVM_FIRMWARE_H
 
+#include <list>
 #include <memory>
 #include <vector>
 
@@ -8,6 +9,7 @@
 #include "../sim/Sim_Object.h"
 #include "../utils/InlineTools.h"
 #include "../utils/Workload_Statistics.h"
+#include "NvmTransaction.h"
 #include "Stats.h"
 
 namespace SSD_Components
@@ -35,7 +37,9 @@ namespace SSD_Components
 
     virtual void Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats) = 0;
 
-    void assign(Data_Cache_Manager_Base* dcm);
+    void assign_dcm(Data_Cache_Manager_Base* dcm);
+
+    virtual void dispatch_transactions(const std::list<NvmTransaction*>& transactionList) = 0;
   };
 
   typedef std::shared_ptr<NVM_Firmware> NvmFirmwarePtr;
@@ -51,7 +55,7 @@ namespace SSD_Components
   { }
 
   force_inline void
-  NVM_Firmware::assign(Data_Cache_Manager_Base *dcm)
+  NVM_Firmware::assign_dcm(Data_Cache_Manager_Base *dcm)
   {
     Data_cache_manager = dcm;
   }

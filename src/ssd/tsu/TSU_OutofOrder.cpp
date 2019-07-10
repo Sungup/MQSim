@@ -200,12 +200,12 @@ namespace SSD_Components
       //Flash transactions that are related to FTL mapping data have the highest priority
       sourceQueue1 = &MappingReadTRQueue[chip.ChannelID][chip.ChipID];
 
-      if (ftl.GC_and_WL_Unit->GC_is_in_urgent_mode(&chip) && GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
+      if (ftl.is_in_urgent_gc(&chip) && GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         sourceQueue2 = &GCReadTRQueue[chip.ChannelID][chip.ChipID];
       else if (UserReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
         sourceQueue2 = &UserReadTRQueue[chip.ChannelID][chip.ChipID];
     }
-    else if (ftl.GC_and_WL_Unit->GC_is_in_urgent_mode(&chip)) {
+    else if (ftl.is_in_urgent_gc(&chip)) {
       //If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
       if (GCReadTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {
@@ -318,7 +318,7 @@ namespace SSD_Components
   {
     Flash_Transaction_Queue *sourceQueue1 = nullptr, *sourceQueue2 = nullptr;
 
-    if (ftl.GC_and_WL_Unit->GC_is_in_urgent_mode(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
+    if (ftl.is_in_urgent_gc(&chip))//If flash transactions related to GC are prioritzed (non-preemptive execution mode of GC), then GC queues are checked first
     {
       if (GCWriteTRQueue[chip.ChannelID][chip.ChipID].size() > 0)
       {

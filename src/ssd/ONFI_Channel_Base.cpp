@@ -31,6 +31,8 @@ SSD_Components::build_onfi_channels(const DeviceParameterSet& params,
 {
   OnfiChannelList channels;
 
+  channels.reserve(params.Flash_Channel_Count);
+
   for (flash_channel_ID_type c = 0; c < params.Flash_Channel_Count; ++c)
     channels.emplace_back(params, id, c, ONFI_Protocol::NVDDR2);
 

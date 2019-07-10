@@ -637,7 +637,7 @@ Address_Mapping_Unit_Page_Level::translate_lpa_to_ppa(stream_id_type streamID, N
   else//This is a write transaction
   {
     allocate_plane_for_user_write((NvmTransactionFlashWR*)transaction);
-    if (ftl->GC_and_WL_Unit->Stop_servicing_writes(transaction->Address))//there are too few free pages remaining only for GC
+    if (ftl->stop_write_services_for_gc(transaction->Address))//there are too few free pages remaining only for GC
       return false;
     allocate_page_in_plane_for_user_write((NvmTransactionFlashWR*)transaction, false);
     transaction->Physical_address_determined = true;
@@ -964,7 +964,7 @@ Address_Mapping_Unit_Page_Level::Allocate_address_for_preconditioning(stream_id_
           plane_address.DieID = domain.Die_ids[die_cntr];
           plane_address.PlaneID = domain.Plane_ids[plane_cntr];
 
-          uint32_t physical_block_consumption_goal = (uint32_t)(double(block_no_per_plane - ftl->GC_and_WL_Unit->Get_minimum_number_of_free_pages_before_GC() / 2)
+          uint32_t physical_block_consumption_goal = (uint32_t)(double(block_no_per_plane - ftl->minimum_free_pages_before_gc() / 2)
                                                                 * __logical_addr_partition_unit.share_of_physical_pages(plane_address.ChannelID, plane_address.ChipID, plane_address.DieID, plane_address.PlaneID));
 
           //Adjust the average

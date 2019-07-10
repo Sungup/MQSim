@@ -11,24 +11,11 @@
 
 // Refined header list
 #include "DataCacheSlot.h"
+#include "../../utils/InlineTools.h"
+#include "../../utils/ObjectPool.h"
 
 namespace SSD_Components
 {
-  enum class Data_Cache_Simulation_Event_Type {
-    MEMORY_READ_FOR_CACHE_EVICTION_FINISHED,
-    MEMORY_WRITE_FOR_CACHE_FINISHED,
-    MEMORY_READ_FOR_USERIO_FINISHED,
-    MEMORY_WRITE_FOR_USERIO_FINISHED
-  };
-
-  struct Memory_Transfer_Info
-  {
-    uint32_t Size_in_bytes;
-    void* Related_request;
-    Data_Cache_Simulation_Event_Type next_event_type;
-    stream_id_type Stream_id;
-  };
-
   class Data_Cache_Flash
   {
   public:

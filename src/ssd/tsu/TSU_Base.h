@@ -23,8 +23,6 @@ namespace SSD_Components
     ChannelIdleSignalHandler<TSU_Base> __channel_idle_signal_handler;
     ChipIdleSignalHandler<TSU_Base>    __chip_idle_signal_handler;
 
-    Flash_Scheduling_Type __type;
-
     // Used for round-robin service of the chips in channels
     ChipIDs __channel_rr_turn;
 
@@ -170,8 +168,7 @@ namespace SSD_Components
   // ------------------------------
   typedef std::shared_ptr<TSU_Base> TSUPtr;
 
-  TSUPtr build_tsu_object(const sim_object_id_type& id,
-                          const DeviceParameterSet& params,
+  TSUPtr build_tsu_object(const DeviceParameterSet& params,
                           FTL& ftl,
                           NVM_PHY_ONFI& nvm_controller);
 }

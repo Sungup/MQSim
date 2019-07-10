@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <vector>
 #include <stdexcept>
+#include <cmath>
 #include <ctime>
 #include <numeric>
 #include "SSD_Device.h"
@@ -27,179 +29,129 @@ SSD_Device::SSD_Device(const DeviceParameterSet& params,
                                          __stats)),
     __ftl(ID() + ".FTL", params, __stats),
     Preconditioning_required(params.Enabled_Preconditioning),
-    Memory_Type(params.Memory_Type),
-    Channel_count(params.Flash_Channel_Count),
-    Chip_no_per_channel(params.Chip_No_Per_Channel),
     lha_to_lpa_converter(this, &SSD_Device::__convert_lha_to_lpa),
     nvm_access_bitmap_finder(this, &SSD_Device::__find_nvm_subunit_access_bitmap)
 {
+  // 0. Initialize temporary variables to build objects.
+  double max_rho = 0;
+  SSD_Components::CachingModeList caching_modes;
+  caching_modes.reserve(io_flows.size());
+
+  for (const auto& flow : io_flows) {
+    max_rho = std::max(max_rho, double(flow->Initial_Occupancy_Percentage));
+    caching_modes.emplace_back(flow->Device_Level_Data_Caching_Mode);
+  }
+
+  // 1. Register SSD
   Simulator->AddObject(this);
 
+  // 2. Register PHY
   Simulator->AddObject(__phy.get());
 
+  // 3. Register FTL
   Simulator->AddObject(&__ftl);
 
-  //Step 5: create TSU
-  auto tsu = SSD_Components::build_tsu_object(__ftl.ID() + ".TSU",
-                                              params,
+  // 4. Create and register TSU
+  auto tsu = SSD_Components::build_tsu_object(params,
                                               __ftl,
                                               *__phy);
-  Simulator->AddObject(tsu.get());
-  __ftl.assign_tsu(tsu);
 
-  //Step 6: create Flash_Block_Manager
+  __ftl.assign_tsu(tsu);
+  Simulator->AddObject(tsu.get());
+
+  // 5. Create and register Flash_Block_Manager
   auto fbm = SSD_Components::build_fbm_object(params,
                                               io_flows.size(),
                                               __stats);
+
   __ftl.assign_fbm(fbm);
 
-  //Step 7: create Address_Mapping_Unit
-  SSD_Components::Address_Mapping_Unit_Base* amu;
+  // 6. Create and register Address_Mapping_Unit
+  auto amu = SSD_Components::build_amu_object(params,
+                                              lapu,
+                                              stream_info,
+                                              __ftl,
+                                              *__phy,
+                                              *fbm,
+                                              __stats);
 
-  switch (params.Address_Mapping)
-  {
-  case SSD_Components::Flash_Address_Mapping_Type::PAGE_LEVEL:
-    amu = new SSD_Components::Address_Mapping_Unit_Page_Level(__ftl.ID() + ".AddressMappingUnit",
-                                                              &__ftl,
-                                                              __phy.get(),
-                                                              fbm.get(),
-                                                              lapu,
-                                                              __stats,
-                                                              params.Ideal_Mapping_Table,
-                                                              params.CMT_Capacity,
-                                                              params.Plane_Allocation_Scheme,
-                                                              stream_info.stream_count,
-                                                              params.Flash_Channel_Count,
-                                                              params.Chip_No_Per_Channel,
-                                                              params.Flash_Parameters.Die_No_Per_Chip,
-                                                              params.Flash_Parameters.Plane_No_Per_Die,
-                                                              stream_info.stream_channel_ids(),
-                                                              stream_info.stream_chip_ids(),
-                                                              stream_info.stream_die_ids(),
-                                                              stream_info.stream_plane_ids(),
-                                                              params.Flash_Parameters.Block_No_Per_Plane,
-                                                              params.Flash_Parameters.Page_No_Per_Block,
-                                                              params.Flash_Parameters.page_size_in_sector(),
-                                                              params.Flash_Parameters.Page_Capacity,
-                                                              params.Overprovisioning_Ratio,
-      params.CMT_Sharing_Mode);
-    break;
-  case SSD_Components::Flash_Address_Mapping_Type::HYBRID:
-    amu = new SSD_Components::Address_Mapping_Unit_Hybrid(__ftl.ID() + ".AddressMappingUnit",
-                                                          &__ftl,
-                                                          __phy.get(),
-                                                          fbm.get(),
-                                                          __stats,
-                                                          params.Ideal_Mapping_Table,
-                                                          stream_info.stream_count,
-                                                          params.Flash_Channel_Count,
-                                                          params.Chip_No_Per_Channel,
-                                                          params.Flash_Parameters.Die_No_Per_Chip,
-                                                          params.Flash_Parameters.Plane_No_Per_Die,
-                                                          params.Flash_Parameters.Block_No_Per_Plane,
-                                                          params.Flash_Parameters.Page_No_Per_Block,
-                                                          params.Flash_Parameters.page_size_in_sector(),
-                                                          params.Flash_Parameters.Page_Capacity,
-                                                          params.Overprovisioning_Ratio);
-    break;
-  default:
-    throw std::invalid_argument("No implementation is available fo the secified address mapping strategy");
-  }
-  Simulator->AddObject(amu);
-  __ftl.Address_Mapping_Unit = amu;
+  __ftl.assign_amu(amu);
+  Simulator->AddObject(amu.get());
 
-  //Step 8: create GC_and_WL_unit
-  double max_rho = 0;
-  for (uint32_t i = 0; i < io_flows.size(); i++)
-    if (io_flows[i]->Initial_Occupancy_Percentage > max_rho)
-      max_rho = io_flows[i]->Initial_Occupancy_Percentage;
-  max_rho /= 100;//Convert from percentage to a value between zero and 1
-  SSD_Components::GC_and_WL_Unit_Base* gcwl;
-  gcwl = new SSD_Components::GC_and_WL_Unit_Page_Level(__ftl.ID() + ".GCandWLUnit", amu, fbm.get(), tsu.get(), __phy.get(),
-    __stats,
-    params.GC_Block_Selection_Policy, params.GC_Exec_Threshold, params.Preemptible_GC_Enabled, params.GC_Hard_Threshold,
-    params.Flash_Channel_Count, params.Chip_No_Per_Channel,
-    params.Flash_Parameters.Die_No_Per_Chip, params.Flash_Parameters.Plane_No_Per_Die,
-    params.Flash_Parameters.Block_No_Per_Plane, params.Flash_Parameters.Page_No_Per_Block,
-    params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, params.Use_Copyback_for_GC, max_rho, 10,
-    params.Seed++);
-  Simulator->AddObject(gcwl);
-  fbm->Set_GC_and_WL_Unit(gcwl);
-  __ftl.GC_and_WL_Unit = gcwl;
 
-  //Step 9: create Data_Cache_Manager
-  SSD_Components::Data_Cache_Manager_Base* dcm;
-  SSD_Components::Caching_Mode* caching_modes = new SSD_Components::Caching_Mode[io_flows.size()];
-  for (uint32_t i = 0; i < io_flows.size(); i++)
-    caching_modes[i] = io_flows[i]->Device_Level_Data_Caching_Mode;
+  // 7. Create and register GC_and_WL_Unit
+  auto gcwl = SSD_Components::build_gc_and_wl_object(params,
+                                                     __ftl,
+                                                     *amu,
+                                                     *fbm,
+                                                     *tsu,
+                                                     *__phy,
+                                                     __stats,
+                                                     max_rho / 100,
+                                                     10);
 
-  switch (params.Caching_Mechanism)
-  {
-  case SSD_Components::Caching_Mechanism::SIMPLE:
-    dcm = new SSD_Components::Data_Cache_Manager_Flash_Simple(ID() + ".DataCache", nullptr, &__ftl, __phy.get(),
-      params.Data_Cache_Capacity, params.Data_Cache_DRAM_Row_Size, params.Data_Cache_DRAM_Data_Rate,
-      params.Data_Cache_DRAM_Data_Busrt_Size, params.Data_Cache_DRAM_tRCD, params.Data_Cache_DRAM_tCL, params.Data_Cache_DRAM_tRP,
-      caching_modes, (uint32_t)io_flows.size(),
-      params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, params.Flash_Channel_Count * params.Chip_No_Per_Channel * params.Flash_Parameters.Die_No_Per_Chip * params.Flash_Parameters.Plane_No_Per_Die * params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE);
+  __ftl.assign_gcwl(gcwl);
+  Simulator->AddObject(gcwl.get());
+  fbm->Set_GC_and_WL_Unit(gcwl.get());
 
-    break;
-  case SSD_Components::Caching_Mechanism::ADVANCED:
-    dcm = new SSD_Components::Data_Cache_Manager_Flash_Advanced(ID() + ".DataCache", nullptr, &__ftl, __phy.get(),
-      params.Data_Cache_Capacity, params.Data_Cache_DRAM_Row_Size, params.Data_Cache_DRAM_Data_Rate,
-      params.Data_Cache_DRAM_Data_Busrt_Size, params.Data_Cache_DRAM_tRCD, params.Data_Cache_DRAM_tCL, params.Data_Cache_DRAM_tRP,
-      caching_modes, params.Data_Cache_Sharing_Mode, (uint32_t)io_flows.size(),
-      params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, params.Flash_Channel_Count * params.Chip_No_Per_Channel * params.Flash_Parameters.Die_No_Per_Chip * params.Flash_Parameters.Plane_No_Per_Die * params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE);
+  // 8. Create and register Data_Cache_Manager
+  __cache_manager = SSD_Components::build_dcm_object(ID() + ".DataCache",
+                                                     params,
+                                                     __ftl,
+                                                     *__phy,
+                                                     caching_modes);
 
-    break;
-  default:
-    PRINT_ERROR("Unknown data caching mechanism!")
-  }    Simulator->AddObject(dcm);
-  __ftl.assign(dcm);
-  Cache_manager = dcm;
+  Simulator->AddObject(__cache_manager.get());
+  __ftl.assign_dcm(__cache_manager.get());
 
-  //Step 10: create Host_Interface
+  // 9. Create and register Host_Interface
   switch (params.HostInterface_Type)
   {
   case HostInterface_Types::NVME:
     Host_interface = new SSD_Components::Host_Interface_NVMe(ID() + ".HostInterface",
-      __addr_partitioner.get_total_device_lha_count(), params.IO_Queue_Depth, params.IO_Queue_Depth,
-      (uint32_t)io_flows.size(), params.Queue_Fetch_Size, params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, dcm);
+                                                             __addr_partitioner.get_total_device_lha_count(),
+                                                             params.IO_Queue_Depth,
+                                                             params.IO_Queue_Depth,
+                                                             (uint32_t)io_flows.size(),
+                                                             params.Queue_Fetch_Size,
+                                                             params.Flash_Parameters.page_size_in_sector(),
+                                                             __cache_manager.get());
     break;
   case HostInterface_Types::SATA:
     Host_interface = new SSD_Components::Host_Interface_SATA(ID() + ".HostInterface",
-      params.IO_Queue_Depth, __addr_partitioner.get_total_device_lha_count(), params.Flash_Parameters.Page_Capacity / SECTOR_SIZE_IN_BYTE, dcm);
+                                                             params.IO_Queue_Depth,
+                                                             __addr_partitioner.get_total_device_lha_count(),
+                                                             params.Flash_Parameters.page_size_in_sector(),
+                                                             __cache_manager.get());
 
     break;
   default:
     break;
   }
   Simulator->AddObject(Host_interface);
-  dcm->Set_host_interface(Host_interface);
+  __cache_manager->Set_host_interface(Host_interface);
 }
 
 SSD_Device::~SSD_Device()
 {
-  delete __ftl.Address_Mapping_Unit;
-  delete __ftl.GC_and_WL_Unit;
-  delete this->Cache_manager;
-  delete this->Host_interface;
+  delete Host_interface;
 }
 
 void SSD_Device::Attach_to_host(Host_Components::PCIe_Switch* pcie_switch)
 {
-  this->Host_interface->Attach_to_device(pcie_switch);
+  Host_interface->Attach_to_device(pcie_switch);
 }
 
 void SSD_Device::Perform_preconditioning(const std::vector<Utils::Workload_Statistics*>& workload_stats)
 {
   if (Preconditioning_required)
   {
-    time_t start_time = time(0);
+    time_t start_time = time(nullptr);
     PRINT_MESSAGE("SSD Device preconditioning started .........");
     __ftl.Perform_precondition(workload_stats);
-    Cache_manager->Do_warmup(workload_stats);
-    time_t end_time = time(0);
-    uint64_t duration = (uint64_t)difftime(end_time, start_time);
+    __cache_manager->Do_warmup(workload_stats);
+    time_t end_time = time(nullptr);
+    auto duration = (uint64_t)difftime(end_time, start_time);
     PRINT_MESSAGE("Finished preconditioning. Duration of preconditioning: " << duration / 3600 << ":" << (duration % 3600) / 60 << ":" << ((duration % 3600) % 60));
   }
 }
@@ -210,15 +162,14 @@ void SSD_Device::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter
   tmp = ID();
   xmlwriter.Write_open_tag(tmp);
 
-  this->Host_interface->Report_results_in_XML(ID(), xmlwriter);
-  if (Memory_Type == NVM::NVM_Type::FLASH)
-  {
-    __ftl.Report_results_in_XML(ID(), xmlwriter);
+  Host_interface->Report_results_in_XML(ID(), xmlwriter);
 
-    for (uint32_t channel_cntr = 0; channel_cntr < Channel_count; channel_cntr++)
-      for (uint32_t chip_cntr = 0; chip_cntr < Chip_no_per_channel; chip_cntr++)
-        __channels[channel_cntr].Chips[chip_cntr].Report_results_in_XML(ID(), xmlwriter);
-  }
+  __ftl.Report_results_in_XML(ID(), xmlwriter);
+
+  for (auto& channel : __channels)
+    for (auto& chip : channel.Chips)
+      chip.Report_results_in_XML(ID(), xmlwriter);
+
   xmlwriter.Write_close_tag();
 }
 

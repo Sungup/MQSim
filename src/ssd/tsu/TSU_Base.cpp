@@ -26,7 +26,6 @@ TSU_Base::TSU_Base(const sim_object_id_type& id,
 #endif
     __channel_idle_signal_handler(this, &TSU_Base::__handle_channel_idle_signal),
     __chip_idle_signal_handler(this, &TSU_Base::__handle_chip_idle_signal),
-    __type(Type),
     __channel_rr_turn(ChannelCount, 0),
     channel_count(ChannelCount),
     chip_no_per_channel(chip_no_per_channel),
@@ -73,12 +72,13 @@ TSU_Base::__handle_chip_idle_signal(const NVM::FlashMemory::Flash_Chip& chip)
 }
 
 TSUPtr
-SSD_Components::build_tsu_object(const sim_object_id_type& id,
-                                 const DeviceParameterSet& params,
+SSD_Components::build_tsu_object(const DeviceParameterSet& params,
                                  FTL& ftl,
                                  NVM_PHY_ONFI& nvm_controller)
 {
-  return std::make_shared<TSU_OutOfOrder>(id, ftl, nvm_controller,
+  return std::make_shared<TSU_OutOfOrder>(ftl.ID() + ".TSU",
+                                          ftl,
+                                          nvm_controller,
                                           params.Flash_Channel_Count,
                                           params.Chip_No_Per_Channel,
                                           params.Flash_Parameters.Die_No_Per_Chip,

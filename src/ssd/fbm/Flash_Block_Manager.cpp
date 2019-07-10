@@ -141,7 +141,7 @@ namespace SSD_Components
     plane_record.Check_bookkeeping_correctness(block_address);
   }
 
-  inline uint32_t Flash_Block_Manager::Get_pool_size(const NVM::FlashMemory::Physical_Page_Address& plane_address)
+  inline uint32_t Flash_Block_Manager::Get_pool_size(const NVM::FlashMemory::Physical_Page_Address& plane_address) const
   {
     return (uint32_t) plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID].Free_block_pool.size();
   }

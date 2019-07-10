@@ -17,11 +17,10 @@ namespace SSD_Components
   private:
     NVM_PHY_ONFI * flash_controller;
     uint32_t capacity_in_bytes, capacity_in_pages;
-    uint32_t sector_no_per_page;
     Data_Cache_Flash* data_cache;
 
     // The list of DRAM transfers that are waiting to be executed
-    std::queue<Memory_Transfer_Info*>* dram_execution_queue;
+    std::queue<MemoryTransferInfo*>* dram_execution_queue;
 
     //The list of user requests that are waiting for free space in DRAM
     std::list<UserRequest*>* waiting_user_requests_queue_for_dram_free_slot;
@@ -41,7 +40,7 @@ namespace SSD_Components
     // space is used as a destage buffer
     void write_to_destage_buffer(UserRequest& user_request);
 
-    void service_dram_access_request(Memory_Transfer_Info& request_info);
+    void service_dram_access_request(MemoryTransferInfo& request_info);
 
     void __handle_transaction_service(NvmTransactionFlash* nvm_transaction);
 

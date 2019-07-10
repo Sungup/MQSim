@@ -13,14 +13,16 @@
 
 #include "../../utils/InlineTools.h"
 #include "../NvmTransactionFlashWR.h"
+#include "../NVM_Firmware.h"
+
 #include "DataCacheDefs.h"
+#include "MemoryTransferInfo.h"
 
 #include "../../sim/Sim_Object.h"
 
 
 namespace SSD_Components
 {
-  class NVM_Firmware;
   class Host_Interface_Base;
 
   class Data_Cache_Manager_Base: public MQSimEngine::Sim_Object
@@ -35,6 +37,8 @@ namespace SSD_Components
     NvmTransactionHandlerList __user_mem_tr_svc_handler;
 
   protected:
+    MemoryTransferInfoPool _mem_transfer_info_pool;
+
     std::vector<Caching_Mode> caching_mode_per_input_stream;
 
     Host_Interface_Base* host_interface;
@@ -84,9 +88,9 @@ namespace SSD_Components
                             Cache_Sharing_Mode sharing_mode,
                             uint32_t stream_count);
 
-    virtual ~Data_Cache_Manager_Base() = default;
+    ~Data_Cache_Manager_Base() override = default;
 
-    void Setup_triggers();
+    void Setup_triggers() override;
 
     void connect_to_user_request_service_handler(UserRequestServiceHandlerBase& handler);
     void connect_to_user_transaction_service_handler(NvmTransactionHandlerBase& handler);
@@ -137,6 +141,17 @@ namespace SSD_Components
       return sim_time_type((tRCD + tCL + sim_time_type((double)(dram_row_size / dram_burst_size_in_bytes / 2 * dram_burst_transfer_time_ddr) + tRP) * (double)(memory_access_size_in_byte / dram_row_size / 2))
                             + tRCD + tCL + sim_time_type((double)(memory_access_size_in_byte % dram_row_size) / ((double)dram_burst_size_in_bytes * dram_burst_transfer_time_ddr)));
   }
+
+  // --------------------------
+  // Data Cache Manager builder
+  // --------------------------
+  typedef std::shared_ptr<Data_Cache_Manager_Base> DataCacheManagerPtr;
+
+  DataCacheManagerPtr build_dcm_object(const sim_object_id_type& id,
+                                       const DeviceParameterSet& params,
+                                       NVM_Firmware& firmware,
+                                       NVM_PHY_ONFI& phy,
+                                       CachingModeList& caching_modes);
 }
 
 #endif // !DATA_CACHE_MANAGER_BASE_H

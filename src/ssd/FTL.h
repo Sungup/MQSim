@@ -19,9 +19,6 @@ namespace SSD_Components
 {
   enum class SimulationMode { STANDALONE, FULL_SYSTEM };
 
-  class Address_Mapping_Unit_Base;
-  class GC_and_WL_Unit_Base;
-
   class FTL : public NVM_Firmware {
   private:
     uint32_t block_no_per_plane;
@@ -37,13 +34,11 @@ namespace SSD_Components
 
     const Stats& __stats;
 
-  public:
-    Address_Mapping_Unit_Base* Address_Mapping_Unit;
-    GC_and_WL_Unit_Base* GC_and_WL_Unit;
-
   private:
-    TSUPtr __tsu;
-    FlashBlockManagerPtr __block_manager;
+    TSUPtr                __tsu;
+    FlashBlockManagerPtr  __block_manager;
+    AddressMappingUnitPtr __address_mapper;
+    GCnWLUnitPtr          __gc_and_wl;
 
   public:
     FTL(const sim_object_id_type& id,
@@ -51,12 +46,15 @@ namespace SSD_Components
         const Stats& stats);
     ~FTL() final = default;
 
+    void dispatch_transactions(const std::list<NvmTransaction*>& transactionList) final;
+
     void Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats);
     void Validate_simulation_config();
     LPA_type Convert_host_logical_address_to_device_address(LHA_type lha) const;
     page_status_type Find_NVM_subunit_access_bitmap(LHA_type lha) const;
 
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
+
 
     // TSU related passing functions
     void assign_tsu(TSUPtr& tsu);
@@ -67,6 +65,14 @@ namespace SSD_Components
     // FBM related passing functions
     void assign_fbm(FlashBlockManagerPtr& fbm);
 
+    // AMU related passing functions
+    void assign_amu(AddressMappingUnitPtr& amu);
+
+    // GC and WL Unit passing function
+    void assign_gcwl(GCnWLUnitPtr& gcwl);
+    uint32_t minimum_free_pages_before_gc() const;
+    bool stop_write_services_for_gc(const NVM::FlashMemory::Physical_Page_Address& plane);
+    bool is_in_urgent_gc(const NVM::FlashMemory::Flash_Chip* chip) const;
   };
 
   force_inline void
@@ -89,6 +95,25 @@ namespace SSD_Components
   FTL::assign_fbm(FlashBlockManagerPtr& fbm)
   { __block_manager = fbm; }
 
+  force_inline void
+  FTL::assign_amu(AddressMappingUnitPtr& amu)
+  { __address_mapper = amu; }
+
+  force_inline void
+  FTL::assign_gcwl(SSD_Components::GCnWLUnitPtr& gcwl)
+  { __gc_and_wl = gcwl; }
+
+  force_inline uint32_t
+  FTL::minimum_free_pages_before_gc() const
+  { return __gc_and_wl->Get_minimum_number_of_free_pages_before_GC(); }
+
+  force_inline bool
+  FTL::stop_write_services_for_gc(const NVM::FlashMemory::Physical_Page_Address& plane)
+  { return __gc_and_wl->Stop_servicing_writes(plane); }
+
+  force_inline bool
+  FTL::is_in_urgent_gc(const NVM::FlashMemory::Flash_Chip* chip) const
+  { return __gc_and_wl->GC_is_in_urgent_mode(chip); }
 }
 
 

@@ -149,7 +149,7 @@ set(MQSIM_SSD_SOURCES
     ssd/Queue_Probe.h
     ssd/SSD_Defs.h
     ssd/Stats.cpp
-    ssd/Stats.h)
+    ssd/Stats.h ssd/dcm/MemoryTransferInfo.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp

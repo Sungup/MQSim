@@ -15,10 +15,10 @@ namespace Utils
       double NextDouble();
     private:
       double s[2][3];
-      static double norm, m1, m2, a12, a13, a21, a23;
-      static double a[2][3][3];
-      static double m[2];
-      static double init_s[2][3];
+      static const double norm, m1, m2, a12, a13, a21, a23;
+      static const double a[2][3][3];
+      static const double m[2];
+      static const double init_s[2][3];
 
 
       static double mod(double x, double m)
@@ -64,7 +64,7 @@ namespace Utils
           v[i] = u[i];
       }
 
-      static void m_ftoi(double a[][3], int64_t b[][3], double m)
+      static void m_ftoi(const double a[][3], int64_t b[][3], double m)
       {
         for (int i = 0; i <= 2; i++)
           for (int j = 0; j <= 2; j++)

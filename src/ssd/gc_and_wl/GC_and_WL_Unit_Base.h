@@ -162,7 +162,7 @@ namespace SSD_Components
 
     void Setup_triggers();
 
-    virtual bool GC_is_in_urgent_mode(const NVM::FlashMemory::Flash_Chip*) = 0;
+    virtual bool GC_is_in_urgent_mode(const NVM::FlashMemory::Flash_Chip*) const = 0;
     virtual void Check_gc_required(const uint32_t BlockPoolSize, const NVM::FlashMemory::Physical_Page_Address& planeAddress) = 0;
 
     GC_Block_Selection_Policy_Type Get_gc_policy() const;
@@ -258,6 +258,20 @@ namespace SSD_Components
 
     tsu->Schedule();
   }
+
+  // ----------------------
+  // GC and WL Unit builder
+  // ----------------------
+  typedef std::shared_ptr<GC_and_WL_Unit_Base> GCnWLUnitPtr;
+  GCnWLUnitPtr build_gc_and_wl_object(const DeviceParameterSet& params,
+                                      FTL& ftl,
+                                      Address_Mapping_Unit_Base& amu,
+                                      Flash_Block_Manager_Base& fbm,
+                                      TSU_Base& tsu,
+                                      NVM_PHY_ONFI& phy,
+                                      Stats& stats,
+                                      double rho,
+                                      uint32_t max_ongoing_gc_reqs_per_plane);
 }
 
 #endif // !GC_AND_WL_UNIT_BASE_H

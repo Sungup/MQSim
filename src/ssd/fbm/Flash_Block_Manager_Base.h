@@ -30,7 +30,7 @@ namespace SSD_Components
     virtual void Invalidate_page_in_block(const stream_id_type streamID, const NVM::FlashMemory::Physical_Page_Address& address) = 0;
     virtual void Invalidate_page_in_block_for_preconditioning(const stream_id_type streamID, const NVM::FlashMemory::Physical_Page_Address& address) = 0;
     virtual void Add_erased_block_to_pool(const NVM::FlashMemory::Physical_Page_Address& address) = 0;
-    virtual uint32_t Get_pool_size(const NVM::FlashMemory::Physical_Page_Address& plane_address) = 0;
+    virtual uint32_t Get_pool_size(const NVM::FlashMemory::Physical_Page_Address& plane_address) const = 0;
     flash_block_ID_type Get_coldest_block_id(const NVM::FlashMemory::Physical_Page_Address& plane_address);
     uint32_t Get_min_max_erase_difference(const NVM::FlashMemory::Physical_Page_Address& plane_address);
     void Set_GC_and_WL_Unit(GC_and_WL_Unit_Base* );

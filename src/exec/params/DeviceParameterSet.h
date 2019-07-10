@@ -101,10 +101,18 @@ public:
   SSD_Components::ONFI_Protocol Flash_Comm_Protocol;
   FlashParameterSet Flash_Parameters;
 
+private:
+  uint32_t __back_pressure_buffer_max_depth;
+
+private:
+  uint32_t __parallel_device_count() const;
+
+public:
   DeviceParameterSet();
   ~DeviceParameterSet() override = default;
 
   int gen_seed() const;
+  uint32_t back_pressure_buffer_max_depth() const;
 
   void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
   void XML_deserialize(rapidxml::xml_node<> *node) final;
@@ -114,6 +122,12 @@ force_inline int
 DeviceParameterSet::gen_seed() const
 {
   return Seed++;
+}
+
+force_inline uint32_t
+DeviceParameterSet::back_pressure_buffer_max_depth() const
+{
+  return __back_pressure_buffer_max_depth;
 }
 
 #endif // !DEVICE_PARAMETER_SET_H

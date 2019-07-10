@@ -15,6 +15,7 @@
 #include "../NvmTransactionFlashWR.h"
 
 #include "AddressMappingUnitDefs.h"
+#include "../../utils/Logical_Address_Partitioning_Unit.h"
 
 namespace SSD_Components
 {
@@ -282,6 +283,18 @@ namespace SSD_Components
                                      0, 0, nullptr, 0, 0, 0, NO_LPA, 0);
   }
 
+  // -----------
+  // AMU builder
+  // -----------
+  typedef std::shared_ptr<Address_Mapping_Unit_Base> AddressMappingUnitPtr;
+
+  AddressMappingUnitPtr build_amu_object(const DeviceParameterSet& params,
+                                         const Utils::LogicalAddressPartitionUnit& lapu,
+                                         const StreamIdInfo& stream_info,
+                                         FTL& ftl,
+                                         NVM_PHY_ONFI& phy,
+                                         Flash_Block_Manager_Base& fbm,
+                                         Stats& stats);
 }
 
 #endif // !ADDRESS_MAPPING_UNIT_BASE_H
