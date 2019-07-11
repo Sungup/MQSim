@@ -116,7 +116,6 @@ namespace Utils
     std::vector<uint32_t> Write_size_histogram, Read_size_histogram;//Histogram with 1 sector resolution
   };
 
-  typedef std::shared_ptr<Workload_Statistics> WorkloadStatsPtr;
-  typedef std::vector<WorkloadStatsPtr>        WorkloadStatsList;
+  typedef std::vector<Workload_Statistics>     WorkloadStatsList;
 }
 #endif// !WORKLOAD_STATISTICS_H

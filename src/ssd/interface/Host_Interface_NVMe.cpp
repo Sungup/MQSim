@@ -3,6 +3,7 @@
 #include "Host_Interface_NVMe.h"
 #include "../NvmTransactionFlashRD.h"
 #include "../NvmTransactionFlashWR.h"
+#include "../../host/Host_Defs.h"
 
 
 namespace SSD_Components

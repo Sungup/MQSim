@@ -1,117 +1,172 @@
 #include "../sim/Engine.h"
 #include "Host_System.h"
-#include "../ssd/interface/Host_Interface_Base.h"
 #include "../ssd/interface/Host_Interface_NVMe.h"
+#include "../ssd/interface/Host_Interface_SATA.h"
 #include "../host/PCIe_Root_Complex.h"
 #include "../host/IO_Flow_Synthetic.h"
 #include "../host/IO_Flow_Trace_Based.h"
 #include "../utils/StringTools.h"
 #include "../utils/Logical_Address_Partitioning_Unit.h"
 
-Host_System::Host_System(HostParameterSet* parameters,
+
+
+Host_System::Host_System(const HostParameterSet& params,
                          const IOFlowScenario& scenario,
                          bool preconditioning_required,
-                         SSD_Components::Host_Interface_Base* ssd_host_interface,
-                         const Utils::LogicalAddressPartitionUnit& lapu)
+                         SSD_Components::Host_Interface_Base& host_interface,
+                         const Utils::LogicalAddrPartition& lapu)
   : MQSimEngine::Sim_Object("Host"),
-    preconditioning_required(preconditioning_required)
+    __sata_hba(Host_Components::build_sata_hba(ID() + ".SATA_HBA",
+                                               host_interface,
+                                               params.SATA_Processing_Delay)),
+    __link(ID() + ".PCIeLink",
+           nullptr,
+           nullptr,
+           params.PCIe_Lane_Bandwidth,
+           params.PCIe_Lane_Count),
+    __root_complex(&__link,
+                   host_interface.GetType(),
+                   __sata_hba.get(),
+                   nullptr),
+    __pcie_switch(&__link,
+                  &host_interface),
+    __ssd_device(nullptr),
+    __preconditioning_required(preconditioning_required)
 {
   Simulator->AddObject(this);
 
-  //Create the main components of the host system
-  if (((SSD_Components::Host_Interface_NVMe*)ssd_host_interface)->GetType() == HostInterface_Types::SATA)
-    this->SATA_hba = new Host_Components::SATA_HBA(ID() + ".SATA_HBA", ((SSD_Components::Host_Interface_SATA*)ssd_host_interface)->Get_ncq_depth(), parameters->SATA_Processing_Delay, NULL, NULL);
-  else
-    this->SATA_hba = NULL;
-  this->Link = new Host_Components::PCIe_Link(this->ID() + ".PCIeLink", NULL, NULL, parameters->PCIe_Lane_Bandwidth, parameters->PCIe_Lane_Count);
-  this->PCIe_root_complex = new Host_Components::PCIe_Root_Complex(this->Link, ssd_host_interface->GetType(), this->SATA_hba, NULL);
-  this->Link->Set_root_complex(this->PCIe_root_complex);
-  this->PCIe_switch = new Host_Components::PCIe_Switch(this->Link, ssd_host_interface);
-  this->Link->Set_pcie_switch(this->PCIe_switch);
-  Simulator->AddObject(this->Link);
+  auto& nvme_interface = (SSD_Components::Host_Interface_NVMe&) host_interface;
 
-  //Create IO flows
-  // LHA_type address_range_per_flow = ssd_host_interface->Get_max_logical_sector_address() / parameters->IO_Flow_Definitions.size();
-  for (uint16_t flow_id = 0; flow_id < scenario.size(); flow_id++)
-  {
-    Host_Components::IO_Flow_Base* io_flow = NULL;
-    //No flow should ask for I/O queue id 0, it is reserved for NVMe Admin command queue pair
-    //Hence, we use flow_id + 1 (which is equal to 1, 2, ...) as the requested I/O queue id
-    uint16_t nvme_sq_size = 0, nvme_cq_size = 0;
-    switch (((SSD_Components::Host_Interface_NVMe*)ssd_host_interface)->GetType())
-    {
-    case HostInterface_Types::NVME:
-      nvme_sq_size = ((SSD_Components::Host_Interface_NVMe*)ssd_host_interface)->Get_submission_queue_depth();
-      nvme_cq_size = ((SSD_Components::Host_Interface_NVMe*)ssd_host_interface)->Get_completion_queue_depth();
-      break;
-    default:
-      break;
-    }
+  __link.Set_root_complex(&__root_complex);
+  __link.Set_pcie_switch(&__pcie_switch);
+
+  Simulator->AddObject(&__link);
+
+  // No flow should ask for I/O queue id 0, it is reserved for NVMe admin
+  // command queue pair. Hence, we use flow_id + 1 (which is equal to 1, 2,
+  // ...) as the requested I/O queue id
+
+  const uint16_t sq_size = host_interface.GetType() == HostInterface_Types::NVME
+                             ? nvme_interface.Get_submission_queue_depth()
+                             : 0;
+  const uint16_t cq_size = host_interface.GetType() == HostInterface_Types::NVME
+                             ? nvme_interface.Get_completion_queue_depth()
+                             : 0;
+
+  // Create IO flows
+  for (uint16_t flow_id = 0; flow_id < scenario.size(); flow_id++) {
+    Host_Components::IO_Flow_Base* io_flow = nullptr;
+
     switch (scenario[flow_id]->Type)
     {
     case Flow_Type::SYNTHETIC:
     {
-      SyntheticFlowParamSet* flow_param = (SyntheticFlowParamSet*)scenario[flow_id].get();
-      if (flow_param->Working_Set_Percentage > 100 || flow_param->Working_Set_Percentage < 1)
-        flow_param->Working_Set_Percentage = 100;
-      io_flow = new Host_Components::IO_Flow_Synthetic(this->ID() + ".IO_Flow.Synth.No_" + std::to_string(flow_id), flow_id,
-        lapu.start_lha_available_to_flow(flow_id),
-        lapu.end_lha_available_to_flow(flow_id),
-        ((double)flow_param->Working_Set_Percentage / 100.0), FLOW_ID_TO_Q_ID(flow_id), nvme_sq_size, nvme_cq_size,
-        flow_param->Priority_Class, flow_param->Read_Percentage / double(100.0), flow_param->Address_Distribution, flow_param->Percentage_of_Hot_Region / double(100.0),
-        flow_param->Request_Size_Distribution, flow_param->Average_Request_Size, flow_param->Variance_Request_Size,
-        flow_param->Synthetic_Generator_Type, (flow_param->Bandwidth == 0? 0 :NanoSecondCoeff / ((flow_param->Bandwidth / SECTOR_SIZE_IN_BYTE) / flow_param->Average_Request_Size)),
-        flow_param->Average_No_of_Reqs_in_Queue, flow_param->Generated_Aligned_Addresses, flow_param->Address_Alignment_Unit,
-        flow_param->Seed, flow_param->Stop_Time, flow_param->Initial_Occupancy_Percentage / double(100.0), flow_param->Total_Requests_To_Generate, ssd_host_interface->GetType(), this->PCIe_root_complex, this->SATA_hba,
-        parameters->Enable_ResponseTime_Logging, parameters->ResponseTime_Logging_Period_Length, parameters->Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log");
+      auto* flow_param = (SyntheticFlowParamSet*)scenario[flow_id].get();
+
+      io_flow = new Host_Components::IO_Flow_Synthetic(ID() + ".IO_Flow.Synth.No_" + std::to_string(flow_id),
+                                                       flow_id,
+                                                       lapu.available_start_lha(flow_id),
+                                                       lapu.available_end_lha(flow_id),
+                                                       flow_param->working_set_rate(),
+                                                       FLOW_ID_TO_Q_ID(flow_id),
+                                                       sq_size,
+                                                       cq_size,
+                                                       flow_param->Priority_Class,
+                                                       flow_param->read_rate(),
+                                                       flow_param->Address_Distribution,
+                                                       flow_param->hot_region_rate(),
+                                                       flow_param->Request_Size_Distribution,
+                                                       flow_param->Average_Request_Size,
+                                                       flow_param->Variance_Request_Size,
+                                                       flow_param->Synthetic_Generator_Type,
+                                                       flow_param->avg_arrival_time(),
+                                                       flow_param->Average_No_of_Reqs_in_Queue,
+                                                       flow_param->Generated_Aligned_Addresses,
+                                                       flow_param->Address_Alignment_Unit,
+                                                       flow_param->Seed,
+                                                       flow_param->Stop_Time,
+                                                       flow_param->init_occupancy_rate(),
+                                                       flow_param->Total_Requests_To_Generate,
+                                                       host_interface.GetType(),
+                                                       &__root_complex,
+                                                       __sata_hba.get(),
+                                                       params.Enable_ResponseTime_Logging,
+                                                       params.ResponseTime_Logging_Period_Length,
+                                                       params.stream_log_path(flow_id));
       this->IO_flows.push_back(io_flow);
       break;
     }
     case Flow_Type::TRACE:
     {
-      TraceFlowParameterSet * flow_param = (TraceFlowParameterSet*)scenario[flow_id].get();
-      io_flow = new Host_Components::IO_Flow_Trace_Based(this->ID() + ".IO_Flow.Trace." + flow_param->File_Path, flow_id,
-        lapu.start_lha_available_to_flow(flow_id),
-        lapu.end_lha_available_to_flow(flow_id),
-        FLOW_ID_TO_Q_ID(flow_id), nvme_sq_size, nvme_cq_size,
-        flow_param->Priority_Class, flow_param->Initial_Occupancy_Percentage / double(100.0),
-        flow_param->File_Path, flow_param->Time_Unit, flow_param->Relay_Count, flow_param->Percentage_To_Be_Executed,
-        ssd_host_interface->GetType(), this->PCIe_root_complex, this->SATA_hba,
-        parameters->Enable_ResponseTime_Logging, parameters->ResponseTime_Logging_Period_Length, parameters->Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log");
+      auto* flow_param = (TraceFlowParameterSet*)scenario[flow_id].get();
 
-      this->IO_flows.push_back(io_flow);
+      io_flow = new Host_Components::IO_Flow_Trace_Based(ID() + ".IO_Flow.Trace." + flow_param->File_Path,
+                                                         flow_id,
+                                                         lapu.available_start_lha(flow_id),
+                                                         lapu.available_end_lha(flow_id),
+                                                         FLOW_ID_TO_Q_ID(flow_id),
+                                                         sq_size,
+                                                         cq_size,
+                                                         flow_param->Priority_Class,
+                                                         flow_param->init_occupancy_rate(),
+                                                         flow_param->File_Path,
+                                                         flow_param->Time_Unit,
+                                                         flow_param->Relay_Count,
+                                                         flow_param->Percentage_To_Be_Executed,
+                                                         host_interface.GetType(),
+                                                         &__root_complex,
+                                                         __sata_hba.get(),
+                                                         params.Enable_ResponseTime_Logging,
+                                                         params.ResponseTime_Logging_Period_Length,
+                                                         params.stream_log_path(flow_id));
+
+      IO_flows.push_back(io_flow);
       break;
     }
-    default:
-      throw "The specified IO flow type is not supported.\n";
     }
+
     Simulator->AddObject(io_flow);
   }
-  this->PCIe_root_complex->Set_io_flows(&this->IO_flows);
-  if (((SSD_Components::Host_Interface_NVMe*)ssd_host_interface)->GetType() == HostInterface_Types::SATA)
+
+  __root_complex.Set_io_flows(&IO_flows);
+
+  if (host_interface.GetType() == HostInterface_Types::SATA)
   {
-    this->SATA_hba->Set_io_flows(&this->IO_flows);
-    this->SATA_hba->Set_root_complex(this->PCIe_root_complex);
+    __sata_hba->Set_io_flows(&IO_flows);
+    __sata_hba->Set_root_complex(&__root_complex);
   }
 }
 
 Host_System::~Host_System() 
 {
-  delete this->Link;
-  delete this->PCIe_root_complex;
-  delete this->PCIe_switch;
-  if (ssd_device->Host_interface->GetType() == HostInterface_Types::SATA)
-    delete this->SATA_hba;
+  for (uint16_t flow_id = 0; flow_id < IO_flows.size(); flow_id++)
+    delete IO_flows[flow_id];
+}
 
-  for (uint16_t flow_id = 0; flow_id < this->IO_flows.size(); flow_id++)
-    delete this->IO_flows[flow_id];
+force_inline Utils::WorkloadStatsList
+Host_System::__make_workloads_statistics()
+{
+  Utils::WorkloadStatsList stats(IO_flows.size());
+
+  auto stat = stats.begin();
+
+  for (auto &workload : IO_flows) {
+    workload->get_stats(*stat,
+                        __ssd_device->lha_to_lpa_converter,
+                        __ssd_device->nvm_access_bitmap_finder);
+
+    ++stat;
+  }
+
+  return stats;
 }
 
 void Host_System::Attach_ssd_device(SSD_Device* ssd_device)
 {
-  ssd_device->Attach_to_host(this->PCIe_switch);
-  this->PCIe_switch->Attach_ssd_device(ssd_device->Host_interface);
-  this->ssd_device = ssd_device;
+  ssd_device->Attach_to_host(&__pcie_switch);
+  __pcie_switch.Attach_ssd_device(&ssd_device->host_interface());
+
+  __ssd_device = ssd_device;
 }
 
 const std::vector<Host_Components::IO_Flow_Base*> Host_System::Get_io_flows()
@@ -121,71 +176,47 @@ const std::vector<Host_Components::IO_Flow_Base*> Host_System::Get_io_flows()
 
 void Host_System::Start_simulation()
 {
-  switch (ssd_device->Host_interface->GetType())
+  switch (__ssd_device->host_interface_type())
   {
   case HostInterface_Types::NVME:
     for (uint16_t flow_cntr = 0; flow_cntr < IO_flows.size(); flow_cntr++)
-      ((SSD_Components::Host_Interface_NVMe*) ssd_device->Host_interface)->Create_new_stream(
+      ((SSD_Components::Host_Interface_NVMe&) __ssd_device->host_interface()).Create_new_stream(
         IO_flows[flow_cntr]->Priority_class(),
         IO_flows[flow_cntr]->Get_start_lsa_on_device(), IO_flows[flow_cntr]->Get_end_lsa_address_on_device(),
         IO_flows[flow_cntr]->Get_nvme_queue_pair_info()->Submission_queue_memory_base_address, IO_flows[flow_cntr]->Get_nvme_queue_pair_info()->Completion_queue_memory_base_address);
     break;
   case HostInterface_Types::SATA:
-    ((SSD_Components::Host_Interface_SATA*) ssd_device->Host_interface)->Set_ncq_address(
-      SATA_hba->Get_sata_ncq_info()->Submission_queue_memory_base_address, SATA_hba->Get_sata_ncq_info()->Completion_queue_memory_base_address);
+    ((SSD_Components::Host_Interface_SATA&) __ssd_device->host_interface()).Set_ncq_address(
+      __sata_hba->Get_sata_ncq_info()->Submission_queue_memory_base_address, __sata_hba->Get_sata_ncq_info()->Completion_queue_memory_base_address);
 
   default:
     break;
   }
 
-  if (preconditioning_required)
+  if (__preconditioning_required)
   {
-    std::vector<Utils::Workload_Statistics*> workload_stats = get_workloads_statistics();
-    ssd_device->Perform_preconditioning(workload_stats);
-    for (auto &stat : workload_stats)
-      delete stat;
+    auto workload_stats = __make_workloads_statistics();
+    __ssd_device->Perform_preconditioning(workload_stats);
   }
 }
 
 void Host_System::Validate_simulation_config() 
 {
-  if (this->IO_flows.size() == 0)
-    PRINT_ERROR("No IO flow is set for host system")
-  if (this->PCIe_root_complex == NULL)
-    PRINT_ERROR("PCIe Root Complex is not set for host system");
-  if (this->Link == NULL)
-    PRINT_ERROR("PCIe Link is not set for host system");
-  if (this->PCIe_switch == NULL)
-    PRINT_ERROR("PCIe Switch is not set for host system")
-  if (!this->PCIe_switch->Is_ssd_connected())
-    PRINT_ERROR("No SSD is connected to the host system")
+  if (IO_flows.empty())
+    throw mqsim_error("No IO flow is set for host system");
+
+  if (!__pcie_switch.Is_ssd_connected())
+    throw mqsim_error("No SSD is connected to the host system");
 }
 
-void Host_System::Execute_simulator_event(MQSimEngine::SimEvent* event) {}
-
-void Host_System::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)
+void
+Host_System::Report_results_in_XML(std::string /* name_prefix */,
+                                   Utils::XmlWriter& xmlwriter)
 {
-  std::string tmp;
-  tmp = ID();
-  xmlwriter.Write_open_tag(tmp);
+  xmlwriter.Write_open_tag(ID());
 
   for (auto &flow : IO_flows)
     flow->Report_results_in_XML("Host", xmlwriter);
 
   xmlwriter.Write_close_tag();
 }
-
-std::vector<Utils::Workload_Statistics*> Host_System::get_workloads_statistics()
-{
-  std::vector<Utils::Workload_Statistics*> stats;
-
-  for (auto &workload : IO_flows)
-  {
-    auto s = new Utils::Workload_Statistics;
-    workload->get_stats(*s, ssd_device->lha_to_lpa_converter, ssd_device->nvm_access_bitmap_finder);
-    stats.push_back(s);
-  }
-
-  return stats;
-}
-

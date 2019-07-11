@@ -48,7 +48,7 @@ namespace SSD_Components
 
     void dispatch_transactions(const std::list<NvmTransaction*>& transactionList) final;
 
-    void Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats);
+    void Perform_precondition(Utils::WorkloadStatsList& workload_stats);
     void Validate_simulation_config();
     LPA_type Convert_host_logical_address_to_device_address(LHA_type lha) const;
     page_status_type Find_NVM_subunit_access_bitmap(LHA_type lha) const;

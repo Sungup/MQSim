@@ -11,6 +11,10 @@
 #include "IO_Flow_Base.h"
 #include "PCIe_Root_Complex.h"
 
+namespace SSD_Components {
+  class Host_Interface_Base;
+}
+
 namespace Host_Components
 {
 #define SATA_SQ_FULL(Q) (Q.Submission_queue_tail < Q.Submission_queue_size - 1 ? Q.Submission_queue_tail + 1 == Q.Submission_queue_head : Q.Submission_queue_head == 0)
@@ -37,6 +41,7 @@ namespace Host_Components
 
   class IO_Flow_Base;
   class PCIe_Root_Complex;
+
   class SATA_HBA : MQSimEngine::Sim_Object
   {
   public:
@@ -64,6 +69,15 @@ namespace Host_Components
     std::queue<CompletionQueueEntry*> consume_requests;
     std::queue<HostIORequest*> host_requests;
   };
+
+  // ----------------
+  // SATA_HBA builder
+  // ----------------
+  typedef std::shared_ptr<SATA_HBA> SataHbaPtr;
+
+  SataHbaPtr build_sata_hba(const sim_object_id_type& id,
+                            const SSD_Components::Host_Interface_Base& interface,
+                            sim_time_type sata_ctrl_delay);
 }
 
 #endif // !SATA_HBA_H

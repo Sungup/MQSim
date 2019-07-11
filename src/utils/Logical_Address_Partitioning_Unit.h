@@ -19,8 +19,6 @@
  * be identical when the traces are executed together.
  */
 
-// TODO Remove static features
-
 namespace Utils
 {
   /// LogicalAddressPartitionUnit's initializer always called at SSD's
@@ -29,16 +27,16 @@ namespace Utils
   /// reset function before its initialization.
   /// But, there is no reason the LogicalAddressPartitionUnit should placed on
   /// the static scope. So I move the LogicalAddressPartitionUnit move into the
-  /// SSD_Device as a member variable to reduce the static variable collison
+  /// SSD_Device as a member variable to reduce the static variable collision
   /// between multiple SSD instance.
-  class LogicalAddressPartitionUnit {
+  class LogicalAddrPartition {
     typedef std::vector<int>                 ResourceListOnPlane;
     typedef std::vector<ResourceListOnPlane> ResourceListOnDie;
     typedef std::vector<ResourceListOnDie>   ResourceListOnChip;
     typedef std::vector<ResourceListOnChip>  ResourceListOnChannel;
 
   private:
-    const HostInterface_Types __hostinterface_type;
+    const HostInterface_Types __host_interface_type;
 
     LHA_type __total_pda_no;
     LHA_type __total_lha_no;
@@ -50,75 +48,75 @@ namespace Utils
     ResourceListOnChannel __resource_list;
 
   public:
-    LogicalAddressPartitionUnit(const DeviceParameterSet& params,
+    LogicalAddrPartition(const DeviceParameterSet& params,
                                 const StreamIdInfo& stream_info,
                                 uint32_t stream_count);
 
-    LHA_type start_lha_available_to_flow(stream_id_type stream) const;
-    LHA_type end_lha_available_to_flow(stream_id_type stream) const;
-    LHA_type flow_allocated_lha_count_from_host(stream_id_type stream) const;
-    LHA_type flow_allocated_lha_count_from_device(stream_id_type stream) const;
-    LHA_type flow_allocated_pda_count(stream_id_type stream) const;
+    LHA_type available_start_lha(stream_id_type stream) const;
+    LHA_type available_end_lha(stream_id_type stream) const;
+    LHA_type allocated_lha_count_from_host(stream_id_type stream) const;
+    LHA_type allocated_lha_count_from_device(stream_id_type stream) const;
+    LHA_type allocated_pda_count(stream_id_type stream) const;
 
     double share_of_physical_pages(flash_channel_ID_type channel_id,
                                    flash_chip_ID_type chip_id,
                                    flash_die_ID_type die_id,
                                    flash_plane_ID_type plane_id) const;
 
-    LHA_type get_total_device_lha_count() const;
+    LHA_type total_device_lha_count() const;
   };
 
   force_inline LHA_type
-  LogicalAddressPartitionUnit::start_lha_available_to_flow(stream_id_type stream) const
+  LogicalAddrPartition::available_start_lha(stream_id_type stream) const
   {
     // There are no difference between SATA & NVME code
     return __start_lhas_per_flow[stream];
   }
 
   force_inline LHA_type
-  LogicalAddressPartitionUnit::end_lha_available_to_flow(stream_id_type stream) const
+  LogicalAddrPartition::available_end_lha(stream_id_type stream) const
   {
     // There are no difference between SATA & NVME code
     return __end_lhas_per_flow[stream];
   }
 
   force_inline LHA_type
-  LogicalAddressPartitionUnit::flow_allocated_lha_count_from_host(stream_id_type stream) const
+  LogicalAddrPartition::allocated_lha_count_from_host(stream_id_type stream) const
   {
     // There are no difference between SATA & NVME code
     return (__end_lhas_per_flow[stream] - __start_lhas_per_flow[stream] + 1);
   }
 
   force_inline LHA_type
-  LogicalAddressPartitionUnit::flow_allocated_lha_count_from_device(stream_id_type stream) const
+  LogicalAddrPartition::allocated_lha_count_from_device(stream_id_type stream) const
   {
-    return (__hostinterface_type == HostInterface_Types::SATA)
+    return (__host_interface_type == HostInterface_Types::SATA)
              ? __total_lha_no
              : __end_lhas_per_flow[stream] - __start_lhas_per_flow[stream] + 1;
   }
 
   force_inline LHA_type
-  LogicalAddressPartitionUnit::flow_allocated_pda_count(stream_id_type stream) const
+  LogicalAddrPartition::allocated_pda_count(stream_id_type stream) const
   {
-    return (__hostinterface_type == HostInterface_Types::SATA)
-           ? __total_pda_no
-           : __pdas_per_flow[stream];
+    return (__host_interface_type == HostInterface_Types::SATA)
+             ? __total_pda_no
+             : __pdas_per_flow[stream];
   }
 
   force_inline double
-  LogicalAddressPartitionUnit::share_of_physical_pages(flash_channel_ID_type channel,
-                                                       flash_chip_ID_type chip,
-                                                       flash_die_ID_type die,
-                                                       flash_plane_ID_type plane) const
+  LogicalAddrPartition::share_of_physical_pages(flash_channel_ID_type channel,
+                                                flash_chip_ID_type chip,
+                                                flash_die_ID_type die,
+                                                flash_plane_ID_type plane) const
   {
-    if (__hostinterface_type == HostInterface_Types::NVME)
+    if (__host_interface_type == HostInterface_Types::NVME)
       return 1.0 / double(__resource_list[channel][chip][die][plane]);
 
     return 1.0;
   }
 
   force_inline LHA_type
-  LogicalAddressPartitionUnit::get_total_device_lha_count() const
+  LogicalAddrPartition::total_device_lha_count() const
   {
     return __total_lha_no;
   }

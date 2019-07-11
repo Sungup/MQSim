@@ -5,7 +5,6 @@
 #include "../request/UserRequest.h"
 #include "../../sim/Sim_Object.h"
 #include "../../sim/Sim_Reporter.h"
-#include "../../host/PCIe_Switch.h"
 #include "../../host/PCIe_Message.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
 
@@ -178,7 +177,7 @@ namespace SSD_Components
                                           LPA_type lpa);
 
   public:
-    Input_Stream_Manager_Base(Host_Interface_Base* host_interface);
+    explicit Input_Stream_Manager_Base(Host_Interface_Base* host_interface);
     virtual ~Input_Stream_Manager_Base();
     virtual void Handle_new_arrived_request(UserRequest* request) = 0;
     virtual void Handle_arrived_write_data(UserRequest* request) = 0;
@@ -304,7 +303,7 @@ namespace SSD_Components
     std::list<DMA_Req_Item*> dma_list;
 
   public:
-    Request_Fetch_Unit_Base(Host_Interface_Base* host_interface);
+    explicit Request_Fetch_Unit_Base(Host_Interface_Base* host_interface);
     virtual ~Request_Fetch_Unit_Base();
     virtual void Fetch_next_request(stream_id_type stream_id) = 0;
     virtual void Fetch_write_data(UserRequest* request) = 0;
@@ -370,8 +369,8 @@ namespace SSD_Components
                         uint32_t sectors_per_page,
                         Data_Cache_Manager_Base* cache);
 
-    virtual ~Host_Interface_Base();
-    void Setup_triggers();
+    ~Host_Interface_Base() override;
+    void Setup_triggers() override;
 
     void connect_to_user_request_signal(UserRequestServiceHandlerBase& handler);
 
@@ -431,8 +430,18 @@ namespace SSD_Components
   force_inline void
   Host_Interface_Base::Attach_to_device(Host_Components::PCIe_Switch* pcie_switch)
   {
-    this->__pcie_switch = pcie_switch;
+    __pcie_switch = pcie_switch;
   }
 
+  // -------------------------
+  // HostInterfaceBase builder
+  // -------------------------
+  typedef std::shared_ptr<Host_Interface_Base> HostInterfacePtr;
+
+  HostInterfacePtr build_hil_object(const sim_object_id_type& id,
+                                    const DeviceParameterSet& params,
+                                    LHA_type max_logical_sector_address,
+                                    uint32_t total_flows,
+                                    Data_Cache_Manager_Base& dcm);
 }
 #endif //HOST_INTERFACE_BASE_H

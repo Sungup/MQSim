@@ -27,8 +27,16 @@ public:
   HostParameterSet();
   ~HostParameterSet() override = default;
 
+  std::string stream_log_path(uint16_t flow_id) const;
+
   void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
   void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
+
+force_inline std::string
+HostParameterSet::stream_log_path(uint16_t flow_id) const
+{
+  return Input_file_path + ".IO_Flow.No_" + std::to_string(flow_id) + ".log";
+}
 
 #endif // !HOST_PARAMETER_SEt_H

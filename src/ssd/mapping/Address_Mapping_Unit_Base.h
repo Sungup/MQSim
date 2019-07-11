@@ -289,7 +289,7 @@ namespace SSD_Components
   typedef std::shared_ptr<Address_Mapping_Unit_Base> AddressMappingUnitPtr;
 
   AddressMappingUnitPtr build_amu_object(const DeviceParameterSet& params,
-                                         const Utils::LogicalAddressPartitionUnit& lapu,
+                                         const Utils::LogicalAddrPartition& lapu,
                                          const StreamIdInfo& stream_info,
                                          FTL& ftl,
                                          NVM_PHY_ONFI& phy,

@@ -265,7 +265,7 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                                                                  FTL* ftl,
                                                                  NVM_PHY_ONFI* flash_controller,
                                                                  Flash_Block_Manager_Base* block_manager,
-                                                                 const Utils::LogicalAddressPartitionUnit& lapu,
+                                                                 const Utils::LogicalAddrPartition& lapu,
                                                                  Stats& stats,
                                                                  bool ideal_mapping_table,
                                                                  uint32_t cmt_capacity_in_byte,
@@ -378,8 +378,10 @@ Address_Mapping_Unit_Page_Level::Address_Mapping_Unit_Page_Level(const sim_objec
                          stream_chip_ids[domainID],
                          stream_die_ids[domainID],
                          stream_plane_ids[domainID],
-                         __logical_addr_partition_unit.flow_allocated_pda_count(domainID),
-                         __logical_addr_partition_unit.flow_allocated_lha_count_from_device(domainID),
+                         __logical_addr_partition_unit.allocated_pda_count(
+                           domainID),
+                         __logical_addr_partition_unit.allocated_lha_count_from_device(
+                           domainID),
                          sector_no_per_page);
   }
 }

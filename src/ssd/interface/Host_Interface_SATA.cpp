@@ -1,4 +1,5 @@
 #include "Host_Interface_SATA.h"
+#include "../../host/Host_Defs.h"
 
 namespace SSD_Components
 {

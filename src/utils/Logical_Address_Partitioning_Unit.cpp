@@ -15,10 +15,10 @@ using namespace Utils;
   if ((LIMIT) <= (VAL))                              \
     throw mqsim_error(__LAPU_INIT_RESOURCE_ERR_MSG(VAL, STREAM_ID))
 
-LogicalAddressPartitionUnit::LogicalAddressPartitionUnit(const DeviceParameterSet& params,
+LogicalAddrPartition::LogicalAddrPartition(const DeviceParameterSet& params,
                                                          const StreamIdInfo& stream_info,
                                                          uint32_t stream_count)
-  : __hostinterface_type(params.HostInterface_Type),
+  : __host_interface_type(params.HostInterface_Type),
     __total_pda_no(0),
     __total_lha_no(0),
     __resource_list(

@@ -212,9 +212,9 @@ int main(int argc, char* argv[])
     StreamIdInfo stream_info(exec_params.SSD_Device_Configuration,
                              io_scen);
 
-    Utils::LogicalAddressPartitionUnit addr_partitioner(exec_params.SSD_Device_Configuration,
-                                                        stream_info,
-                                                        io_scen.size());
+    Utils::LogicalAddrPartition addr_partitioner(exec_params.SSD_Device_Configuration,
+                                                 stream_info,
+                                                 io_scen.size());
 
     // Create SSD_Device based on the specified parameters
     SSD_Device ssd(exec_params.SSD_Device_Configuration,
@@ -225,10 +225,10 @@ int main(int argc, char* argv[])
     //Create Host_System based on the specified parameters
     exec_params.Host_Configuration.Input_file_path = workload_defs_file_path.substr(0, workload_defs_file_path.find_last_of('.'));
 
-    Host_System host(&exec_params.Host_Configuration,
+    Host_System host(exec_params.Host_Configuration,
                      io_scen,
                      exec_params.SSD_Device_Configuration.Enabled_Preconditioning,
-                     ssd.Host_interface,
+                     ssd.host_interface(),
                      addr_partitioner);
 
     host.Attach_ssd_device(&ssd);
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
     time_t end_time = time(nullptr);
     dt = ctime(&end_time);
     PRINT_MESSAGE("MQSim finished at " << dt)
-    auto duration = (uint64_t)difftime(end_time, start_time);
+    auto duration = uint64_t(difftime(end_time, start_time));
     PRINT_MESSAGE("Total simulation time: " << duration / 3600 << ":" << (duration % 3600) / 60 << ":" << ((duration % 3600) % 60))
     PRINT_MESSAGE("");
 

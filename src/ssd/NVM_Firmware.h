@@ -35,7 +35,7 @@ namespace SSD_Components
     // bit-stream has b bits where b = ceiling(B_nvm / B_lha).
     virtual page_status_type Find_NVM_subunit_access_bitmap(LHA_type lha) const = 0;
 
-    virtual void Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats) = 0;
+    virtual void Perform_precondition(Utils::WorkloadStatsList& workload_stats) = 0;
 
     void assign_dcm(Data_Cache_Manager_Base* dcm);
 

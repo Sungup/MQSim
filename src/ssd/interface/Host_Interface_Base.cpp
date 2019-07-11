@@ -1,8 +1,13 @@
 #include "Host_Interface_Base.h"
+
+#include "../../host/PCIe_Switch.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
 
-using namespace SSD_Components;
+// Children classes for builder
+#include "Host_Interface_NVMe.h"
+#include "Host_Interface_SATA.h"
 
+using namespace SSD_Components;
 
 // ==============================
 // Declare of Host_Interface_Base
@@ -76,4 +81,34 @@ Host_Interface_Base::Send_write_message_to_host(uint64_t address, void* message,
                                        MQSimEngine::copy_data(message, message_size));
 
   __pcie_switch->Send_to_host(pcie_message);
+}
+
+// -------------------------
+// HostInterfaceBase builder
+// -------------------------
+HostInterfacePtr
+SSD_Components::build_hil_object(const sim_object_id_type& id,
+                                 const DeviceParameterSet& params,
+                                 LHA_type max_logical_sector_address,
+                                 uint32_t total_flows,
+                                 Data_Cache_Manager_Base& dcm)
+{
+  switch (params.HostInterface_Type)
+  {
+  case HostInterface_Types::NVME:
+    return std::make_shared<Host_Interface_NVMe>(id,
+                                                 max_logical_sector_address,
+                                                 params.IO_Queue_Depth,
+                                                 params.IO_Queue_Depth,
+                                                 total_flows,
+                                                 params.Queue_Fetch_Size,
+                                                 params.Flash_Parameters.page_size_in_sector(),
+                                                 &dcm);
+  case HostInterface_Types::SATA:
+    return std::make_shared<Host_Interface_SATA>(id,
+                                                 params.IO_Queue_Depth,
+                                                 max_logical_sector_address,
+                                                 params.Flash_Parameters.page_size_in_sector(),
+                                                 &dcm);
+  }
 }

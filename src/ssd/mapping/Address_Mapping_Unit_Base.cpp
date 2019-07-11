@@ -52,7 +52,7 @@ CMT_Sharing_Mode Address_Mapping_Unit_Base::Get_CMT_sharing_mode()
 // -----------
 AddressMappingUnitPtr
 SSD_Components::build_amu_object(const DeviceParameterSet& params,
-                                 const Utils::LogicalAddressPartitionUnit& lapu,
+                                 const Utils::LogicalAddrPartition& lapu,
                                  const StreamIdInfo& stream_info,
                                  FTL& ftl,
                                  NVM_PHY_ONFI& phy,

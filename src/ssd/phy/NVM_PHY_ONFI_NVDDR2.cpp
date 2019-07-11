@@ -515,7 +515,7 @@ copy_read_data_to_transaction(NvmTransactionFlashRD* read_transaction, NVM::Flas
 void NVM_PHY_ONFI_NVDDR2::Execute_simulator_event(MQSimEngine::SimEvent* ev)
 {
   auto* dieBKE = (DieBookKeepingEntry*)ev->Parameters;
-  flash_channel_ID_type channel_id = dieBKE->__active_transactions.front()->Address.ChannelID;
+  const flash_channel_ID_type channel_id = dieBKE->__active_transactions.front()->Address.ChannelID;
   ONFI_Channel_Base& targetChannel = channels[channel_id];
   NVM::FlashMemory::Flash_Chip& targetChip = targetChannel.Chips[dieBKE->__active_transactions.front()->Address.ChipID];
   ChipBookKeepingEntry *chipBKE = &bookKeepingTable[channel_id][targetChip.ChipID];

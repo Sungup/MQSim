@@ -94,7 +94,7 @@ namespace SSD_Components
 
     void Execute_simulator_event(MQSimEngine::SimEvent* ev) final;
     void Setup_triggers() final;
-    void Do_warmup(const std::vector<Utils::Workload_Statistics*>& workload_stats) final;
+    void Do_warmup(const Utils::WorkloadStatsList& workload_stats) final;
 
   };
 }

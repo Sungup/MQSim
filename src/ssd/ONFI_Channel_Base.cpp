@@ -14,7 +14,7 @@ ONFI_Channel_Base::ONFI_Channel_Base(const DeviceParameterSet& params,
     __status(BusChannelStatus::IDLE),
     __current_active(nullptr)
 {
-  auto sim = Simulator;
+  auto* sim = Simulator;
 
   Chips.reserve(params.Chip_No_Per_Channel);
 

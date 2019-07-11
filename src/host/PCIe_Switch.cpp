@@ -1,5 +1,7 @@
 #include "PCIe_Switch.h"
 
+#include "../ssd/interface/Host_Interface_Base.h"
+
 namespace Host_Components
 {
   PCIe_Switch::PCIe_Switch(PCIe_Link* pcie_link, SSD_Components::Host_Interface_Base* host_interface) :

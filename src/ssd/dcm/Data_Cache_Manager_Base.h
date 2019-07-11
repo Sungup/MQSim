@@ -94,9 +94,10 @@ namespace SSD_Components
 
     void connect_to_user_request_service_handler(UserRequestServiceHandlerBase& handler);
     void connect_to_user_transaction_service_handler(NvmTransactionHandlerBase& handler);
-    void Set_host_interface(Host_Interface_Base* interface);
 
-    virtual void Do_warmup(const std::vector<Utils::Workload_Statistics*>& workload_stats);
+    void connect_host_interface(Host_Interface_Base& interface);
+
+    virtual void Do_warmup(const Utils::WorkloadStatsList& workload_stats);
   };
 
   force_inline void
@@ -123,6 +124,12 @@ namespace SSD_Components
                                          evicted);
 
     return tr;
+  }
+
+  force_inline void
+  Data_Cache_Manager_Base::connect_host_interface(Host_Interface_Base& interface)
+  {
+    host_interface = &interface;
   }
 
   force_inline sim_time_type

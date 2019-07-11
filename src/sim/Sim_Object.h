@@ -16,7 +16,7 @@ namespace MQSimEngine
     bool __triggersSetUp;
 
   public:
-    explicit Sim_Object(const sim_object_id_type &id);
+    explicit Sim_Object(sim_object_id_type id);
     virtual ~Sim_Object() = default;
 
     sim_object_id_type ID();
@@ -40,8 +40,8 @@ namespace MQSimEngine
   };
 
   force_inline
-  Sim_Object::Sim_Object(const sim_object_id_type& id)
-    : __id(id),
+  Sim_Object::Sim_Object(sim_object_id_type id)
+    : __id(std::move(id)),
       __triggersSetUp(false)
   { }
 

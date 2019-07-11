@@ -52,25 +52,25 @@ FTL::Validate_simulation_config()
 }
 
 void
-FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stats)
+FTL::Perform_precondition(Utils::WorkloadStatsList&  workload_stats)
 {
   __address_mapper->Store_mapping_table_on_flash_at_start();
 
   double overall_rate = 0;
   for (auto const &stat : workload_stats)
   {
-    if (stat->Type == Utils::Workload_Type::SYNTHETIC)
+    if (stat.Type == Utils::Workload_Type::SYNTHETIC)
     {
-      switch (stat->generator_type)
+      switch (stat.generator_type)
       {
       case Utils::Request_Generator_Type::BANDWIDTH:
-        overall_rate += 1.0 / double(stat->Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat->Average_request_size_sector;
+        overall_rate += 1.0 / double(stat.Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
         break;
       case Utils::Request_Generator_Type::QUEUE_DEPTH:
       {
-        sim_time_type max_arrival_time = sim_time_type(stat->Read_ratio * double(avg_flash_read_latency) + (1 - stat->Read_ratio) * double(avg_flash_program_latency));
-        double avg_arrival_time = double(max_arrival_time) / double(stat->Request_queue_depth);
-        overall_rate += 1.0 / avg_arrival_time * SIM_TIME_TO_SECONDS_COEFF * stat->Average_request_size_sector;
+        sim_time_type max_arrival_time = sim_time_type(stat.Read_ratio * double(avg_flash_read_latency) + (1 - stat.Read_ratio) * double(avg_flash_program_latency));
+        double avg_arrival_time = double(max_arrival_time) / double(stat.Request_queue_depth);
+        overall_rate += 1.0 / avg_arrival_time * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
         break;
       }
       default:
@@ -79,7 +79,7 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
     }
     else
     {
-      overall_rate += 1.0 / double(stat->Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat->Average_request_size_sector;
+      overall_rate += 1.0 / double(stat.Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
     }
   }
 
@@ -87,22 +87,22 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
 
   for (auto &stat : workload_stats)
   {
-    LPA_type no_of_logical_pages_in_steadystate = (LPA_type)(stat->Initial_occupancy_ratio * __address_mapper->Get_logical_pages_count(stat->Stream_id));
+    LPA_type no_of_logical_pages_in_steadystate = (LPA_type)(stat.Initial_occupancy_ratio * __address_mapper->Get_logical_pages_count(stat.Stream_id));
 
     //Step 1: generate LPAs that are accessed in the steady-state
-    Utils::Address_Distribution_Type decision_dist_type = stat->Address_distribution_type;
+    Utils::Address_Distribution_Type decision_dist_type = stat.Address_distribution_type;
     std::map<LPA_type, page_status_type> lpa_set_for_preconditioning;//Stores the accessed LPAs
     std::multimap<int, LPA_type, std::greater<int>> trace_lpas_sorted_histogram;//only used for trace workloads
     uint32_t hot_region_last_index_in_histogram = 0;//only used for trace workloads to detect hot addresses
-    LHA_type min_lha = stat->Min_LHA;
-    LHA_type max_lha = stat->Max_LHA - 1;
+    LHA_type min_lha = stat.Min_LHA;
+    LHA_type max_lha = stat.Max_LHA - 1;
     LPA_type min_lpa = Convert_host_logical_address_to_device_address(min_lha);
-    if (stat->generate_aligned_addresses)
+    if (stat.generate_aligned_addresses)
     {
-      if (min_lha % stat->alignment_value != 0)
-        min_lha += stat->alignment_value - (min_lha % stat->alignment_value);
-      if (max_lha % stat->alignment_value != 0)
-        max_lha -= min_lha % stat->alignment_value;
+      if (min_lha % stat.alignment_value != 0)
+        min_lha += stat.alignment_value - (min_lha % stat.alignment_value);
+      if (max_lha % stat.alignment_value != 0)
+        max_lha -= min_lha % stat.alignment_value;
     }
 
     LPA_type max_lpa = Convert_host_logical_address_to_device_address(max_lha) - 1;
@@ -112,18 +112,18 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
     LPA_type last_hot_lpa = 0;
 
 
-    if (stat->Type == Utils::Workload_Type::SYNTHETIC)
+    if (stat.Type == Utils::Workload_Type::SYNTHETIC)
     {
       uint32_t size = 0;
       LHA_type start_LBA = 0, streaming_next_address = 0;
-      Utils::RandomGenerator* random_address_generator = new Utils::RandomGenerator(stat->random_address_generator_seed);
+      Utils::RandomGenerator* random_address_generator = new Utils::RandomGenerator(stat.random_address_generator_seed);
       Utils::RandomGenerator* random_hot_address_generator = nullptr;
       Utils::RandomGenerator* random_hot_cold_generator = nullptr;
       Utils::RandomGenerator* random_request_size_generator = nullptr;
       bool fully_include_hot_addresses = false;
 
-      if (stat->Address_distribution_type == Utils::Address_Distribution_Type::RANDOM_HOTCOLD)//treat a workload with very low hot/cold values as a uniform random workload
-        if (stat->Ratio_of_hot_addresses_to_whole_working_set > 0.3)
+      if (stat.Address_distribution_type == Utils::Address_Distribution_Type::RANDOM_HOTCOLD)//treat a workload with very low hot/cold values as a uniform random workload
+        if (stat.Ratio_of_hot_addresses_to_whole_working_set > 0.3)
           decision_dist_type = Utils::Address_Distribution_Type::RANDOM_UNIFORM;
 
 
@@ -132,9 +132,9 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
       {
       case Utils::Address_Distribution_Type::RANDOM_HOTCOLD:
       {
-        random_hot_address_generator = new Utils::RandomGenerator(stat->random_hot_address_generator_seed);
-        random_hot_cold_generator = new Utils::RandomGenerator(stat->random_hot_cold_generator_seed);
-        hot_region_end_lsa = min_lha + (LHA_type)((double)(max_lha - min_lha) * stat->Ratio_of_hot_addresses_to_whole_working_set);
+        random_hot_address_generator = new Utils::RandomGenerator(stat.random_hot_address_generator_seed);
+        random_hot_cold_generator = new Utils::RandomGenerator(stat.random_hot_cold_generator_seed);
+        hot_region_end_lsa = min_lha + (LHA_type)((double)(max_lha - min_lha) * stat.Ratio_of_hot_addresses_to_whole_working_set);
         last_hot_lpa = Convert_host_logical_address_to_device_address(hot_region_end_lsa) - 1;//Be conservative and not include the last_hot_address itself
         hot_lha_used_for_generation = min_lha;
         //Check if enough LPAs could be generated within the working set of the flow
@@ -142,11 +142,11 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
           fully_include_hot_addresses = true;
         if ((max_lpa - last_hot_lpa) < 1.1 * (no_of_logical_pages_in_steadystate - (last_hot_lpa - min_lpa)))
         {
-          PRINT_MESSAGE("The specified initial occupancy value could not be satisfied as the working set of workload #" << stat->Stream_id << " is small. MQSim made some adjustments!");
-          max_lha = min_lha + LHA_type(double(max_lha - min_lha) / stat->Working_set_ratio);
-          if (stat->generate_aligned_addresses)
-            if (max_lha % stat->alignment_value != 0)
-              max_lha -= min_lha % stat->alignment_value;
+          PRINT_MESSAGE("The specified initial occupancy value could not be satisfied as the working set of workload #" << stat.Stream_id << " is small. MQSim made some adjustments!");
+          max_lha = min_lha + LHA_type(double(max_lha - min_lha) / stat.Working_set_ratio);
+          if (stat.generate_aligned_addresses)
+            if (max_lha % stat.alignment_value != 0)
+              max_lha -= min_lha % stat.alignment_value;
 
           max_lpa = Convert_host_logical_address_to_device_address(max_lha);
         }
@@ -155,15 +155,15 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
       case Utils::Address_Distribution_Type::STREAMING:
       {
         streaming_next_address = random_address_generator->Uniform_ulong(min_lha, max_lha);
-        stat->First_Accessed_Address = streaming_next_address;
+        stat.First_Accessed_Address = streaming_next_address;
         //Check if enough LPAs could be generated within the working set of the flow
         if ((max_lpa - min_lpa) < no_of_logical_pages_in_steadystate)
         {
-          PRINT_MESSAGE("The specified initial occupancy value could not be satisfied as the working set of workload #" << stat->Stream_id << " is small. MQSim made some adjustments!");
-          max_lha = min_lha + LHA_type(double(max_lha - min_lha) / stat->Working_set_ratio);
-          if (stat->generate_aligned_addresses)
-            if (max_lha % stat->alignment_value != 0)
-              max_lha -= min_lha % stat->alignment_value;
+          PRINT_MESSAGE("The specified initial occupancy value could not be satisfied as the working set of workload #" << stat.Stream_id << " is small. MQSim made some adjustments!");
+          max_lha = min_lha + LHA_type(double(max_lha - min_lha) / stat.Working_set_ratio);
+          if (stat.generate_aligned_addresses)
+            if (max_lha % stat.alignment_value != 0)
+              max_lha -= min_lha % stat.alignment_value;
           max_lpa = Convert_host_logical_address_to_device_address(max_lha);
 
           if ((max_lpa - min_lpa) < no_of_logical_pages_in_steadystate)
@@ -176,11 +176,11 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
         //Check if enough LPAs could be generated within the working set of the flow
         if ((max_lpa - min_lpa) < 1.1 * no_of_logical_pages_in_steadystate)
         {
-          PRINT_MESSAGE("The specified initial occupancy value could not be satisfied as the working set of workload #" << stat->Stream_id << " is small. MQSim made some adjustments!");
-          max_lha = min_lha + LHA_type(double(max_lha - min_lha) / stat->Working_set_ratio);
-          if (stat->generate_aligned_addresses)
-            if (max_lha % stat->alignment_value != 0)
-              max_lha -= min_lha % stat->alignment_value;
+          PRINT_MESSAGE("The specified initial occupancy value could not be satisfied as the working set of workload #" << stat.Stream_id << " is small. MQSim made some adjustments!");
+          max_lha = min_lha + LHA_type(double(max_lha - min_lha) / stat.Working_set_ratio);
+          if (stat.generate_aligned_addresses)
+            if (max_lha % stat.alignment_value != 0)
+              max_lha -= min_lha % stat.alignment_value;
           max_lpa = Convert_host_logical_address_to_device_address(max_lha);
 
           if ((max_lpa - min_lpa) < 1.1 * no_of_logical_pages_in_steadystate)
@@ -192,21 +192,21 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
       }
       }
 
-      if (stat->Request_size_distribution_type == Utils::Request_Size_Distribution_Type::NORMAL)
+      if (stat.Request_size_distribution_type == Utils::Request_Size_Distribution_Type::NORMAL)
       {
-        random_request_size_generator = new Utils::RandomGenerator(stat->random_request_size_generator_seed);
+        random_request_size_generator = new Utils::RandomGenerator(stat.random_request_size_generator_seed);
       }
 
       while (lpa_set_for_preconditioning.size() < no_of_logical_pages_in_steadystate)
       {
-        switch (stat->Request_size_distribution_type)
+        switch (stat.Request_size_distribution_type)
         {
         case Utils::Request_Size_Distribution_Type::FIXED:
-          size = stat->Average_request_size_sector;
+          size = stat.Average_request_size_sector;
           break;
         case Utils::Request_Size_Distribution_Type::NORMAL:
         {
-          double temp_request_size = random_request_size_generator->Normal(stat->Average_request_size_sector, stat->STDEV_reuqest_size);
+          double temp_request_size = random_request_size_generator->Normal(stat.Average_request_size_sector, stat.STDEV_reuqest_size);
           size = (uint32_t)(std::ceil(temp_request_size));
           if (size <= 0)
             size = 1;
@@ -225,9 +225,9 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
           streaming_next_address += size;
           if (streaming_next_address > max_lha)
             streaming_next_address = min_lha;
-          if (stat->generate_aligned_addresses)
-            if (streaming_next_address % stat->alignment_value != 0)
-              streaming_next_address += stat->alignment_value - (streaming_next_address % stat->alignment_value);
+          if (stat.generate_aligned_addresses)
+            if (streaming_next_address % stat.alignment_value != 0)
+              streaming_next_address += stat.alignment_value - (streaming_next_address % stat.alignment_value);
           break;
         case Utils::Address_Distribution_Type::RANDOM_HOTCOLD:
         {
@@ -253,7 +253,7 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
           }
           else
           {
-            if (random_hot_cold_generator->Uniform(0, 1) < stat->Ratio_of_hot_addresses_to_whole_working_set)// (100-hot)% of requests going to hot% of the address space
+            if (random_hot_cold_generator->Uniform(0, 1) < stat.Ratio_of_hot_addresses_to_whole_working_set)// (100-hot)% of requests going to hot% of the address space
             {
               start_LBA = random_hot_address_generator->Uniform_ulong(hot_region_end_lsa + 1, max_lha);
               if (start_LBA < hot_region_end_lsa + 1 || start_LBA > max_lha)
@@ -281,14 +281,14 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
           break;
         }
 
-        if (stat->generate_aligned_addresses)
-          start_LBA -= start_LBA % stat->alignment_value;
+        if (stat.generate_aligned_addresses)
+          start_LBA -= start_LBA % stat.alignment_value;
 
 
         uint32_t hanled_sectors_count = 0;
         LHA_type lsa = start_LBA - min_lha;
         uint32_t transaction_size = 0;
-        LPA_type max_lpa_within_device = Convert_host_logical_address_to_device_address(stat->Max_LHA) - Convert_host_logical_address_to_device_address(stat->Min_LHA);
+        LPA_type max_lpa_within_device = Convert_host_logical_address_to_device_address(stat.Max_LHA) - Convert_host_logical_address_to_device_address(stat.Min_LHA);
         while (hanled_sectors_count < size)
         {
           transaction_size = page_size_in_sectors - (uint32_t)(lsa % page_size_in_sectors);
@@ -325,43 +325,43 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
       delete random_hot_cold_generator;
       delete random_request_size_generator;
 
-    }//if (stat->Type == Utils::Workload_Type::SYNTHETIC)
+    }//if (stat.Type == Utils::Workload_Type::SYNTHETIC)
     else
     {
       //Step 1-1: Read LPAs are preferred for steady-state since each read should be written before the actual access
-      for (auto itr = stat->Write_read_shared_addresses.begin(); itr != stat->Write_read_shared_addresses.end(); itr++)
+      for (auto itr = stat.Write_read_shared_addresses.begin(); itr != stat.Write_read_shared_addresses.end(); itr++)
       {
         LPA_type lpa = (*itr);
         if (lpa_set_for_preconditioning.size() < no_of_logical_pages_in_steadystate)
-          lpa_set_for_preconditioning[lpa] = stat->Write_address_access_pattern[lpa].Accessed_sub_units | stat->Read_address_access_pattern[lpa].Accessed_sub_units;
+          lpa_set_for_preconditioning[lpa] = stat.Write_address_access_pattern[lpa].Accessed_sub_units | stat.Read_address_access_pattern[lpa].Accessed_sub_units;
         else break;
       }
 
-      for (auto itr = stat->Read_address_access_pattern.begin(); itr != stat->Read_address_access_pattern.end(); itr++)
+      for (auto itr = stat.Read_address_access_pattern.begin(); itr != stat.Read_address_access_pattern.end(); itr++)
       {
         LPA_type lpa = (*itr).first;
         if (lpa_set_for_preconditioning.size() < no_of_logical_pages_in_steadystate)
         {
           if (lpa_set_for_preconditioning.find(lpa) == lpa_set_for_preconditioning.end())
-            lpa_set_for_preconditioning[lpa] = stat->Read_address_access_pattern[lpa].Accessed_sub_units;
+            lpa_set_for_preconditioning[lpa] = stat.Read_address_access_pattern[lpa].Accessed_sub_units;
         }
         else break;
       }
 
       //Step 1-2: if the read LPAs are not enough for steady-state, then fill the lpa_set_for_preconditioning using write LPAs
-      for (auto itr = stat->Write_address_access_pattern.begin(); itr != stat->Write_address_access_pattern.end(); itr++)
+      for (auto itr = stat.Write_address_access_pattern.begin(); itr != stat.Write_address_access_pattern.end(); itr++)
       {
         LPA_type lpa = (*itr).first;
         if (lpa_set_for_preconditioning.size() < no_of_logical_pages_in_steadystate)
           if (lpa_set_for_preconditioning.find(lpa) == lpa_set_for_preconditioning.end())
-            lpa_set_for_preconditioning[lpa] = stat->Write_address_access_pattern[lpa].Accessed_sub_units;
+            lpa_set_for_preconditioning[lpa] = stat.Write_address_access_pattern[lpa].Accessed_sub_units;
         std::pair<int, LPA_type> entry((*itr).second.Access_count, lpa);
         trace_lpas_sorted_histogram.insert(entry);
       }
 
       //Step 1-3: Determine the address distribution type of the input trace
-      stat->Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_HOTCOLD;//Initially assume that the trace has hot/cold access pattern
-      if (stat->Write_address_access_pattern.size() > STATISTICALLY_SUFFICIENT_WRITES_FOR_PRECONDITIONING)//First check if there are enough number of write requests in the workload to make a statistically correct decision, if not, MQSim assumes the workload has a uniform access pattern
+      stat.Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_HOTCOLD;//Initially assume that the trace has hot/cold access pattern
+      if (stat.Write_address_access_pattern.size() > STATISTICALLY_SUFFICIENT_WRITES_FOR_PRECONDITIONING)//First check if there are enough number of write requests in the workload to make a statistically correct decision, if not, MQSim assumes the workload has a uniform access pattern
       {
         int hot_region_write_count = 0;
         double f_temp = 0;
@@ -375,7 +375,7 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
           hot_region_write_count += (*itr).first;
 
           f_temp = double(hot_region_last_index_in_histogram) / double(trace_lpas_sorted_histogram.size());
-          r_temp = double(hot_region_write_count) / double(stat->Total_accessed_lbas);
+          r_temp = double(hot_region_write_count) / double(stat.Total_accessed_lbas);
 
           if (f_temp >= next_milestone)
           {
@@ -393,20 +393,20 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
 
         if ((r_temp > MIN_HOT_REGION_TRAFFIC_RATIO) && ((r_temp / f_temp) > HOT_REGION_METRIC))
         {
-          stat->Ratio_of_hot_addresses_to_whole_working_set = f_temp;
-          stat->Ratio_of_traffic_accessing_hot_region = r_temp;
+          stat.Ratio_of_hot_addresses_to_whole_working_set = f_temp;
+          stat.Ratio_of_traffic_accessing_hot_region = r_temp;
         }
         else
         {
-          stat->Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_UNIFORM;
+          stat.Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_UNIFORM;
         }
       }
       else
-        stat->Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_UNIFORM;
+        stat.Address_distribution_type = Utils::Address_Distribution_Type::RANDOM_UNIFORM;
 
 
       Utils::RandomGenerator* random_address_generator = new Utils::RandomGenerator(preconditioning_seed++);
-      uint32_t size = stat->Average_request_size_sector;
+      uint32_t size = stat.Average_request_size_sector;
       LHA_type start_LHA = 0;
 
       //Step 1-4: If both read and write LPAs are not enough for preconditioning flash storage space, then fill the remaining space
@@ -443,17 +443,17 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
       }
 
       delete random_address_generator;
-    }//else of if (stat->Type == Utils::Workload_Type::SYNTHETIC)
+    }//else of if (stat.Type == Utils::Workload_Type::SYNTHETIC)
 
     //Step 2: Determine the probability distribution function of valid pages in blocks, in the steady-state.
     //Note: if hot/cold separation is required, then the following estimations should be changed according to Van Houtd's paper in Performance Evaluation 2014.
     std::vector<double> steadystate_block_status_probability;//The probability distribution function of the number of valid pages in a block in the steadystate
-    double rho = stat->Initial_occupancy_ratio * (1 - over_provisioning_ratio) / (1 - double(__gc_and_wl->Get_minimum_number_of_free_pages_before_GC()) / block_no_per_plane);
+    double rho = stat.Initial_occupancy_ratio * (1 - over_provisioning_ratio) / (1 - double(__gc_and_wl->Get_minimum_number_of_free_pages_before_GC()) / block_no_per_plane);
     switch (decision_dist_type)
     {
     case Utils::Address_Distribution_Type::RANDOM_HOTCOLD://Estimate the steady-state of the hot/cold traffic based on the steady-state of the uniform traffic
     {
-      double r_to_f_ratio = std::sqrt(double(stat->Ratio_of_traffic_accessing_hot_region) / double(stat->Ratio_of_hot_addresses_to_whole_working_set));
+      double r_to_f_ratio = std::sqrt(double(stat.Ratio_of_traffic_accessing_hot_region) / double(stat.Ratio_of_hot_addresses_to_whole_working_set));
       switch (__gc_and_wl->Get_gc_policy())
       {
       case GC_Block_Selection_Policy_Type::GREEDY://Based on: B. Van Houdt, "A mean field model for a class of garbage collection algorithms in flash-based solid state drives", SIGMETRICS 2013.
@@ -490,7 +490,7 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
         for (uint32_t i = 0; i <= page_no_per_block; i++)
           steadystate_block_status_probability.push_back(0);
 
-        double rho = stat->Initial_occupancy_ratio * (1 - over_provisioning_ratio);
+        double rho = stat.Initial_occupancy_ratio * (1 - over_provisioning_ratio);
         double S_rho_b = 0;
         for (uint32_t j = __gc_and_wl->Get_GC_policy_specific_parameter() + 1; j <= page_no_per_block; j++)
         {
@@ -604,7 +604,7 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
           for (uint32_t i = 0; i <= page_no_per_block; i++)
             steadystate_block_status_probability.push_back(0);
 
-          double rho = stat->Initial_occupancy_ratio * (1 - over_provisioning_ratio);
+          double rho = stat.Initial_occupancy_ratio * (1 - over_provisioning_ratio);
           double S_rho_b = 0;
           for (uint32_t j = __gc_and_wl->Get_GC_policy_specific_parameter() + 1; j <= page_no_per_block; j++)
           {
@@ -646,33 +646,33 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
       sum += steadystate_block_status_probability[i];
     if (sum > 1.001 || sum < 0.99)//Due to some precision errors the sum may not be exactly equal to 1
       PRINT_ERROR("Wrong probability distribution function for the number of valid pages in flash blocks in the steady-state! It is not safe to continue preconditioning!")
-    __address_mapper->Allocate_address_for_preconditioning(stat->Stream_id, lpa_set_for_preconditioning, steadystate_block_status_probability);
+    __address_mapper->Allocate_address_for_preconditioning(stat.Stream_id, lpa_set_for_preconditioning, steadystate_block_status_probability);
 
     //Step 4: Touch the LPAs and bring them to CMT to warmup address mapping unit
     if (!__address_mapper->Is_ideal_mapping_table())
     {
       //Step 4-1: Determine how much share of the entire CMT should be filled based on the flow arrival rate and access pattern
       uint32_t no_of_entries_in_cmt = 0;
-      LPA_type min_LPA = Convert_host_logical_address_to_device_address(stat->Min_LHA);
-      LPA_type max_LPA = Convert_host_logical_address_to_device_address(stat->Max_LHA);
+      LPA_type min_LPA = Convert_host_logical_address_to_device_address(stat.Min_LHA);
+      LPA_type max_LPA = Convert_host_logical_address_to_device_address(stat.Max_LHA);
 
       switch (__address_mapper->Get_CMT_sharing_mode())
       {
       case CMT_Sharing_Mode::SHARED:
       {
         double flow_rate = 0;
-        if (stat->Type == Utils::Workload_Type::SYNTHETIC)
+        if (stat.Type == Utils::Workload_Type::SYNTHETIC)
         {
-          switch (stat->generator_type)
+          switch (stat.generator_type)
           {
           case Utils::Request_Generator_Type::BANDWIDTH:
-            flow_rate = 1.0 / double(stat->Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat->Average_request_size_sector;
+            flow_rate = 1.0 / double(stat.Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
             break;
           case Utils::Request_Generator_Type::QUEUE_DEPTH:
           {
-            sim_time_type max_arrival_time = sim_time_type(stat->Read_ratio * double(avg_flash_read_latency) + (1 - stat->Read_ratio) * double(avg_flash_program_latency));
-            double avg_arrival_time = double(max_arrival_time) / double(stat->Request_queue_depth);
-            flow_rate = 1.0 / avg_arrival_time * SIM_TIME_TO_SECONDS_COEFF * stat->Average_request_size_sector;
+            sim_time_type max_arrival_time = sim_time_type(stat.Read_ratio * double(avg_flash_read_latency) + (1 - stat.Read_ratio) * double(avg_flash_program_latency));
+            double avg_arrival_time = double(max_arrival_time) / double(stat.Request_queue_depth);
+            flow_rate = 1.0 / avg_arrival_time * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
             break;
           }
           default:
@@ -681,7 +681,7 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
         }
         else
         {
-          flow_rate = 1.0 / double(stat->Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat->Average_request_size_sector;
+          flow_rate = 1.0 / double(stat.Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
         }
 
         no_of_entries_in_cmt = (uint32_t)(double(flow_rate) / double(overall_rate) * __address_mapper->Get_cmt_capacity());
@@ -705,14 +705,14 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
       case Utils::Address_Distribution_Type::RANDOM_HOTCOLD:
       {
         //First bring hot addresses to CMT
-        uint32_t required_no_of_hot_cmt_entries = (uint32_t)(stat->Ratio_of_hot_addresses_to_whole_working_set * no_of_entries_in_cmt);
+        uint32_t required_no_of_hot_cmt_entries = (uint32_t)(stat.Ratio_of_hot_addresses_to_whole_working_set * no_of_entries_in_cmt);
         uint32_t entries_to_bring_into_cmt = required_no_of_hot_cmt_entries;
         if (required_no_of_hot_cmt_entries > hot_region_last_index_in_histogram)
           entries_to_bring_into_cmt = hot_region_last_index_in_histogram;
         auto itr = trace_lpas_sorted_histogram.begin();
-        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat->Stream_id) < entries_to_bring_into_cmt)
+        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat.Stream_id) < entries_to_bring_into_cmt)
         {
-          __address_mapper->Bring_to_CMT_for_preconditioning(stat->Stream_id, (*itr).second);
+          __address_mapper->Bring_to_CMT_for_preconditioning(stat.Stream_id, (*itr).second);
           trace_lpas_sorted_histogram.erase(itr++);
         }
 
@@ -720,9 +720,9 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
         no_of_entries_in_cmt -= entries_to_bring_into_cmt;
         auto itr2 = trace_lpas_sorted_histogram.begin();
         std::advance(itr2, hot_region_last_index_in_histogram);
-        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat->Stream_id) < no_of_entries_in_cmt)
+        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat.Stream_id) < no_of_entries_in_cmt)
         {
-          __address_mapper->Bring_to_CMT_for_preconditioning(stat->Stream_id, (*itr2++).second);
+          __address_mapper->Bring_to_CMT_for_preconditioning(stat.Stream_id, (*itr2++).second);
           if (itr2 == trace_lpas_sorted_histogram.end())
             break;
         }
@@ -734,9 +734,9 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
         auto itr = lpa_set_for_preconditioning.find(lpa);
         if (itr != lpa_set_for_preconditioning.begin())
           itr--;
-        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat->Stream_id) < no_of_entries_in_cmt)
+        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat.Stream_id) < no_of_entries_in_cmt)
         {
-          __address_mapper->Bring_to_CMT_for_preconditioning(stat->Stream_id, (*itr).first);
+          __address_mapper->Bring_to_CMT_for_preconditioning(stat.Stream_id, (*itr).first);
           if (itr == lpa_set_for_preconditioning.begin())
           {
             itr = lpa_set_for_preconditioning.end();
@@ -751,10 +751,10 @@ FTL::Perform_precondition(std::vector<Utils::Workload_Statistics*> workload_stat
         int random_walker = int(random_generator.Uniform(0, uint32_t(trace_lpas_sorted_histogram.size()) - 2));
         int random_step = random_generator.Uniform_uint(0, (uint32_t)(trace_lpas_sorted_histogram.size()) / no_of_entries_in_cmt);
         auto itr = trace_lpas_sorted_histogram.begin();
-        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat->Stream_id) < no_of_entries_in_cmt)
+        while (__address_mapper->Get_current_cmt_occupancy_for_stream(stat.Stream_id) < no_of_entries_in_cmt)
         {
           std::advance(itr, random_step);
-          __address_mapper->Bring_to_CMT_for_preconditioning(stat->Stream_id, (*itr).second);
+          __address_mapper->Bring_to_CMT_for_preconditioning(stat.Stream_id, (*itr).second);
           if (trace_lpas_sorted_histogram.size() > 1)
           {
             trace_lpas_sorted_histogram.erase(itr++);

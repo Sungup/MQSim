@@ -526,7 +526,7 @@ Data_Cache_Manager_Flash_Advanced::Setup_triggers()
 }
 
 void
-Data_Cache_Manager_Flash_Advanced::Do_warmup(const std::vector<Utils::Workload_Statistics*>& workload_stats)
+Data_Cache_Manager_Flash_Advanced::Do_warmup(const Utils::WorkloadStatsList& workload_stats)
 {
   // double total_write_arrival_rate = 0, total_read_arrival_rate = 0;
   switch (sharing_mode)
@@ -536,7 +536,7 @@ Data_Cache_Manager_Flash_Advanced::Do_warmup(const std::vector<Utils::Workload_S
     //Estimate the queue length based on the arrival rate
     for (auto &stat : workload_stats)
     {
-      switch (caching_mode_per_input_stream[stat->Stream_id])
+      switch (caching_mode_per_input_stream[stat.Stream_id])
       {
       case Caching_Mode::TURNED_OFF:
         break;
@@ -588,7 +588,7 @@ Data_Cache_Manager_Flash_Advanced::Do_warmup(const std::vector<Utils::Workload_S
   case Cache_Sharing_Mode::EQUAL_PARTITIONING:
     for (auto &stat : workload_stats)
     {
-      switch (caching_mode_per_input_stream[stat->Stream_id])
+      switch (caching_mode_per_input_stream[stat.Stream_id])
       {
       case Caching_Mode::TURNED_OFF:
         break;

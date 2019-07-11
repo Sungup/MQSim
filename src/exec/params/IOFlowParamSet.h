@@ -44,6 +44,12 @@ public:
   // performed
   uint32_t Initial_Occupancy_Percentage;
 
+private:
+  double __init_occupancy_rate;
+
+private:
+  void __update_hidden_data();
+
 protected:
   void _load_default();
 
@@ -51,9 +57,15 @@ public:
   explicit IOFlowParamSet(Flow_Type type);
   ~IOFlowParamSet() override = default;
 
+  double init_occupancy_rate() const;
+
   void XML_serialize(Utils::XmlWriter& xmlwrite) const override;
   void XML_deserialize(rapidxml::xml_node<> *node) override;
 };
+
+force_inline double
+IOFlowParamSet::init_occupancy_rate() const
+{ return __init_occupancy_rate; }
 
 typedef std::shared_ptr<IOFlowParamSet>    IOFlowParameterSetPtr;
 typedef std::vector<IOFlowParameterSetPtr> IOFlowScenario;
@@ -103,6 +115,15 @@ public:
   // Total_Requests_To_Generate to decide when to stop generating I/O requests
   uint32_t Total_Requests_To_Generate;
 
+private:
+  double __read_rate;
+  double __hot_region_rate;
+  double __working_set_rate;
+  sim_time_type __avg_arrival_time;
+
+private:
+  void __update_hidden_data();
+
 public:
   SyntheticFlowParamSet();
   explicit SyntheticFlowParamSet(int seed);
@@ -110,10 +131,30 @@ public:
 
   void load_default(int seed);
 
+  double read_rate() const;
+  double hot_region_rate() const;
+  double working_set_rate() const;
+  sim_time_type avg_arrival_time() const;
+
   void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
   void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
 
+force_inline double
+SyntheticFlowParamSet::read_rate() const
+{ return __read_rate; }
+
+force_inline double
+SyntheticFlowParamSet::hot_region_rate() const
+{ return __hot_region_rate; }
+
+force_inline double
+SyntheticFlowParamSet::working_set_rate() const
+{ return __working_set_rate; }
+
+force_inline sim_time_type
+SyntheticFlowParamSet::avg_arrival_time() const
+{ return __avg_arrival_time; }
 // --------------------------------
 // TraceFlowParameterSet Definition
 // --------------------------------

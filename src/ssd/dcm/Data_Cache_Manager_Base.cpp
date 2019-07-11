@@ -71,13 +71,7 @@ Data_Cache_Manager_Base::Setup_triggers()
 }
 
 void
-Data_Cache_Manager_Base::Set_host_interface(Host_Interface_Base* interface)
-{
-  host_interface = interface;
-}
-
-void
-Data_Cache_Manager_Base::Do_warmup(const std::vector<Utils::Workload_Statistics *>& workload_stats)
+Data_Cache_Manager_Base::Do_warmup(const Utils::WorkloadStatsList& workload_stats)
 { /* Default do nothing */}
 
 DataCacheManagerPtr

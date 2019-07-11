@@ -94,7 +94,8 @@ namespace SSD_Components
     uint16_t Get_completion_queue_depth();
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter) final;
   private:
-    uint16_t submission_queue_depth, completion_queue_depth;
+    const uint16_t submission_queue_depth;
+    const uint16_t completion_queue_depth;
     uint32_t no_of_input_streams;
   };
 }

@@ -46,8 +46,17 @@ IOFlowParamSet::IOFlowParamSet(Flow_Type type)
     Chip_IDs(),
     Die_IDs(),
     Plane_IDs(),
-    Initial_Occupancy_Percentage(50)
-{ }
+    Initial_Occupancy_Percentage(50),
+    __init_occupancy_rate(0.0)
+{
+  __update_hidden_data();
+}
+
+force_inline void
+IOFlowParamSet::__update_hidden_data()
+{
+  __init_occupancy_rate = double(Initial_Occupancy_Percentage) / 100.;
+}
 
 force_inline void
 IOFlowParamSet::_load_default()
@@ -65,7 +74,7 @@ IOFlowParamSet::_load_default()
   std::iota(Die_IDs.begin(),     Die_IDs.end(),     0);
   std::iota(Plane_IDs.begin(),   Plane_IDs.end(),   0);
 
-  Initial_Occupancy_Percentage = 50;
+  __update_hidden_data();
 }
 
 // All serialization and deserialization functions should be replaced by a C++
@@ -115,11 +124,29 @@ IOFlowParamSet::XML_deserialize(rapidxml::xml_node<> *node)
   } catch (...) {
     throw mqsim_error("Error in IOFlowParamSet!");
   }
+
+  __update_hidden_data();
 }
 
 // ------------------------------------
 // SyntheticFlowParamSet Implementation
 // ------------------------------------
+force_inline void
+SyntheticFlowParamSet::__update_hidden_data()
+{
+  if (Working_Set_Percentage > 100 || Working_Set_Percentage < 1)
+    Working_Set_Percentage = 100;
+
+  __read_rate = double(Read_Percentage) / 100.;
+  __hot_region_rate = double(Percentage_of_Hot_Region) / 100.;
+  __working_set_rate = double(Working_Set_Percentage) / 100.;
+
+  __avg_arrival_time = (Bandwidth == 0)
+                         ? 0
+                         : NanoSecondCoeff
+                             / ((Bandwidth / SECTOR_SIZE_IN_BYTE) / Average_Request_Size);
+}
+
 SyntheticFlowParamSet::SyntheticFlowParamSet()
   : IOFlowParamSet(Flow_Type::SYNTHETIC),
     Synthetic_Generator_Type(Utils::Request_Generator_Type::QUEUE_DEPTH),
@@ -136,8 +163,14 @@ SyntheticFlowParamSet::SyntheticFlowParamSet()
     Average_No_of_Reqs_in_Queue(2),
     Bandwidth(0),
     Stop_Time(1000000000),
-    Total_Requests_To_Generate(0)
-{ }
+    Total_Requests_To_Generate(0),
+    __read_rate(0.0),
+    __hot_region_rate(0.0),
+    __working_set_rate(0.0),
+    __avg_arrival_time(0)
+{
+  __update_hidden_data();
+}
 
 SyntheticFlowParamSet::SyntheticFlowParamSet(int seed)
   : IOFlowParamSet(Flow_Type::SYNTHETIC),
@@ -155,7 +188,11 @@ SyntheticFlowParamSet::SyntheticFlowParamSet(int seed)
     Average_No_of_Reqs_in_Queue(2),
     Bandwidth(0),
     Stop_Time(1000000000),
-    Total_Requests_To_Generate(0)
+    Total_Requests_To_Generate(0),
+    __read_rate(0.0),
+    __hot_region_rate(0.0),
+    __working_set_rate(0.0),
+    __avg_arrival_time(0)
 {
   load_default(seed);
 }
@@ -176,7 +213,11 @@ SyntheticFlowParamSet::SyntheticFlowParamSet(rapidxml::xml_node<>* node)
     Average_No_of_Reqs_in_Queue(2),
     Bandwidth(0),
     Stop_Time(1000000000),
-    Total_Requests_To_Generate(0)
+    Total_Requests_To_Generate(0),
+    __read_rate(0.0),
+    __hot_region_rate(0.0),
+    __working_set_rate(0.0),
+    __avg_arrival_time(0)
 {
   XML_deserialize(node);
 }
@@ -205,6 +246,8 @@ SyntheticFlowParamSet::load_default(int seed)
 
   Stop_Time = 1000000000;
   Total_Requests_To_Generate = 0;
+
+  __update_hidden_data();
 }
 
 void
@@ -289,6 +332,8 @@ SyntheticFlowParamSet::XML_deserialize(rapidxml::xml_node<> *node)
   } catch (...) {
     throw mqsim_error("Error in SyntheticFlowParamSet!");
   }
+
+  __update_hidden_data();
 }
 
 // -------------------------------------
