@@ -1,3 +1,8 @@
+
+set(Boost_USE_STATIC_LIBS ${STATIC_BOOST})
+set(Boost_USE_STATIC_RUNTIME ${STATIC_BOOST})
+find_package(Boost COMPONENTS system filesystem)
+
 find_package(Boost COMPONENTS program_options REQUIRED)
 if (Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIR})
@@ -23,13 +28,13 @@ set(MQSIM_EXEC_SOURCES
     exec/params/FlashParameterSet.h
     exec/params/HostParameterSet.cpp
     exec/params/HostParameterSet.h
-    exec/Host_System.cpp
-    exec/Host_System.h
+    exec/HostSystem.cpp
+    exec/HostSystem.h
     exec/params/IOFlowParamSet.cpp
     exec/params/IOFlowParamSet.h
     exec/params/ParameterSetBase.h
-    exec/SSD_Device.cpp
-    exec/SSD_Device.h)
+    exec/SsdDevice.cpp
+    exec/SsdDevice.h)
 
 set(MQSIM_HOST_SOURCES
     host/ASCII_Trace_Definition.h
@@ -43,13 +48,13 @@ set(MQSIM_HOST_SOURCES
     host/IO_Flow_Trace_Based.h
     host/PCIe_Link.cpp
     host/PCIe_Link.h
-    host/PCIe_Message.h
+    host/PCIeMessage.h
     host/PCIe_Root_Complex.cpp
     host/PCIe_Root_Complex.h
-    host/PCIe_Switch.cpp
-    host/PCIe_Switch.h
+    host/PCIeSwitch.cpp
+    host/PCIeSwitch.h
     host/SATA_HBA.cpp
-    host/SATA_HBA.h)
+    host/SATA_HBA.h host/IoQueueInfo.h)
 
 set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/NVM_Chip.h

@@ -23,7 +23,7 @@
     <ClCompile Include="src\exec\ExecParameterSet.cpp" />
     <ClCompile Include="src\exec\FlashParameterSet.cpp" />
     <ClCompile Include="src\exec\HostParameterSet.cpp" />
-    <ClCompile Include="src\exec\Host_System.cpp" />
+    <ClCompile Include="src\exec\HostSystem.cpp" />
     <ClCompile Include="src\exec\IO_Flow_Parameter_Set.cpp" />
     <ClCompile Include="src\exec\SSD_Device.cpp" />
     <ClCompile Include="src\host\IO_Flow_Base.cpp" />
@@ -31,7 +31,7 @@
     <ClCompile Include="src\host\IO_Flow_Trace_Based.cpp" />
     <ClCompile Include="src\host\PCIe_Link.cpp" />
     <ClCompile Include="src\host\PCIe_Root_Complex.cpp" />
-    <ClCompile Include="src\host\PCIe_Switch.cpp" />
+    <ClCompile Include="src\host\PCIeSwitch.cpp" />
     <ClCompile Include="src\host\SATA_HBA.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\nvm_chip\flash_memory\Block.cpp" />
@@ -86,7 +86,7 @@
     <ClInclude Include="src\exec\ExecParameterSet.h" />
     <ClInclude Include="src\exec\FlashParameterSet.h" />
     <ClInclude Include="src\exec\HostParameterSet.h" />
-    <ClInclude Include="src\exec\Host_System.h" />
+    <ClInclude Include="src\exec\HostSystem.h" />
     <ClInclude Include="src\exec\IO_Flow_Parameter_Set.h" />
     <ClInclude Include="src\exec\Parameter_Set_Base.h" />
     <ClInclude Include="src\exec\SSD_Device.h" />
@@ -97,9 +97,9 @@
     <ClInclude Include="src\host\IO_Flow_Synthetic.h" />
     <ClInclude Include="src\host\IO_Flow_Trace_Based.h" />
     <ClInclude Include="src\host\PCIe_Link.h" />
-    <ClInclude Include="src\host\PCIe_Message.h" />
+    <ClInclude Include="src\host\PCIeMessage.h" />
     <ClInclude Include="src\host\PCIe_Root_Complex.h" />
-    <ClInclude Include="src\host\PCIe_Switch.h" />
+    <ClInclude Include="src\host\PCIeSwitch.h" />
     <ClInclude Include="src\host\SATA_HBA.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\Block.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\Die.h" />

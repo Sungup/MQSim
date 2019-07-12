@@ -1,6 +1,7 @@
 #ifndef HOST_IO_REQUEST_H
 #define HOST_IO_REQUEST_H
 
+#include "../sim/Sim_Defs.h"
 #include "../ssd/SSD_Defs.h"
 #include "../utils/InlineTools.h"
 #include "../utils/ObjectPool.h"

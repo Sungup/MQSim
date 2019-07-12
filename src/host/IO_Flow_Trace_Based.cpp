@@ -1,7 +1,9 @@
 #include "IO_Flow_Trace_Based.h"
-#include "../utils/StringTools.h"
+
 #include "ASCII_Trace_Definition.h"
+#include "../sim/Engine.h"
 #include "../utils/DistributionTypes.h"
+#include "../utils/StringTools.h"
 
 namespace Host_Components
 {

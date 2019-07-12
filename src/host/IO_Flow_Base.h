@@ -1,44 +1,34 @@
 #ifndef IO_FLOW_BASE_H
 #define IO_FLOW_BASE_H
 
-#include <string>
 #include <iostream>
-#include <unordered_map>
-#include <set>
 #include <list>
+#include <set>
+#include <string>
 #include <vector>
+#include <unordered_map>
+
+#include "../exec/params/HostParameterSet.h"
 #include "../sim/Sim_Defs.h"
 #include "../sim/Sim_Object.h"
 #include "../sim/Sim_Reporter.h"
-#include "../ssd/SSD_Defs.h"
 #include "../ssd/interface/Host_Interface_Defs.h"
-#include "HostIORequest.h"
-#include "PCIe_Root_Complex.h"
-#include "SATA_HBA.h"
+#include "../ssd/SSD_Defs.h"
+#include "../utils/Logical_Address_Partitioning_Unit.h"
 #include "../utils/Workload_Statistics.h"
+#include "HostIORequest.h"
+#include "IoQueueInfo.h"
 
 namespace Host_Components
 {
-  struct NVMe_Queue_Pair
-  {
-    uint16_t Submission_queue_head;
-    uint16_t Submission_queue_tail;
-    uint16_t Submission_queue_size;
-    uint64_t Submission_tail_register_address_on_device;
-    uint64_t Submission_queue_memory_base_address;
-    uint16_t Completion_queue_head;
-    uint16_t Completion_queue_tail;
-    uint16_t Completion_queue_size;
-    uint64_t Completion_head_register_address_on_device;
-    uint64_t Completion_queue_memory_base_address;
-  };
+  class SATA_HBA;
+  class PCIe_Root_Complex;
 
 #define NVME_SQ_FULL(Q) (Q.Submission_queue_tail < Q.Submission_queue_size - 1 ? Q.Submission_queue_tail + 1 == Q.Submission_queue_head : Q.Submission_queue_head == 0)
 #define NVME_UPDATE_SQ_TAIL(Q)  Q.Submission_queue_tail++;\
             if (Q.Submission_queue_tail == Q.Submission_queue_size)\
               nvme_queue_pair.Submission_queue_tail = 0;
 
-  class PCIe_Root_Complex;
   class IO_Flow_Base : public MQSimEngine::Sim_Object
   {
   public:
@@ -53,18 +43,8 @@ namespace Host_Components
     virtual HostIORequest* Generate_next_request() = 0;
     virtual void NVMe_consume_io_request(CompletionQueueEntry*);
     SubmissionQueueEntry* NVMe_read_sqe(uint64_t address);
-    const NVMe_Queue_Pair* Get_nvme_queue_pair_info();
+    const IoQueueInfo& queue_info();
     virtual void SATA_consume_io_request(HostIORequest* request);
-    LHA_type Get_start_lsa_on_device();
-    LHA_type Get_end_lsa_address_on_device();
-    uint32_t Get_generated_request_count();
-    uint32_t Get_serviced_request_count();//in microseconds
-    uint32_t Get_device_response_time();//in microseconds
-    uint32_t Get_min_device_response_time();//in microseconds
-    uint32_t Get_max_device_response_time();//in microseconds
-    uint32_t Get_end_to_end_request_delay();//in microseconds
-    uint32_t Get_min_end_to_end_request_delay();//in microseconds
-    uint32_t Get_max_end_to_end_request_delay();//in microseconds
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);
 
     virtual void get_stats(Utils::Workload_Statistics& stats,
@@ -121,7 +101,105 @@ namespace Host_Components
     sim_time_type STAT_sum_device_response_time_short_term, STAT_sum_request_delay_short_term;
     uint32_t STAT_serviced_request_count_short_term;
 
+  public:
+    LHA_type Get_start_lsa_on_device();
+    LHA_type Get_end_lsa_address_on_device();
+    uint32_t Get_generated_request_count();
+    uint32_t Get_serviced_request_count();//in microseconds
+    uint32_t Get_device_response_time();//in microseconds
+    uint32_t Get_min_device_response_time();//in microseconds
+    uint32_t Get_max_device_response_time();//in microseconds
+    uint32_t Get_end_to_end_request_delay();//in microseconds
+    uint32_t Get_min_end_to_end_request_delay();//in microseconds
+    uint32_t Get_max_end_to_end_request_delay();//in microseconds
   };
+
+  force_inline LHA_type
+  IO_Flow_Base::Get_start_lsa_on_device()
+  {
+    return start_lsa_on_device;
+  }
+
+  force_inline LHA_type
+  IO_Flow_Base::Get_end_lsa_address_on_device()
+  {
+    return end_lsa_on_device;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_generated_request_count()
+  {
+    return STAT_generated_request_count;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_serviced_request_count()
+  {
+    return STAT_serviced_request_count;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_device_response_time()
+  {
+    return (STAT_serviced_request_count == 0)
+             ? 0
+             : STAT_sum_device_response_time
+                 / STAT_serviced_request_count
+                 / SIM_TIME_TO_MICROSECONDS_COEFF;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_min_device_response_time()
+  {
+    return STAT_min_device_response_time / SIM_TIME_TO_MICROSECONDS_COEFF;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_max_device_response_time()
+  {
+    return STAT_max_device_response_time / SIM_TIME_TO_MICROSECONDS_COEFF;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_end_to_end_request_delay()
+  {
+    return (STAT_serviced_request_count == 0)
+             ? 0
+             : STAT_sum_request_delay
+                 / STAT_serviced_request_count
+                 / SIM_TIME_TO_MICROSECONDS_COEFF;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_min_end_to_end_request_delay()
+  {
+    return STAT_min_request_delay / SIM_TIME_TO_MICROSECONDS_COEFF;
+  }
+
+  force_inline uint32_t
+  IO_Flow_Base::Get_max_end_to_end_request_delay()
+  {
+    return STAT_max_request_delay / SIM_TIME_TO_MICROSECONDS_COEFF;
+  }
+
+  // ---------------
+  // IO Flow Builder
+  // ---------------
+  typedef std::shared_ptr<IO_Flow_Base> IoFlowPtr;
+  typedef std::vector<IoFlowPtr>        IoFlowList;
+
+  // Passing SATA_HBA by pointer not reference, reference can't pass the
+  // nullptr for the NVMe environment.
+  IoFlowPtr build_io_flow(const sim_object_id_type& host_id,
+                          const HostParameterSet& host_params,
+                          const IOFlowParamSet& flow_params,
+                          const Utils::LogicalAddrPartition& lapu,
+                          uint16_t flow_id,
+                          PCIe_Root_Complex& root_complex,
+                          SATA_HBA* sata_hba,
+                          HostInterface_Types interface_type,
+                          uint16_t sq_size,
+                          uint16_t cq_size);
 }
 
 #endif // !IO_FLOW_BASE_H

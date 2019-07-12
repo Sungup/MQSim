@@ -43,7 +43,7 @@
     <ClCompile Include="src\exec\HostParameterSet.cpp">
       <Filter>exec</Filter>
     </ClCompile>
-    <ClCompile Include="src\exec\Host_System.cpp">
+    <ClCompile Include="src\exec\HostSystem.cpp">
       <Filter>exec</Filter>
     </ClCompile>
     <ClCompile Include="src\exec\IO_Flow_Parameter_Set.cpp">
@@ -67,7 +67,7 @@
     <ClCompile Include="src\host\PCIe_Root_Complex.cpp">
       <Filter>host</Filter>
     </ClCompile>
-    <ClCompile Include="src\host\PCIe_Switch.cpp">
+    <ClCompile Include="src\host\PCIeSwitch.cpp">
       <Filter>host</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\CMRRandomGenerator.cpp">
@@ -225,7 +225,7 @@
     <ClInclude Include="src\exec\HostParameterSet.h">
       <Filter>exec</Filter>
     </ClInclude>
-    <ClInclude Include="src\exec\Host_System.h">
+    <ClInclude Include="src\exec\HostSystem.h">
       <Filter>exec</Filter>
     </ClInclude>
     <ClInclude Include="src\exec\IO_Flow_Parameter_Set.h">
@@ -258,13 +258,13 @@
     <ClInclude Include="src\host\PCIe_Link.h">
       <Filter>host</Filter>
     </ClInclude>
-    <ClInclude Include="src\host\PCIe_Message.h">
+    <ClInclude Include="src\host\PCIeMessage.h">
       <Filter>host</Filter>
     </ClInclude>
     <ClInclude Include="src\host\PCIe_Root_Complex.h">
       <Filter>host</Filter>
     </ClInclude>
-    <ClInclude Include="src\host\PCIe_Switch.h">
+    <ClInclude Include="src\host\PCIeSwitch.h">
       <Filter>host</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\CMRRandomGenerator.h">

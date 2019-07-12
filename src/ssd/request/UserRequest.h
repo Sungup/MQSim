@@ -64,9 +64,13 @@ namespace SSD_Components
   force_inline void
   UserRequestBase::assign_data(void* payload, size_t payload_size)
   {
+    // TODO This block can make the memory leak while runnign simulator.
     Data = MQSimEngine::copy_data(payload, payload_size);
   }
 
+  // -----------------
+  // User Request Pool
+  // -----------------
   class UserReqPool : protected Utils::ObjectPool<UserRequestBase> {
   public:
     typedef Utils::ObjectPool<UserRequestBase>::item_t item_t;

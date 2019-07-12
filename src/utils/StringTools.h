@@ -80,4 +80,11 @@ join_vector(const std::vector<T>& v, const char* seperator = ",")
   return ss.str();
 }
 
+
+force_inline std::string
+remove_ext(const std::string& file_path)
+{
+  return file_path.substr(0, file_path.find_last_of('.'));
+}
+
 #endif

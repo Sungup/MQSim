@@ -1,5 +1,8 @@
 #include "SATA_HBA.h"
 
+#include "IO_Flow_Base.h"
+#include "PCIe_Root_Complex.h"
+
 // --------------------
 // Includes for builder
 // --------------------
@@ -8,8 +11,16 @@
 
 using namespace Host_Components;
 
-SATA_HBA::SATA_HBA(sim_object_id_type id, uint16_t ncq_size, sim_time_type hba_processing_delay, PCIe_Root_Complex* pcie_root_complex, std::vector<Host_Components::IO_Flow_Base*>* IO_flows) :
-  MQSimEngine::Sim_Object(id), ncq_size(ncq_size), hba_processing_delay(hba_processing_delay), pcie_root_complex(pcie_root_complex), IO_flows(IO_flows)
+SATA_HBA::SATA_HBA(sim_object_id_type id,
+                   uint16_t ncq_size,
+                   sim_time_type hba_processing_delay,
+                   PCIe_Root_Complex& pcie_root_complex,
+                   IoFlowList& IO_flows)
+ : MQSimEngine::Sim_Object(id),
+   ncq_size(ncq_size),
+   hba_processing_delay(hba_processing_delay),
+   pcie_root_complex(pcie_root_complex),
+   IO_flows(IO_flows)
 {
   for (uint16_t cmdid = 0; cmdid < (uint16_t)(0xffffffff); cmdid++)
     available_command_ids.insert(cmdid);
@@ -49,7 +60,7 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
     available_command_ids.insert(cqe->Command_Identifier);
     sata_ncq.Submission_queue_head = cqe->SQ_Head;
 
-    ((*IO_flows)[request->Source_flow_id])->SATA_consume_io_request(request);
+    IO_flows[request->Source_flow_id]->SATA_consume_io_request(request);
 
     Update_and_submit_ncq_completion_info();
 
@@ -70,7 +81,7 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
           SATA_UPDATE_SQ_TAIL(sata_ncq);
         }
         new_req->Enqueue_time = sim->Time();
-        pcie_root_complex->Write_to_device(sata_ncq.Submission_tail_register_address_on_device, sata_ncq.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
+        pcie_root_complex.Write_to_device(sata_ncq.Submission_tail_register_address_on_device, sata_ncq.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
       }
       else break;
 
@@ -99,7 +110,7 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
         SATA_UPDATE_SQ_TAIL(sata_ncq);
       }
       request->Enqueue_time = sim->Time();
-      pcie_root_complex->Write_to_device(sata_ncq.Submission_tail_register_address_on_device, sata_ncq.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
+      pcie_root_complex.Write_to_device(sata_ncq.Submission_tail_register_address_on_device, sata_ncq.Submission_queue_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
     }
 
     if (host_requests.size() > 0)
@@ -159,34 +170,28 @@ void SATA_HBA::Update_and_submit_ncq_completion_info()
   sata_ncq.Completion_queue_head++;
   if (sata_ncq.Completion_queue_head == sata_ncq.Completion_queue_size)
     sata_ncq.Completion_queue_head = 0;
-  pcie_root_complex->Write_to_device(sata_ncq.Completion_head_register_address_on_device, sata_ncq.Completion_queue_head);//Based on NVMe protocol definition, the updated head pointer should be informed to the device
+  pcie_root_complex.Write_to_device(sata_ncq.Completion_head_register_address_on_device, sata_ncq.Completion_queue_head);//Based on NVMe protocol definition, the updated head pointer should be informed to the device
 }
-const NCQ_Control_Structure* SATA_HBA::Get_sata_ncq_info()
+const IoQueueInfo&
+SATA_HBA::queue_info()
 {
-  return &sata_ncq;
-}
-void SATA_HBA::Set_io_flows(std::vector<Host_Components::IO_Flow_Base*>* IO_flows)
-{
-  this->IO_flows = IO_flows;
-}
-void SATA_HBA::Set_root_complex(PCIe_Root_Complex* pcie_root_complex)
-{
-  this->pcie_root_complex = pcie_root_complex;
+  return sata_ncq;
 }
 
 SataHbaPtr
 Host_Components::build_sata_hba(const sim_object_id_type& id,
-                                const SSD_Components::Host_Interface_Base& interface,
-                                sim_time_type sata_ctrl_delay)
+                                HostInterface_Types interface_type,
+                                uint16_t ncq_depth,
+                                sim_time_type sata_ctrl_delay,
+                                PCIe_Root_Complex& root_complex,
+                                IoFlowList& io_flows)
 {
-  auto& sata_interface = (SSD_Components::Host_Interface_SATA&) interface;
-
-  if (interface.GetType() == HostInterface_Types::SATA)
+  if (interface_type == HostInterface_Types::SATA)
     return std::make_shared<SATA_HBA>(id,
-                                      sata_interface.Get_ncq_depth(),
+                                      ncq_depth,
                                       sata_ctrl_delay,
-                                      nullptr,
-                                      nullptr);
+                                      root_complex,
+                                      io_flows);
 
   return nullptr;
 }

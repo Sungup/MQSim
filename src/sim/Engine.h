@@ -109,10 +109,13 @@ namespace MQSimEngine {
   copy_data(void* src, size_t size) {
     void* dest = src;
 
+#if UNBLOCK_NOT_IN_USE
+    // TODO This block can make the memory leak while runnign simulator.
     if (Simulator->Is_integrated_execution_mode()) {
       dest = new char[size];
       memcpy(dest, src, size);
     }
+#endif
 
     return dest;
   }

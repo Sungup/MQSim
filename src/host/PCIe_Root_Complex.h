@@ -2,50 +2,62 @@
 #define PCIE_ROOT_COMPLEX_H
 
 #include "../ssd/interface/Host_Interface_Defs.h"
-#include "Host_Defs.h"
-#include "PCIe_Message.h"
-#include "PCIe_Link.h"
-#include "HostIORequest.h"
-#include "IO_Flow_Base.h"
-#include "SATA_HBA.h"
 
+#include "Host_Defs.h"
+#include "HostIORequest.h"
+#include "PCIe_Link.h"
+#include "PCIeMessage.h"
+#include "IO_Flow_Base.h"
 
 namespace Host_Components
 {
-  class PCIe_Link;
-  class IO_Flow_Base;
-  class SATA_HBA;
   class PCIe_Root_Complex
   {
   public:
-    PCIe_Root_Complex(PCIe_Link* pcie_link, HostInterface_Types SSD_device_type, SATA_HBA* sata_hba, std::vector<Host_Components::IO_Flow_Base*>* IO_flows);
+    PCIe_Root_Complex(PCIe_Link& pcie_link,
+                      IoFlowList& IO_flows,
+                      HostInterface_Types SSD_device_type);
     
-    void Consume_pcie_message(PCIe_Message* messages)//Modern processors support DDIO, where all writes to memory are going through LLC
+    void Consume_pcie_message(PCIeMessage* messages)//Modern processors support DDIO, where all writes to memory are going through LLC
     {
-      switch (messages->Type)
+      switch (messages->type)
       {
       case PCIe_Message_Type::READ_REQ:
-        Read_from_memory(messages->Address, (uint32_t)(intptr_t)messages->Payload);
+        Read_from_memory(messages->address, (uint32_t)(intptr_t)messages->payload());
         break;
       case PCIe_Message_Type::WRITE_REQ:
-        Write_to_memory(messages->Address, messages->Payload);
+        Write_to_memory(messages->address, messages->payload());
         break;
       default:
         break;
       }
-      delete messages;
+
+      // TODO Check memory leak for the payload
+      messages->release();
     }
     void Write_to_device(uint64_t address, uint16_t write_value);
-    void Set_io_flows(std::vector<Host_Components::IO_Flow_Base*>* IO_flows);
+
+    void assign_sata_hba(SATA_HBA* hba);
+
   private:
-    PCIe_Link* pcie_link;
+    PCIe_Link& pcie_link;
     HostInterface_Types SSD_device_type;
     SATA_HBA * sata_hba;
-    std::vector<Host_Components::IO_Flow_Base*>* IO_flows;
-    
-    void Write_to_memory(const uint64_t address, const void* payload);
-    void Read_from_memory(const uint64_t address, const uint32_t size);
+
+    IoFlowList& IO_flows;
+
+    PCIeMessagePool& __msg_pool;
+
+    void Write_to_memory(uint64_t address, const void* payload);
+    void Read_from_memory(uint64_t address, uint32_t size);
+
   };
+
+  force_inline void
+  PCIe_Root_Complex::assign_sata_hba(SATA_HBA* hba)
+  {
+    sata_hba =hba;
+  }
 }
 
 #endif //!PCIE_ROOT_COMPLEX_H

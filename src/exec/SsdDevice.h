@@ -32,11 +32,12 @@
 *******************************************************************************/
 
 namespace Host_Components {
-  class PCIe_Switch;
+  class PCIeSwitch;
 }
 
-class SSD_Device : public MQSimEngine::Sim_Object
+class SsdDevice : public MQSimEngine::Sim_Object
 {
+private:
   SSD_Components::OnfiChannelList     __channels;
   SSD_Components::OnfiPhyPtr          __phy;
   SSD_Components::FTL                 __ftl;
@@ -48,48 +49,72 @@ class SSD_Device : public MQSimEngine::Sim_Object
   const bool __preconditioning_required;
 
 public:
-  const Utils::LhaToLpaConverter<SSD_Device>     lha_to_lpa_converter;
-  const Utils::NvmAccessBitmapFinder<SSD_Device> nvm_access_bitmap_finder;
+  const Utils::LhaToLpaConverter<SsdDevice>     lha_to_lpa_converter;
+  const Utils::NvmAccessBitmapFinder<SsdDevice> nvm_access_bitmap_finder;
 
 private:
   LPA_type __convert_lha_to_lpa(LHA_type lha) const;
   page_status_type __find_nvm_subunit_access_bitmap(LHA_type lha) const;
 
 public:
-  SSD_Device(const DeviceParameterSet& parameters,
+  SsdDevice(const DeviceParameterSet& parameters,
              const IOFlowScenario& io_flows,
              const Utils::LogicalAddrPartition& lapu,
              const StreamIdInfo& stream_info);
-  ~SSD_Device() final = default;
+  ~SsdDevice() final = default;
 
   void Report_results_in_XML(std::string name_prefix,
                              Utils::XmlWriter& xmlwriter) final;
 
-  uint32_t Get_no_of_LHAs_in_an_NVM_write_unit();
+  uint32_t total_lha_in_nvm_wr_unit() const;
 
-  void Attach_to_host(Host_Components::PCIe_Switch* pcie_switch);
-  void Perform_preconditioning(Utils::WorkloadStatsList& workload_stats);
+  // Host<->Device queue information query and managements
+  uint16_t nvme_sq_size() const;
+  uint16_t nvme_cq_size() const;
+  uint16_t sata_ncq_depth() const;
+
+  void create_new_stream(IO_Flow_Priority_Class priority,
+                         LHA_type start_logical_sector,
+                         LHA_type end_logical_sector,
+                         uint64_t sq_base_address,
+                         uint64_t cq_base_address);
+
+  void set_ncq_address(uint64_t sq_base_address, uint64_t cq_base_address);
+
+  // Host<->Device interconnection
+  void connect_to_host(Host_Components::PCIeSwitch* pcie_switch);
 
   SSD_Components::Host_Interface_Base& host_interface();
   HostInterface_Types host_interface_type() const;
+
+  // Device preconditioning
+  bool preconditioning_required() const;
+  void perform_preconditioning(Utils::WorkloadStatsList& workload_stats);
+
 };
 
 force_inline uint32_t
-SSD_Device::Get_no_of_LHAs_in_an_NVM_write_unit()
+SsdDevice::total_lha_in_nvm_wr_unit() const
 {
-  return __host_interface->Get_no_of_LHAs_in_an_NVM_write_unit();
+  return __host_interface->total_lha_in_nvm_wr_unit();
 }
 
 force_inline SSD_Components::Host_Interface_Base&
-SSD_Device::host_interface()
+SsdDevice::host_interface()
 {
   return *__host_interface;
 }
 
 force_inline HostInterface_Types
-SSD_Device::host_interface_type() const
+SsdDevice::host_interface_type() const
 {
   return __host_interface->GetType();
+}
+
+force_inline bool
+SsdDevice::preconditioning_required() const
+{
+  return __preconditioning_required;
 }
 
 #endif //!SSD_DEVICE_H

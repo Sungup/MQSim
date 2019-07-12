@@ -20,11 +20,11 @@ public:
   bool Enable_ResponseTime_Logging;
   sim_time_type ResponseTime_Logging_Period_Length; // nanoseconds
 
-  // This parameter is not serialized. This is used to inform the Host_System
+  // This parameter is not serialized. This is used to inform the HostSystem
   // class about the input file path.
-  std::string Input_file_path;
+  const std::string Input_file_path;
 
-  HostParameterSet();
+  explicit HostParameterSet(const std::string& workload_file_path);
   ~HostParameterSet() override = default;
 
   std::string stream_log_path(uint16_t flow_id) const;

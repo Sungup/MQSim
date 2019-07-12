@@ -413,7 +413,7 @@ __build_id_list(uint32_t count)
 
 force_inline void
 StreamIdInfo::__init_sata_stream(const DeviceParameterSet& params,
-                               uint32_t flow_count)
+                                 uint32_t flow_count)
 {
   for (uint32_t i = 0; i < flow_count; ++i) {
     __stream_channel_ids.emplace_back(
@@ -435,7 +435,7 @@ StreamIdInfo::__init_sata_stream(const DeviceParameterSet& params,
 }
 
 force_inline void
-StreamIdInfo::__init_nvme_stream(IOFlowScenario& io_flows)
+StreamIdInfo::__init_nvme_stream(const IOFlowScenario& io_flows)
 {
   for (auto& flow : io_flows) {
     __stream_channel_ids.emplace_back(
@@ -457,7 +457,7 @@ StreamIdInfo::__init_nvme_stream(IOFlowScenario& io_flows)
 }
 
 StreamIdInfo::StreamIdInfo(const DeviceParameterSet& params,
-                           IOFlowScenario& io_flows)
+                           const IOFlowScenario& io_flows)
   : stream_count(params.HostInterface_Type == HostInterface_Types::SATA
                  ? 1U
                  : io_flows.size())

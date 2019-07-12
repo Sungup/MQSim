@@ -1,14 +1,17 @@
 #include "../sim/Sim_Defs.h"
 #include "../sim/Engine.h"
+#include "PCIeMessage.h"
+#include "PCIe_Root_Complex.h"
+#include "PCIeSwitch.h"
+
 #include "PCIe_Link.h"
-#include "PCIe_Message.h"
 
 namespace Host_Components
 {
-  PCIe_Link::PCIe_Link(const sim_object_id_type& id, PCIe_Root_Complex* root_complex, PCIe_Switch* pcie_switch,
+  PCIe_Link::PCIe_Link(const sim_object_id_type& id,
     double lane_bandwidth_GBPs, int lane_count, int tlp_header_size,
     int tlp_max_payload_size, int dllp_ovehread, int ph_overhead) :
-    Sim_Object(id), root_complex(root_complex), pcie_switch(pcie_switch),
+    Sim_Object(id), __msg_pool(), root_complex(root_complex), pcie_switch(pcie_switch),
     lane_bandwidth_GBPs(lane_bandwidth_GBPs), lane_count(lane_count),
     tlp_header_size(tlp_header_size), tlp_max_payload_size(tlp_max_payload_size), dllp_ovehread(dllp_ovehread), ph_overhead(ph_overhead)
   {
@@ -20,15 +23,15 @@ namespace Host_Components
     this->root_complex = root_complex;
   }
 
-  void PCIe_Link::Set_pcie_switch(PCIe_Switch* pcie_switch) 
+  void PCIe_Link::Set_pcie_switch(PCIeSwitch* pcie_switch) 
   {
     this->pcie_switch = pcie_switch;
   }
 
-  void PCIe_Link::Deliver(PCIe_Message* message)
+  void PCIe_Link::Deliver(PCIeMessage* message)
   {
     auto sim = Simulator;
-    switch (message->Destination)
+    switch (message->destination)
     {
     case PCIe_Destination_Type::HOST://Message from SSD device to the host
       Message_buffer_toward_root_complex.push(message);
@@ -53,7 +56,7 @@ namespace Host_Components
 
   void PCIe_Link::Execute_simulator_event(MQSimEngine::SimEvent* event)
   {
-    PCIe_Message* message = NULL;
+    PCIeMessage* message = NULL;
     PCIe_Destination_Type destination = (PCIe_Destination_Type)(intptr_t)event->Parameters;
     auto sim = Simulator;
     switch (destination)
@@ -69,7 +72,7 @@ namespace Host_Components
     case PCIe_Destination_Type::DEVICE:
       message = Message_buffer_toward_ssd_device.front();
       Message_buffer_toward_ssd_device.pop();
-      pcie_switch->Deliver_to_device(message);
+      pcie_switch->deliver_to_device(message);
       if (Message_buffer_toward_ssd_device.size() > 0)
         sim->Register_sim_event(sim->Time() + estimate_transfer_time(Message_buffer_toward_ssd_device.front()),
           this, (void*)(intptr_t)PCIe_Destination_Type::DEVICE, static_cast<int>(PCIe_Link_Event_Type::DELIVER));

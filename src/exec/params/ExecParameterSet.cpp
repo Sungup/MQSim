@@ -17,11 +17,12 @@ ExecParameterSet::__dump_config_params(const std::string& file_path) const
   std::cout << "[====================] Done!" << std::endl;
 }
 
-ExecParameterSet::ExecParameterSet(const std::string& file_path)
-  : Host_Configuration(),
+ExecParameterSet::ExecParameterSet(const std::string& ssd_config_path,
+                                   const std::string& workload_defs_path)
+  : Host_Configuration(workload_defs_path),
     SSD_Device_Configuration()
 {
-  load_config_params(file_path);
+  load_config_params(ssd_config_path);
 }
 
 void

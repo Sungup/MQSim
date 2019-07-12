@@ -4,14 +4,18 @@
 #include <cmath>
 #include <ctime>
 #include <numeric>
-#include "SSD_Device.h"
+#include "SsdDevice.h"
 
 #include "../ssd/fbm/Flash_Block_Manager.h"
 #include "../ssd/gc_and_wl/GC_and_WL_Unit_Base.h"
 #include "../ssd/mapping/Address_Mapping_Unit_Base.h"
 #include "../ssd/tsu/TSU_Base.h"
 
-SSD_Device::SSD_Device(const DeviceParameterSet& params,
+// To control NVMe and SATA interface
+#include "../ssd/interface/Host_Interface_NVMe.h"
+#include "../ssd/interface/Host_Interface_SATA.h"
+
+SsdDevice::SsdDevice(const DeviceParameterSet& params,
                        const IOFlowScenario& io_flows,
                        const Utils::LogicalAddrPartition& lapu,
                        const StreamIdInfo& stream_info)
@@ -25,9 +29,9 @@ SSD_Device::SSD_Device(const DeviceParameterSet& params,
     __stats(params),
     __preconditioning_required(params.Enabled_Preconditioning),
     lha_to_lpa_converter(this,
-                         &SSD_Device::__convert_lha_to_lpa),
+                         &SsdDevice::__convert_lha_to_lpa),
     nvm_access_bitmap_finder(this,
-                             &SSD_Device::__find_nvm_subunit_access_bitmap)
+                             &SsdDevice::__find_nvm_subunit_access_bitmap)
 {
   using namespace SSD_Components;
 
@@ -111,14 +115,86 @@ SSD_Device::SSD_Device(const DeviceParameterSet& params,
   __cache_manager->connect_host_interface(*__host_interface);
 }
 
-void
-SSD_Device::Attach_to_host(Host_Components::PCIe_Switch* pcie_switch)
+LPA_type
+SsdDevice::__convert_lha_to_lpa(LHA_type lha) const
 {
-  __host_interface->Attach_to_device(pcie_switch);
+  return __ftl.Convert_host_logical_address_to_device_address(lha);
+}
+
+page_status_type
+SsdDevice::__find_nvm_subunit_access_bitmap(LHA_type lha) const
+{
+  return __ftl.Find_NVM_subunit_access_bitmap(lha);
+}
+
+uint16_t
+SsdDevice::nvme_sq_size() const
+{
+  using namespace SSD_Components;
+
+  return (__host_interface->GetType() == HostInterface_Types::NVME)
+           ? to_nvme_interface(__host_interface)->Get_submission_queue_depth()
+           : 0;
+}
+
+uint16_t
+SsdDevice::nvme_cq_size() const
+{
+  using namespace SSD_Components;
+
+  return (__host_interface->GetType() == HostInterface_Types::NVME)
+           ? to_nvme_interface(__host_interface)->Get_completion_queue_depth()
+           : 0;
+}
+
+uint16_t
+SsdDevice::sata_ncq_depth() const
+{
+  using namespace SSD_Components;
+
+  return (__host_interface->GetType() == HostInterface_Types::SATA)
+           ? to_sata_interface(__host_interface)->Get_ncq_depth()
+           : 0;
 }
 
 void
-SSD_Device::Perform_preconditioning(Utils::WorkloadStatsList& workload_stats)
+SsdDevice::create_new_stream(IO_Flow_Priority_Class priority,
+                              LHA_type start_logical_sector,
+                              LHA_type end_logical_sector,
+                              uint64_t sq_base_address,
+                              uint64_t cq_base_address)
+{
+  auto interface = SSD_Components::to_nvme_interface(__host_interface);
+
+  if (!interface)
+    throw mqsim_error("Unexpected HIL type casting. HIL is not NVMe");
+
+  interface->Create_new_stream(priority,
+                               start_logical_sector,
+                               end_logical_sector,
+                               sq_base_address,
+                               cq_base_address);
+}
+
+void
+SsdDevice::set_ncq_address(uint64_t sq_base_address, uint64_t cq_base_address)
+{
+  auto interface = SSD_Components::to_sata_interface(__host_interface);
+
+  if (!interface)
+    throw mqsim_error("Unexpected HIL type casting. HIL is not SATA");
+
+  interface->Set_ncq_address(sq_base_address, cq_base_address);
+}
+
+void
+SsdDevice::connect_to_host(Host_Components::PCIeSwitch* pcie_switch)
+{
+  __host_interface->connect_to_switch(pcie_switch);
+}
+
+void
+SsdDevice::perform_preconditioning(Utils::WorkloadStatsList& workload_stats)
 {
   if (!__preconditioning_required)
     return;
@@ -141,7 +217,7 @@ SSD_Device::Perform_preconditioning(Utils::WorkloadStatsList& workload_stats)
 }
 
 void
-SSD_Device::Report_results_in_XML(std::string /* name_prefix */,
+SsdDevice::Report_results_in_XML(std::string /* name_prefix */,
                                   Utils::XmlWriter& xmlwriter)
 {
   xmlwriter.Write_open_tag(ID());
@@ -155,16 +231,4 @@ SSD_Device::Report_results_in_XML(std::string /* name_prefix */,
       chip.Report_results_in_XML(ID(), xmlwriter);
 
   xmlwriter.Write_close_tag();
-}
-
-LPA_type
-SSD_Device::__convert_lha_to_lpa(LHA_type lha) const
-{
-  return __ftl.Convert_host_logical_address_to_device_address(lha);
-}
-
-page_status_type
-SSD_Device::__find_nvm_subunit_access_bitmap(LHA_type lha) const
-{
-  return __ftl.Find_NVM_subunit_access_bitmap(lha);
 }

@@ -2,13 +2,15 @@
 
 #include <cstring>
 
-HostParameterSet::HostParameterSet()
+#include "../../utils/StringTools.h"
+
+HostParameterSet::HostParameterSet(const std::string& workload_defs_path)
   : PCIe_Lane_Bandwidth(0.4),
     PCIe_Lane_Count(4),
     SATA_Processing_Delay(400000),
     Enable_ResponseTime_Logging(false),
     ResponseTime_Logging_Period_Length(400000),
-    Input_file_path()
+    Input_file_path(remove_ext(workload_defs_path))
 { }
 
 void

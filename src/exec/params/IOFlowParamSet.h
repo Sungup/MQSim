@@ -189,11 +189,11 @@ public:
 private:
   void __init_sata_stream(const DeviceParameterSet& params,
                           uint32_t flow_count);
-  void __init_nvme_stream(IOFlowScenario& io_flows);
+  void __init_nvme_stream(const IOFlowScenario& io_flows);
 
 public:
   StreamIdInfo(const DeviceParameterSet& params,
-               IOFlowScenario& io_flows);
+               const IOFlowScenario& io_flows);
 
   const StreamChannelIDs& stream_channel_ids() const;
   const StreamChipIDs&    stream_chip_ids() const;

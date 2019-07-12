@@ -33,7 +33,13 @@ function __build_mqsim() {
   cd ${PROJECT_BUILD_HOME};
 
   # Build
-  cmake -DCMAKE_BUILD_TYPE=Release -DFORCE_INLINE=ON ${PROJECT_HOME};
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DFORCE_INLINE=ON \
+        -DBLOCK_ERASE_HISTO=Off \
+        -DSKIP_EXCEPTION_CHECK=On \
+        -DSTATIC_BOOST=Off \
+        ${PROJECT_HOME};
+
   make -j ${__N_CORES};
 
   # Return to project home

@@ -1,37 +1,34 @@
-#include <iostream>
-#include <fstream>
-#include <ctime>
-#include <string>
 #include <cstring>
-#include <numeric>
-#include "ssd/SSD_Defs.h"
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <string>
+
 #include "exec/params/ExecParameterSet.h"
-#include "exec/SSD_Device.h"
-#include "exec/Host_System.h"
+#include "exec/HostSystem.h"
+#include "exec/SsdDevice.h"
 #include "utils/rapidxml/rapidxml.hpp"
-#include "utils/DistributionTypes.h"
 #include "utils/Logical_Address_Partitioning_Unit.h"
 
 using namespace std;
+
+#define FILE_PATH_OPT     "-i"
+#define WORKLOAD_PATH_OPT "-w"
 
 force_inline void
 command_line_args(char* argv[],
                   string& input_file_path,
                   string& workload_file_path)
 {
-
-  for (int arg_cntr = 1; arg_cntr < 5; arg_cntr++)
-  {
+  for (int arg_cntr = 1; arg_cntr < 5; arg_cntr++) {
     string arg = argv[arg_cntr];
 
-    char file_path_switch[] = "-i";
-    if (arg.compare(0, strlen(file_path_switch), file_path_switch) == 0) {
+    if (arg.compare(0, strlen(FILE_PATH_OPT), FILE_PATH_OPT) == 0) {
       input_file_path.assign(argv[++arg_cntr]);
       continue;
     }
 
-    char workload_path_switch[] = "-w";
-    if (arg.compare(0, strlen(workload_path_switch), workload_path_switch) == 0) {
+    if (arg.compare(0, strlen(WORKLOAD_PATH_OPT), WORKLOAD_PATH_OPT) == 0) {
       workload_file_path.assign(argv[++arg_cntr]);
       continue;
     }
@@ -43,9 +40,9 @@ __dump_workload_definitions(const std::string& file_path,
                             IOFlowScenariosList& io_scenarios)
 {
 
-  std::cout << "Using MQSim's default workload definitions." << std::endl
-            << "Writing the default workload definitions to the expected "
-            << "workload definition file." << std::endl;
+  cout << "Using MQSim's default workload definitions." << endl
+       << "Writing the default workload definitions to the expected "
+       << "workload definition file." << endl;
 
   IOFlowScenario scenario;
   scenario.push_back(std::make_shared<SyntheticFlowParamSet>(12344));
@@ -53,7 +50,8 @@ __dump_workload_definitions(const std::string& file_path,
 
   io_scenarios.push_back(scenario);
 
-  PRINT_MESSAGE("Writing default workload parameters to the expected input file.")
+  cout << "Writing default workload parameters to the expected input file."
+       << endl;
 
   Utils::XmlWriter xmlwriter;
   string tmp;
@@ -73,10 +71,11 @@ __dump_workload_definitions(const std::string& file_path,
   std::cout << "[====================] Done!\n" << std::endl;
 }
 
-force_inline void
-__read_workload_definitions(const string& workload_defs_file_path,
-                            IOFlowScenariosList& io_scenarios)
+force_inline IOFlowScenariosList
+__read_workload_definitions(const string& workload_defs_file_path)
 {
+  IOFlowScenariosList io_scenarios;
+
   ifstream workload_defs_file;
   workload_defs_file.open(workload_defs_file_path.c_str());
 
@@ -85,7 +84,7 @@ __read_workload_definitions(const string& workload_defs_file_path,
               << std::endl;
 
     __dump_workload_definitions(workload_defs_file_path, io_scenarios);
-    return;
+    return io_scenarios;
   }
 
   /// 1. Read input workload parameters
@@ -97,7 +96,7 @@ __read_workload_definitions(const string& workload_defs_file_path,
   /// 2. Check default flag option in file
   if (line == "USE_INTERNAL_PARAMS") {
     __dump_workload_definitions(workload_defs_file_path, io_scenarios);
-    return;
+    return io_scenarios;
   }
 
   /// TODO Remove RapidXml because of the old c++ standard (<C++11).
@@ -130,54 +129,117 @@ __read_workload_definitions(const string& workload_defs_file_path,
       if (!scene.empty())
         io_scenarios.push_back(scene);
     }
-  }
-  else
-  {
+  } else {
     std::cerr << "Error in the workload definition file!" << endl;
 
     __dump_workload_definitions(workload_defs_file_path, io_scenarios);
-    return;
+    return io_scenarios;
   }
 
   // Last of all, if scenario is empty, insert default io scenarios.
   if (io_scenarios.empty())
     __dump_workload_definitions(workload_defs_file_path, io_scenarios);
 
+  return io_scenarios;
 }
 
-void collect_results(SSD_Device& ssd, Host_System& host, const char* output_file_path)
+void
+__collect_results(SsdDevice& ssd,
+                  HostSystem& host,
+                  const std::string& output_file_path)
 {
+  cout << "Writing results to output file ......." << endl;
+
   Utils::XmlWriter xmlwriter;
   xmlwriter.Open(output_file_path);
 
-  std::string tmp("MQSim_Results");
-  xmlwriter.Write_open_tag(tmp);
+  xmlwriter.Write_open_tag("MQSim_Results");
   
   host.Report_results_in_XML("", xmlwriter);
   ssd.Report_results_in_XML("", xmlwriter);
 
   xmlwriter.Write_close_tag();
 
-  auto IO_flows = host.Get_io_flows();
-  for (auto& flow : host.Get_io_flows()) {
-    cout << "Flow " << flow->ID() << " - total requests generated: " << flow->Get_generated_request_count()
-         << " total requests serviced:" << flow->Get_serviced_request_count() << endl;
-    cout << "                   - device response time: " << flow->Get_device_response_time() << " (us)"
-         << " end-to-end request delay:" << flow->Get_end_to_end_request_delay() << " (us)" << endl;
+  cout << endl << "[Flow summary]" << endl;
+  for (auto& flow : host.io_flows()) {
+    cout << " - Flow ID: " << flow->ID() << endl
+         << "   - total generated requests: " << flow->Get_generated_request_count() << endl
+         << "   - total serviced requests:  " << flow->Get_serviced_request_count() << endl;
+    cout << "   - device response time:     " << flow->Get_device_response_time() << " (us)" << endl
+         << "   - end-to-end request delay: " << flow->Get_end_to_end_request_delay() << " (us)" << endl
+         << endl;
   }
-  //cin.get();
 }
 
 void print_help()
 {
-  cout << "MQSim - A simulator for modern NVMe and SATA SSDs developed at SAFARI group in ETH Zurich" << endl <<
-    "Standalone Usage:" << endl <<
-    "./MQSim [-i path/to/config/file] [-w path/to/workload/file]" << endl;
+  cout << "MQSim "
+          "- A simulator for modern NVMe and SATA SSDs developed at SAFARI "
+          "group in ETH Zurich" << endl
+       << endl
+       << "Standalone Usage:" << endl
+       << "./MQSim "
+          "[-i path/to/config/file] "
+          "[-w path/to/workload/file]" << endl;
 }
 
-int main(int argc, char* argv[])
+void
+__run(const ExecParameterSet& params,
+      const IOFlowScenario& scenario,
+      const std::string& result_file_path)
 {
-  string ssd_config_file_path, workload_defs_file_path;
+  /// ==========================================================================
+  /// Simualtion Block
+  time_t start_time = time(nullptr);
+  char* dt = ctime(&start_time);
+
+  cout << "MQSim started at " << dt;
+
+  // The simulator should always be reset, before starting the actual simulation
+  Simulator->Reset();
+
+  // Create LogicalAddressPartitioningUnit
+  StreamIdInfo stream_info(params.SSD_Device_Configuration,
+                           scenario);
+
+  Utils::LogicalAddrPartition addr_partitioner(params.SSD_Device_Configuration,
+                                               stream_info,
+                                               scenario.size());
+
+  // Create SSD_Device based on the specified parameters
+  SsdDevice ssd(params.SSD_Device_Configuration,
+                 scenario,
+                 addr_partitioner,
+                 stream_info);
+
+  // Create HostSystem based on the specified parameters
+  HostSystem host(params.Host_Configuration,
+                   scenario,
+                   addr_partitioner,
+                   ssd);
+
+  Simulator->Start_simulation();
+
+  time_t end_time = time(nullptr);
+  dt = ctime(&end_time);
+
+  cout << "MQSim finished at " << dt;
+  /// ==========================================================================
+
+  auto duration = uint64_t(difftime(end_time, start_time));
+  cout << "Total simulation time: "
+       << duration / 3600 << ":"
+       << (duration % 3600) / 60
+       << ":" << ((duration % 3600) % 60) << endl << endl;
+
+  /// Report results.
+  __collect_results(ssd, host, result_file_path);
+}
+
+int
+main(int argc, char* argv[])
+{
+  string ssd_config_path, workload_defs_path;
 
   if (argc != 5) {
     // MQSim expects 2 arguments:
@@ -187,64 +249,29 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  command_line_args(argv, ssd_config_file_path, workload_defs_file_path);
+  // 1. Argument parsing
+  command_line_args(argv, ssd_config_path, workload_defs_path);
 
-  ExecParameterSet exec_params(ssd_config_file_path);
-  IOFlowScenariosList io_scenarios;
+  // 2. Load workload definitions
+  auto io_scenarios = __read_workload_definitions(workload_defs_path);
 
-  __read_workload_definitions(workload_defs_file_path,
-                              io_scenarios);
+  // 3. Load ssd configurations
+  ExecParameterSet exec_params(ssd_config_path, workload_defs_path);
 
+  // 4. Run simulation
   int s_no = 0;
-  for (auto& io_scen : io_scenarios) {
+  for (auto& scenario : io_scenarios) {
     ++s_no;
 
-    time_t start_time = time(nullptr);
-    char* dt = ctime(&start_time);
-    PRINT_MESSAGE("MQSim started at " << dt)
-    PRINT_MESSAGE("******************************")
-    PRINT_MESSAGE("Executing scenario " << s_no << " out of " << io_scenarios.size() << " .......")
+    cout << "******************************" << endl
+         << "Executing scenario " << s_no
+         << " out of " << io_scenarios.size() << " ......." << endl;
 
-    //The simulator should always be reset, before starting the actual simulation
-    Simulator->Reset();
-
-    // Create LogicalAddressPartitioningUnit
-    StreamIdInfo stream_info(exec_params.SSD_Device_Configuration,
-                             io_scen);
-
-    Utils::LogicalAddrPartition addr_partitioner(exec_params.SSD_Device_Configuration,
-                                                 stream_info,
-                                                 io_scen.size());
-
-    // Create SSD_Device based on the specified parameters
-    SSD_Device ssd(exec_params.SSD_Device_Configuration,
-                   io_scen,
-                   addr_partitioner,
-                   stream_info);
-
-    //Create Host_System based on the specified parameters
-    exec_params.Host_Configuration.Input_file_path = workload_defs_file_path.substr(0, workload_defs_file_path.find_last_of('.'));
-
-    Host_System host(exec_params.Host_Configuration,
-                     io_scen,
-                     exec_params.SSD_Device_Configuration.Enabled_Preconditioning,
-                     ssd.host_interface(),
-                     addr_partitioner);
-
-    host.Attach_ssd_device(&ssd);
-
-    Simulator->Start_simulation();
-
-    time_t end_time = time(nullptr);
-    dt = ctime(&end_time);
-    PRINT_MESSAGE("MQSim finished at " << dt)
-    auto duration = uint64_t(difftime(end_time, start_time));
-    PRINT_MESSAGE("Total simulation time: " << duration / 3600 << ":" << (duration % 3600) / 60 << ":" << ((duration % 3600) % 60))
-    PRINT_MESSAGE("");
-
-    PRINT_MESSAGE("Writing results to output file .......");
-    collect_results(ssd, host, (workload_defs_file_path.substr(0, workload_defs_file_path.find_last_of('.')) + "_scenario_" + std::to_string(s_no) + ".xml").c_str());
+    __run(exec_params,
+          scenario,
+          exec_params.result_file_path(s_no));
   }
+
   cout << "Simulation complete" << endl;
 
   return 0;

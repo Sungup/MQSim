@@ -1,6 +1,6 @@
 #include "Host_Interface_Base.h"
 
-#include "../../host/PCIe_Switch.h"
+#include "../../host/PCIeSwitch.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
 
 // Children classes for builder
@@ -61,12 +61,12 @@ Host_Interface_Base::Send_read_message_to_host(uint64_t address, uint32_t reques
 {
   using namespace Host_Components;
 
-  auto pcie_message = new PCIe_Message(PCIe_Message_Type::READ_REQ,
-                                       PCIe_Destination_Type::HOST,
-                                       address,
-                                       request_read_data_size);
-
-  __pcie_switch->Send_to_host(pcie_message);
+  __pcie_switch->send_to_host(
+    __pcie_switch->make_pcie_message(PCIe_Message_Type::READ_REQ,
+                                     PCIe_Destination_Type::HOST,
+                                     address,
+                                     request_read_data_size)
+                             );
 }
 
 void
@@ -74,13 +74,15 @@ Host_Interface_Base::Send_write_message_to_host(uint64_t address, void* message,
 {
   using namespace Host_Components;
 
-  auto pcie_message = new PCIe_Message(PCIe_Message_Type::WRITE_REQ,
-                                       PCIe_Destination_Type::HOST,
-                                       address,
-                                       message_size,
-                                       MQSimEngine::copy_data(message, message_size));
-
-  __pcie_switch->Send_to_host(pcie_message);
+  __pcie_switch->send_to_host(
+    // TODO This block can make the memory leak while runnign simulator.
+    __pcie_switch->make_pcie_message(PCIe_Message_Type::WRITE_REQ,
+                                     PCIe_Destination_Type::HOST,
+                                     address,
+                                     message_size,
+                                     MQSimEngine::copy_data(message,
+                                                            message_size))
+                             );
 }
 
 // -------------------------
@@ -111,4 +113,28 @@ SSD_Components::build_hil_object(const sim_object_id_type& id,
                                                  params.Flash_Parameters.page_size_in_sector(),
                                                  &dcm);
   }
+}
+
+NVMeInterfacePtr
+SSD_Components::to_nvme_interface(HostInterfacePtr& hil)
+{
+  return std::dynamic_pointer_cast<Host_Interface_NVMe>(hil);
+}
+
+SataInterfacePtr
+SSD_Components::to_sata_interface(HostInterfacePtr& hil)
+{
+  return std::dynamic_pointer_cast<Host_Interface_SATA>(hil);
+}
+
+const NVMeInterfacePtr
+SSD_Components::to_nvme_interface(const HostInterfacePtr& hil)
+{
+  return std::dynamic_pointer_cast<Host_Interface_NVMe>(hil);
+}
+
+const SataInterfacePtr
+SSD_Components::to_sata_interface(const HostInterfacePtr& hil)
+{
+  return std::dynamic_pointer_cast<Host_Interface_SATA>(hil);
 }

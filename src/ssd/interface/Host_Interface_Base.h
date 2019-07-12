@@ -5,7 +5,7 @@
 #include "../request/UserRequest.h"
 #include "../../sim/Sim_Object.h"
 #include "../../sim/Sim_Reporter.h"
-#include "../../host/PCIe_Message.h"
+#include "../../host/PCIeMessage.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
 
 // Renewed Headers
@@ -19,13 +19,15 @@
 
 namespace Host_Components
 {
-  class PCIe_Switch;
+  class PCIeSwitch;
 }
 
 namespace SSD_Components
 {
   class Data_Cache_Manager_Base;
   class Host_Interface_Base;
+  class Host_Interface_NVMe;
+  class Host_Interface_SATA;
 
   // ============================
   // Declare of Input_Stream_Base
@@ -349,7 +351,7 @@ namespace SSD_Components
 
     Data_Cache_Manager_Base* cache;
 
-    Host_Components::PCIe_Switch* __pcie_switch;
+    Host_Components::PCIeSwitch* __pcie_switch;
 
   protected:
     // TODO Check how to change this members private
@@ -374,15 +376,15 @@ namespace SSD_Components
 
     void connect_to_user_request_signal(UserRequestServiceHandlerBase& handler);
 
-    void Consume_pcie_message(Host_Components::PCIe_Message* message);
+    void Consume_pcie_message(Host_Components::PCIeMessage* message);
     void Send_read_message_to_host(uint64_t address, uint32_t request_read_data_size);
     void Send_write_message_to_host(uint64_t address, void* message, uint32_t message_size);
 
     HostInterface_Types GetType() const;
     LHA_type Get_max_logical_sector_address() const;
-    uint32_t Get_no_of_LHAs_in_an_NVM_write_unit() const;
+    uint32_t total_lha_in_nvm_wr_unit() const;
 
-    void Attach_to_device(Host_Components::PCIe_Switch* pcie_switch);
+    void connect_to_switch(Host_Components::PCIeSwitch* pcie_switch);
   };
 
   force_inline void
@@ -399,14 +401,15 @@ namespace SSD_Components
   }
 
   force_inline void
-  Host_Interface_Base::Consume_pcie_message(Host_Components::PCIe_Message* message)
+  Host_Interface_Base::Consume_pcie_message(Host_Components::PCIeMessage* message)
   {
-    if (message->Type == Host_Components::PCIe_Message_Type::READ_COMP)
-      request_fetch_unit->Process_pcie_read_message(message->Address, message->Payload, message->Payload_size);
+    if (message->type == Host_Components::PCIe_Message_Type::READ_COMP)
+      request_fetch_unit->Process_pcie_read_message(message->address, message->payload(), message->payload_size);
     else
-      request_fetch_unit->Process_pcie_write_message(message->Address, message->Payload, message->Payload_size);
+      request_fetch_unit->Process_pcie_write_message(message->address, message->payload(), message->payload_size);
 
-    delete message;
+    // TODO Check need to free for the write message's payload data
+    message->release();
   }
 
   force_inline HostInterface_Types
@@ -422,13 +425,13 @@ namespace SSD_Components
   }
 
   force_inline uint32_t
-  Host_Interface_Base::Get_no_of_LHAs_in_an_NVM_write_unit() const
+  Host_Interface_Base::total_lha_in_nvm_wr_unit() const
   {
     return sectors_per_page;
   }
 
   force_inline void
-  Host_Interface_Base::Attach_to_device(Host_Components::PCIe_Switch* pcie_switch)
+  Host_Interface_Base::connect_to_switch(Host_Components::PCIeSwitch* pcie_switch)
   {
     __pcie_switch = pcie_switch;
   }
@@ -437,11 +440,19 @@ namespace SSD_Components
   // HostInterfaceBase builder
   // -------------------------
   typedef std::shared_ptr<Host_Interface_Base> HostInterfacePtr;
+  typedef std::shared_ptr<Host_Interface_NVMe> NVMeInterfacePtr;
+  typedef std::shared_ptr<Host_Interface_SATA> SataInterfacePtr;
 
   HostInterfacePtr build_hil_object(const sim_object_id_type& id,
                                     const DeviceParameterSet& params,
                                     LHA_type max_logical_sector_address,
                                     uint32_t total_flows,
                                     Data_Cache_Manager_Base& dcm);
+
+  NVMeInterfacePtr to_nvme_interface(HostInterfacePtr& hil);
+  SataInterfacePtr to_sata_interface(HostInterfacePtr& hil);
+
+  const NVMeInterfacePtr to_nvme_interface(const HostInterfacePtr& hil);
+  const SataInterfacePtr to_sata_interface(const HostInterfacePtr& hil);
 }
 #endif //HOST_INTERFACE_BASE_H
