@@ -188,3 +188,5 @@ add_executable(MQSim
                ${MQSIM_SIM_SOURCES}
                ${MQSIM_SSD_SOURCES}
                ${MQSIM_UTILS_SOURCES})
+
+install(TARGETS MQSim RUNTIME DESTINATION bin)

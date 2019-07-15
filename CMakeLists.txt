@@ -37,6 +37,7 @@ set(CPACK_RPM_PACKAGE_RELEASE_DIST ON)
 # For debian package only
 set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 set(CPACK_DEBIAN_PACKAGE_SECTION "Electronics")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sungup Moon <sungup@me.com>")
 
 # Currently serve only RPM package.
 set(CPACK_GENERATOR "ZIP;TGZ;TBZ2;RPM;DEB")
