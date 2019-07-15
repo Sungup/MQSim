@@ -15,9 +15,11 @@
 #include "../ssd/interface/Host_Interface_Defs.h"
 #include "../ssd/SSD_Defs.h"
 #include "../utils/Logical_Address_Partitioning_Unit.h"
+#include "../utils/CountingStats.h"
 #include "../utils/Workload_Statistics.h"
 #include "HostIORequest.h"
 #include "IoQueueInfo.h"
+
 
 namespace Host_Components
 {
@@ -62,8 +64,6 @@ namespace Host_Components
     SATA_HBA* sata_hba;
     LHA_type start_lsa_on_device, end_lsa_on_device;
 
-    void Submit_io_request(HostIORequest*);
-
     //NVMe host-to-device communication variables
     IO_Flow_Priority_Class priority_class;
     NVMe_Queue_Pair nvme_queue_pair;
@@ -74,19 +74,30 @@ namespace Host_Components
     std::vector<HostIORequest*> request_queue_in_memory;
     std::list<HostIORequest*> waiting_requests;//The I/O requests that are still waiting to be enqueued in the I/O queue (the I/O queue is full)
     std::unordered_map<sim_time_type, HostIORequest*> nvme_software_request_queue;//The I/O requests that are enqueued in the I/O queue of the SSD device
-    void NVMe_update_and_submit_completion_queue_tail();
 
     //Variables used to collect statistics
-    uint32_t STAT_generated_request_count, STAT_generated_read_request_count, STAT_generated_write_request_count;
+    uint32_t STAT_generated_request_count;
+    uint32_t STAT_generated_read_request_count;
+    uint32_t STAT_generated_write_request_count;
     uint32_t STAT_ignored_request_count;
-    uint32_t STAT_serviced_request_count, STAT_serviced_read_request_count, STAT_serviced_write_request_count;
-    sim_time_type STAT_sum_device_response_time, STAT_sum_device_response_time_read, STAT_sum_device_response_time_write;
-    sim_time_type STAT_min_device_response_time, STAT_min_device_response_time_read, STAT_min_device_response_time_write;
-    sim_time_type STAT_max_device_response_time, STAT_max_device_response_time_read, STAT_max_device_response_time_write;
-    sim_time_type STAT_sum_request_delay, STAT_sum_request_delay_read, STAT_sum_request_delay_write;
-    sim_time_type STAT_min_request_delay, STAT_min_request_delay_read, STAT_min_request_delay_write;
-    sim_time_type STAT_max_request_delay, STAT_max_request_delay_read, STAT_max_request_delay_write;
-    sim_time_type STAT_transferred_bytes_total, STAT_transferred_bytes_read, STAT_transferred_bytes_write;
+
+    uint32_t STAT_serviced_request_count;
+    uint32_t STAT_serviced_read_request_count;
+    uint32_t STAT_serviced_write_request_count;
+
+  private:
+    Utils::MinMaxAvgStats<sim_time_type> _stat_dev_rd_response_time;
+    Utils::MinMaxAvgStats<sim_time_type> _stat_dev_wr_response_time;
+    Utils::MinMaxAvgStats<sim_time_type> _stat_rd_req_delay;
+    Utils::MinMaxAvgStats<sim_time_type> _stat_wr_req_delay;
+    Utils::AvgStats<sim_time_type> _stat_short_term_dev_resp;
+    Utils::AvgStats<sim_time_type> _stat_short_term_req_delay;
+
+  protected:
+    sim_time_type STAT_transferred_bytes_total;
+    sim_time_type STAT_transferred_bytes_read;
+    sim_time_type STAT_transferred_bytes_write;
+
     int progress;
     int next_progress_step = 0;
 
@@ -96,22 +107,19 @@ namespace Host_Components
     sim_time_type next_logging_milestone;
     std::string logging_file_path;
     std::ofstream log_file;
-    uint32_t Get_device_response_time_short_term();//in microseconds
-    uint32_t Get_end_to_end_request_delay_short_term();//in microseconds
-    sim_time_type STAT_sum_device_response_time_short_term, STAT_sum_request_delay_short_term;
-    uint32_t STAT_serviced_request_count_short_term;
+
+    void Submit_io_request(HostIORequest*);
+    void NVMe_update_and_submit_completion_queue_tail();
 
   public:
     LHA_type Get_start_lsa_on_device();
     LHA_type Get_end_lsa_address_on_device();
     uint32_t Get_generated_request_count();
-    uint32_t Get_serviced_request_count();//in microseconds
+    uint32_t Get_serviced_request_count();
+
     uint32_t Get_device_response_time();//in microseconds
-    uint32_t Get_min_device_response_time();//in microseconds
-    uint32_t Get_max_device_response_time();//in microseconds
+
     uint32_t Get_end_to_end_request_delay();//in microseconds
-    uint32_t Get_min_end_to_end_request_delay();//in microseconds
-    uint32_t Get_max_end_to_end_request_delay();//in microseconds
   };
 
   force_inline LHA_type
@@ -141,45 +149,18 @@ namespace Host_Components
   force_inline uint32_t
   IO_Flow_Base::Get_device_response_time()
   {
-    return (STAT_serviced_request_count == 0)
-             ? 0
-             : STAT_sum_device_response_time
-                 / STAT_serviced_request_count
-                 / SIM_TIME_TO_MICROSECONDS_COEFF;
-  }
+    auto response_time = _stat_dev_rd_response_time
+                           + _stat_dev_wr_response_time;
 
-  force_inline uint32_t
-  IO_Flow_Base::Get_min_device_response_time()
-  {
-    return STAT_min_device_response_time / SIM_TIME_TO_MICROSECONDS_COEFF;
-  }
-
-  force_inline uint32_t
-  IO_Flow_Base::Get_max_device_response_time()
-  {
-    return STAT_max_device_response_time / SIM_TIME_TO_MICROSECONDS_COEFF;
+    return response_time.avg(SIM_TIME_TO_MICROSECONDS_COEFF);
   }
 
   force_inline uint32_t
   IO_Flow_Base::Get_end_to_end_request_delay()
   {
-    return (STAT_serviced_request_count == 0)
-             ? 0
-             : STAT_sum_request_delay
-                 / STAT_serviced_request_count
-                 / SIM_TIME_TO_MICROSECONDS_COEFF;
-  }
+    auto req_delay = _stat_rd_req_delay + _stat_wr_req_delay;
 
-  force_inline uint32_t
-  IO_Flow_Base::Get_min_end_to_end_request_delay()
-  {
-    return STAT_min_request_delay / SIM_TIME_TO_MICROSECONDS_COEFF;
-  }
-
-  force_inline uint32_t
-  IO_Flow_Base::Get_max_end_to_end_request_delay()
-  {
-    return STAT_max_request_delay / SIM_TIME_TO_MICROSECONDS_COEFF;
+    return req_delay.avg(SIM_TIME_TO_MICROSECONDS_COEFF);
   }
 
   // ---------------

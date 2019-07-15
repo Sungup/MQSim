@@ -178,7 +178,7 @@ set(MQSIM_UTILS_SOURCES
     utils/StringTools.h
     utils/Workload_Statistics.h
     utils/XMLWriter.cpp
-    utils/XMLWriter.h)
+    utils/XMLWriter.h utils/CountingStats.h)
 
 add_executable(MQSim
                main.cpp
