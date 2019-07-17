@@ -6,14 +6,14 @@
 				 <Request_Count>594508</Request_Count>
 				 <Read_Request_Count>594508</Read_Request_Count>
 				 <Write_Request_Count>0</Write_Request_Count>
-				 <IOPS>59450.800000</IOPS>
-				 <IOPS_Read>59450.800000</IOPS_Read>
+				 <IOPS>59449.953665</IOPS>
+				 <IOPS_Read>59449.953665</IOPS_Read>
 				 <IOPS_Write>0.000000</IOPS_Write>
-				 <Bytes_Transferred>2435104768.000000</Bytes_Transferred>
-				 <Bytes_Transferred_Read>2435104768.000000</Bytes_Transferred_Read>
-				 <Bytes_Transferred_Write>0.000000</Bytes_Transferred_Write>
-				 <Bandwidth>243510476.800000</Bandwidth>
-				 <Bandwidth_Read>243510476.800000</Bandwidth_Read>
+				 <Bytes_Transferred>2435104768</Bytes_Transferred>
+				 <Bytes_Transferred_Read>2435104768</Bytes_Transferred_Read>
+				 <Bytes_Transferred_Write>0</Bytes_Transferred_Write>
+				 <Bandwidth>243507010.209852</Bandwidth>
+				 <Bandwidth_Read>243507010.209852</Bandwidth_Read>
 				 <Bandwidth_Write>0.000000</Bandwidth_Write>
 				 <Device_Response_Time>134</Device_Response_Time>
 				 <Min_Device_Response_Time>88</Min_Device_Response_Time>
@@ -27,14 +27,14 @@
 				 <Request_Count>593865</Request_Count>
 				 <Read_Request_Count>593865</Read_Request_Count>
 				 <Write_Request_Count>0</Write_Request_Count>
-				 <IOPS>59386.500000</IOPS>
-				 <IOPS_Read>59386.500000</IOPS_Read>
+				 <IOPS>59385.654580</IOPS>
+				 <IOPS_Read>59385.654580</IOPS_Read>
 				 <IOPS_Write>0.000000</IOPS_Write>
-				 <Bytes_Transferred>2432471040.000000</Bytes_Transferred>
-				 <Bytes_Transferred_Read>2432471040.000000</Bytes_Transferred_Read>
-				 <Bytes_Transferred_Write>0.000000</Bytes_Transferred_Write>
-				 <Bandwidth>243247104.000000</Bandwidth>
-				 <Bandwidth_Read>243247104.000000</Bandwidth_Read>
+				 <Bytes_Transferred>2432471040</Bytes_Transferred>
+				 <Bytes_Transferred_Read>2432471040</Bytes_Transferred_Read>
+				 <Bytes_Transferred_Write>0</Bytes_Transferred_Write>
+				 <Bandwidth>243243641.159200</Bandwidth>
+				 <Bandwidth_Read>243243641.159200</Bandwidth_Read>
 				 <Bandwidth_Write>0.000000</Bandwidth_Write>
 				 <Device_Response_Time>134</Device_Response_Time>
 				 <Min_Device_Response_Time>88</Min_Device_Response_Time>

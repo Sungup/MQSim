@@ -25,6 +25,8 @@ namespace Host_Components
                       LHA_type start_lba,
                       uint32_t lba_count,
                       HostIOReqType type);
+
+    uint32_t requested_size() const;
   };
 
   force_inline
@@ -40,6 +42,12 @@ namespace Host_Components
       IO_queue_info(0),
       Source_flow_id(0)
   { }
+
+  force_inline
+  uint32_t HostIORequestBase::requested_size() const
+  {
+    return LBA_count * SECTOR_SIZE_IN_BYTE;
+  }
 
   typedef Utils::ObjectPool<HostIORequestBase> HostIOReqPool;
   typedef HostIOReqPool::item_t                HostIORequest;

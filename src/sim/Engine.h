@@ -33,6 +33,8 @@ namespace MQSimEngine {
 
     static Engine* Instance();
     sim_time_type Time() const;
+    double seconds() const;
+
     SimEvent* Register_sim_event(sim_time_type fireTime,
                                  Sim_Object* targetObject,
                                  void* parameters = nullptr,
@@ -91,6 +93,12 @@ namespace MQSimEngine {
   Engine::Time() const
   {
     return _sim_time;
+  }
+
+  force_inline double
+  Engine::seconds() const
+  {
+    return double(_sim_time) / SIM_TIME_TO_SECONDS_COEFF;
   }
 
   force_inline bool

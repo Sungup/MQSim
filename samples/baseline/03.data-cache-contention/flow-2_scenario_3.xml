@@ -6,15 +6,15 @@
 				 <Request_Count>1136078</Request_Count>
 				 <Read_Request_Count>0</Read_Request_Count>
 				 <Write_Request_Count>1136078</Write_Request_Count>
-				 <IOPS>11360.780000</IOPS>
+				 <IOPS>11344.822152</IOPS>
 				 <IOPS_Read>0.000000</IOPS_Read>
-				 <IOPS_Write>11360.780000</IOPS_Write>
-				 <Bytes_Transferred>4653375488.000000</Bytes_Transferred>
-				 <Bytes_Transferred_Read>0.000000</Bytes_Transferred_Read>
-				 <Bytes_Transferred_Write>4653375488.000000</Bytes_Transferred_Write>
-				 <Bandwidth>46533754.880000</Bandwidth>
+				 <IOPS_Write>11344.822152</IOPS_Write>
+				 <Bytes_Transferred>4653375488</Bytes_Transferred>
+				 <Bytes_Transferred_Read>0</Bytes_Transferred_Read>
+				 <Bytes_Transferred_Write>4653375488</Bytes_Transferred_Write>
+				 <Bandwidth>46468391.535726</Bandwidth>
 				 <Bandwidth_Read>0.000000</Bandwidth_Read>
-				 <Bandwidth_Write>46533754.880000</Bandwidth_Write>
+				 <Bandwidth_Write>46468391.535726</Bandwidth_Write>
 				 <Device_Response_Time>2816</Device_Response_Time>
 				 <Min_Device_Response_Time>3</Min_Device_Response_Time>
 				 <Max_Device_Response_Time>113454</Max_Device_Response_Time>

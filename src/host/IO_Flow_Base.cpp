@@ -42,22 +42,20 @@ IO_Flow_Base::IO_Flow_Base(const sim_object_id_type& name,
     SSD_device_type(SSD_device_type),
     pcie_root_complex(pcie_root_complex),
     sata_hba(sata_hba),
-    STAT_generated_request_count(0),
-    STAT_generated_read_request_count(0),
-    STAT_generated_write_request_count(0),
-    STAT_ignored_request_count(0),
-    STAT_serviced_request_count(0),
-    STAT_serviced_read_request_count(0),
-    STAT_serviced_write_request_count(0),
+    _generated_req(0),
+    _serviced_req(0),
+    _stat_generated_reads(),
+    _stat_generated_writes(),
+    _stat_serviced_reads(),
+    _stat_serviced_writes(),
     _stat_dev_rd_response_time(MAXIMUM_TIME, 0),
     _stat_dev_wr_response_time(MAXIMUM_TIME, 0),
     _stat_rd_req_delay(MAXIMUM_TIME, 0),
     _stat_wr_req_delay(MAXIMUM_TIME, 0),
     _stat_short_term_dev_resp(),
     _stat_short_term_req_delay(),
-    STAT_transferred_bytes_total(0),
-    STAT_transferred_bytes_read(0),
-    STAT_transferred_bytes_write(0),
+    _stat_transferred_reads(),
+    _stat_transferred_writes(),
     progress(0),
     next_progress_step(0),
     enabled_logging(enabled_logging),
@@ -164,26 +162,24 @@ void IO_Flow_Base::SATA_consume_io_request(HostIORequest* request)
 
   sim_time_type device_response_time = sim->Time() - request->Enqueue_time;
   sim_time_type request_delay = sim->Time() - request->Arrival_time;
-  STAT_serviced_request_count++;
+  ++_serviced_req;
 
   _stat_short_term_dev_resp += device_response_time;
   _stat_short_term_req_delay += request_delay;
 
-  STAT_transferred_bytes_total += request->LBA_count * SECTOR_SIZE_IN_BYTE;
-
   if (request->Type == HostIOReqType::READ)
   {
+    ++_stat_serviced_reads;
     _stat_dev_rd_response_time += device_response_time;
     _stat_rd_req_delay += request_delay;
-    STAT_serviced_read_request_count++;
-    STAT_transferred_bytes_read += request->LBA_count * SECTOR_SIZE_IN_BYTE;
+    _stat_transferred_reads += request->requested_size();
   }
   else
   {
+    ++_stat_serviced_writes;
     _stat_dev_wr_response_time += device_response_time;
     _stat_wr_req_delay += request_delay;
-    STAT_serviced_write_request_count++;
-    STAT_transferred_bytes_write += request->LBA_count * SECTOR_SIZE_IN_BYTE;
+    _stat_transferred_writes += request->requested_size();
   }
 
   request->release();
@@ -195,7 +191,7 @@ void IO_Flow_Base::SATA_consume_io_request(HostIORequest* request)
   }
   else
   {
-    progress = int(STAT_serviced_request_count / (double)total_requests_to_be_generated * 100);
+    progress = int(_serviced_req / (double)total_requests_to_be_generated * 100);
   }
   if (progress >= next_progress_step)
   {
@@ -234,26 +230,24 @@ void IO_Flow_Base::NVMe_consume_io_request(CompletionQueueEntry* cqe)
   available_command_ids.insert(cqe->Command_Identifier);
   sim_time_type device_response_time = sim->Time() - request->Enqueue_time;
   sim_time_type request_delay = sim->Time() - request->Arrival_time;
-  STAT_serviced_request_count++;
+  ++_serviced_req;
 
   _stat_short_term_dev_resp += device_response_time;
   _stat_short_term_req_delay += request_delay;
 
-  STAT_transferred_bytes_total += request->LBA_count * SECTOR_SIZE_IN_BYTE;
-
   if (request->Type == HostIOReqType::READ)
   {
-    STAT_serviced_read_request_count++;
+    ++_stat_serviced_reads;
     _stat_dev_rd_response_time += device_response_time;
     _stat_rd_req_delay += request_delay;
-    STAT_transferred_bytes_read += request->LBA_count * SECTOR_SIZE_IN_BYTE;
+    _stat_transferred_reads += request->requested_size();
   }
   else
   {
-    STAT_serviced_write_request_count++;
+    ++_stat_serviced_writes;
     _stat_dev_wr_response_time += device_response_time;
     _stat_wr_req_delay += request_delay;
-    STAT_transferred_bytes_write += request->LBA_count * SECTOR_SIZE_IN_BYTE;
+    _stat_transferred_writes += request->requested_size();
   }
 
   request->release();
@@ -292,7 +286,7 @@ void IO_Flow_Base::NVMe_consume_io_request(CompletionQueueEntry* cqe)
   }
   else
   {
-    progress = int(STAT_serviced_request_count / (double)total_requests_to_be_generated * 100);
+    progress = int(_serviced_req / (double)total_requests_to_be_generated * 100);
   }
   if (progress >= next_progress_step)
   {
@@ -400,56 +394,44 @@ void IO_Flow_Base::Report_results_in_XML(std::string name_prefix, Utils::XmlWrit
 
   xmlwriter.Write_attribute_string("Name", ID());
 
-  std::string attr;
-  std::string val;
+  double seconds = sim->seconds();
 
-  attr = "Request_Count";
-  val = std::to_string(STAT_generated_request_count);
-  xmlwriter.Write_attribute_string(attr, val);
+  auto gen_reqs = _stat_generated_reads + _stat_generated_writes;
 
-  attr = "Read_Request_Count";
-  val = std::to_string(STAT_generated_read_request_count);
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("Request_Count", gen_reqs.count());
 
-  attr = "Write_Request_Count";
-  val = std::to_string(STAT_generated_write_request_count);
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("Read_Request_Count",
+                                   _stat_generated_reads.count());
 
-  attr = "IOPS";
-  val = std::to_string((double)STAT_generated_request_count / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("Write_Request_Count",
+                                   _stat_generated_writes.count());
 
-  attr = "IOPS_Read";
-  val = std::to_string((double)STAT_generated_read_request_count / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("IOPS", gen_reqs.iops(seconds));
 
-  attr = "IOPS_Write";
-  val = std::to_string((double)STAT_generated_write_request_count / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("IOPS_Read",
+                                   _stat_generated_reads.iops(seconds));
 
-  attr = "Bytes_Transferred";
-  val = std::to_string((double)STAT_transferred_bytes_total);
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("IOPS_Write",
+                                   _stat_generated_writes.iops(seconds));
 
-  attr = "Bytes_Transferred_Read";
-  val = std::to_string((double)STAT_transferred_bytes_read);
-  xmlwriter.Write_attribute_string(attr, val);
+  auto transferred = _stat_transferred_reads + _stat_transferred_writes;
 
-  attr = "Bytes_Transferred_Write";
-  val = std::to_string((double)STAT_transferred_bytes_write);
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("Bytes_Transferred", transferred.sum());
 
-  attr = "Bandwidth";
-  val = std::to_string((double)STAT_transferred_bytes_total / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("Bytes_Transferred_Read",
+                                   _stat_transferred_reads.sum());
 
-  attr = "Bandwidth_Read";
-  val = std::to_string((double)STAT_transferred_bytes_read / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("Bytes_Transferred_Write",
+                                   _stat_transferred_writes.sum());
 
-  attr = "Bandwidth_Write";
-  val = std::to_string((double)STAT_transferred_bytes_write / (sim->Time() / SIM_TIME_TO_SECONDS_COEFF));
-  xmlwriter.Write_attribute_string(attr, val);
+  xmlwriter.Write_attribute_string("Bandwidth",
+                                    transferred.bandwidth(seconds));
+
+  xmlwriter.Write_attribute_string("Bandwidth_Read",
+                                   _stat_transferred_reads.bandwidth(seconds));
+
+  xmlwriter.Write_attribute_string("Bandwidth_Write",
+                                   _stat_transferred_writes.bandwidth(seconds));
 
   // Device response time and end-to-end request delay
   auto dev_resp  = _stat_dev_rd_response_time + _stat_dev_wr_response_time;

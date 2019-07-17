@@ -28,7 +28,7 @@ namespace Host_Components
 
   HostIORequest* IO_Flow_Trace_Based::Generate_next_request()
   {
-    if (current_trace_line.size() == 0 || STAT_generated_request_count >= total_requests_to_be_generated)
+    if (current_trace_line.size() == 0 || _generated_req >= total_requests_to_be_generated)
       return nullptr;
 
     HostIOReqType req_type;
@@ -38,12 +38,12 @@ namespace Host_Components
     if (current_trace_line[ASCIITraceTypeColumn] == ASCIITraceWriteCode)
     {
       req_type = HostIOReqType::WRITE;
-      STAT_generated_write_request_count++;
+      ++_stat_generated_writes;
     }
     else
     {
       req_type = HostIOReqType::READ;
-      STAT_generated_read_request_count++;
+      ++_stat_generated_reads;
     }
 
     char* pEnd;
@@ -55,7 +55,7 @@ namespace Host_Components
     else
       start_lba = start_lsa_on_device + start_lba % (end_lsa_on_device - start_lsa_on_device);
 
-    STAT_generated_request_count++;
+    _generated_req++;
     return _host_io_req_pool.construct(time_offset + Simulator->Time(), start_lba, lba_count, req_type);
   }
 
@@ -120,7 +120,7 @@ namespace Host_Components
     if (request != nullptr)
       Submit_io_request(request);
 
-    if (STAT_generated_request_count < total_requests_to_be_generated)
+    if (_generated_req < total_requests_to_be_generated)
     {
       auto sim = Simulator;
 

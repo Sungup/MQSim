@@ -76,16 +76,22 @@ namespace Host_Components
     std::unordered_map<sim_time_type, HostIORequest*> nvme_software_request_queue;//The I/O requests that are enqueued in the I/O queue of the SSD device
 
     //Variables used to collect statistics
-    uint32_t STAT_generated_request_count;
-    uint32_t STAT_generated_read_request_count;
-    uint32_t STAT_generated_write_request_count;
-    uint32_t STAT_ignored_request_count;
+    uint32_t _generated_req;
 
-    uint32_t STAT_serviced_request_count;
-    uint32_t STAT_serviced_read_request_count;
-    uint32_t STAT_serviced_write_request_count;
+    uint32_t _serviced_req;
+
+  protected:
+    Utils::IopsStats _stat_generated_reads;
+    Utils::IopsStats _stat_generated_writes;
+
+#if UNBLOCK_NOT_IN_USE
+    Utils::IopsStats _stat_generated_ignored;
+#endif
 
   private:
+    Utils::IopsStats _stat_serviced_reads;
+    Utils::IopsStats _stat_serviced_writes;
+
     Utils::MinMaxAvgStats<sim_time_type> _stat_dev_rd_response_time;
     Utils::MinMaxAvgStats<sim_time_type> _stat_dev_wr_response_time;
     Utils::MinMaxAvgStats<sim_time_type> _stat_rd_req_delay;
@@ -93,11 +99,10 @@ namespace Host_Components
     Utils::AvgStats<sim_time_type> _stat_short_term_dev_resp;
     Utils::AvgStats<sim_time_type> _stat_short_term_req_delay;
 
-  protected:
-    sim_time_type STAT_transferred_bytes_total;
-    sim_time_type STAT_transferred_bytes_read;
-    sim_time_type STAT_transferred_bytes_write;
+    Utils::BandwidthStats<sim_time_type> _stat_transferred_reads;
+    Utils::BandwidthStats<sim_time_type> _stat_transferred_writes;
 
+  protected:
     int progress;
     int next_progress_step = 0;
 
@@ -137,13 +142,13 @@ namespace Host_Components
   force_inline uint32_t
   IO_Flow_Base::Get_generated_request_count()
   {
-    return STAT_generated_request_count;
+    return _generated_req;
   }
 
   force_inline uint32_t
   IO_Flow_Base::Get_serviced_request_count()
   {
-    return STAT_serviced_request_count;
+    return _serviced_req;
   }
 
   force_inline uint32_t

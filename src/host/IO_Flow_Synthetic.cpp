@@ -78,7 +78,7 @@ namespace Host_Components
       if (Simulator->Time() > stop_time)
         return nullptr;
     }
-    else if (STAT_generated_request_count >= total_requests_to_be_generated)
+    else if (_generated_req >= total_requests_to_be_generated)
       return nullptr;
     
     LHA_type start_lba;
@@ -89,12 +89,12 @@ namespace Host_Components
     if (random_request_type_generator->Uniform(0, 1) <= read_ratio)
     {
       req_type = HostIOReqType::READ;
-      STAT_generated_read_request_count++;
+      ++_stat_generated_reads;
     }
     else
     {
       req_type = HostIOReqType::WRITE;
-      STAT_generated_write_request_count++;
+      ++_stat_generated_writes;
     }
 
     switch (request_size_distribution)
@@ -159,7 +159,7 @@ namespace Host_Components
     if (generate_aligned_addresses)
       start_lba -= start_lba % alignment_value;
 
-    STAT_generated_request_count++;
+    ++_generated_req;
 
     PRINT_DEBUG("* Host: Request generated - " << (req_type == HostIOReqType::READ ? "Read, " : "Write, ") << "LBA:" << start_lba << ", Size_in_bytes:" << lba_count << "")
 
