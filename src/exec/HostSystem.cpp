@@ -78,7 +78,7 @@ HostSystem::__init_nvme_queue()
   // Make make queue information per IO flow.
   for (auto& flow : __io_flows)
     __ssd_device.create_new_stream(
-      flow->Priority_class(),
+      flow->priority_class(),
       flow->Get_start_lsa_on_device(),
       flow->Get_end_lsa_address_on_device(),
       flow->queue_info().Submission_queue_memory_base_address,

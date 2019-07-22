@@ -44,10 +44,12 @@ namespace Host_Components
     void Validate_simulation_config();
     void Execute_simulator_event(MQSimEngine::SimEvent*);
     void Submit_io_request(HostIORequest* request);
-    void SATA_consume_io_request(CompletionQueueEntry* cqe);
-    SubmissionQueueEntry* Read_ncq_entry(uint64_t address);
+    void SATA_consume_io_request(CQEntry* cqe);
+    SQEntry* Read_ncq_entry(uint64_t address);
     const IoQueueInfo& queue_info();
   private:
+    SQEntryPool __sq_entry_pool;
+
     uint16_t ncq_size;
     sim_time_type hba_processing_delay;//This estimates the processing delay of the whole SATA software and hardware layers to send/receive a SATA message
     PCIe_Root_Complex& pcie_root_complex;
@@ -57,7 +59,7 @@ namespace Host_Components
     std::vector<HostIORequest*> request_queue_in_memory;
     std::list<HostIORequest*> waiting_requests_for_submission;//The I/O requests that are still waiting (since the I/O queue is full) to be enqueued in the I/O queue 
     void Update_and_submit_ncq_completion_info();
-    std::queue<CompletionQueueEntry*> consume_requests;
+    std::queue<CQEntry*> consume_requests;
     std::queue<HostIORequest*> host_requests;
   };
 

@@ -28,7 +28,7 @@ namespace Host_Components
 
   HostIORequest* IO_Flow_Trace_Based::Generate_next_request()
   {
-    if (current_trace_line.size() == 0 || _generated_req >= total_requests_to_be_generated)
+    if (current_trace_line.size() == 0 || _all_request_generated())
       return nullptr;
 
     HostIOReqType req_type;
@@ -36,33 +36,27 @@ namespace Host_Components
     LHA_type start_lba;
 
     if (current_trace_line[ASCIITraceTypeColumn] == ASCIITraceWriteCode)
-    {
       req_type = HostIOReqType::WRITE;
-      ++_stat_generated_writes;
-    }
     else
-    {
       req_type = HostIOReqType::READ;
-      ++_stat_generated_reads;
-    }
 
     char* pEnd;
     lba_count = std::strtoul(current_trace_line[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
 
     start_lba = std::strtoull(current_trace_line[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
-    if (start_lba <= (end_lsa_on_device - start_lsa_on_device))
-      start_lba += start_lsa_on_device;
+    if (start_lba <= (__end_lsa_on_dev - __start_lsa_on_dev))
+      start_lba += __start_lsa_on_dev;
     else
-      start_lba = start_lsa_on_device + start_lba % (end_lsa_on_device - start_lsa_on_device);
+      start_lba = __start_lsa_on_dev + start_lba % (__end_lsa_on_dev - __start_lsa_on_dev);
 
-    _generated_req++;
-    return _host_io_req_pool.construct(time_offset + Simulator->Time(), start_lba, lba_count, req_type);
+    return _generate_request(Simulator->Time() + time_offset, start_lba, lba_count, req_type);
   }
 
-  void IO_Flow_Trace_Based::NVMe_consume_io_request(CompletionQueueEntry* io_request)
+  void IO_Flow_Trace_Based::NVMe_consume_io_request(CQEntry* io_request)
   {
     IO_Flow_Base::NVMe_consume_io_request(io_request);
-    IO_Flow_Base::NVMe_update_and_submit_completion_queue_tail();
+
+    NVMe_update_and_submit_completion_queue_tail();
   }
 
   void IO_Flow_Trace_Based::SATA_consume_io_request(HostIORequest* io_request)
@@ -120,32 +114,32 @@ namespace Host_Components
     if (request != nullptr)
       Submit_io_request(request);
 
-    if (_generated_req < total_requests_to_be_generated)
-    {
-      auto sim = Simulator;
+    if (_all_request_generated())
+      return;
 
-      std::string trace_line;
-      if (std::getline(trace_file, trace_line))
-      {
-        Utils::Helper_Functions::Remove_cr(trace_line);
-        current_trace_line.clear();
-        Utils::Helper_Functions::Tokenize(trace_line, ASCIILineDelimiter, current_trace_line);
-      }
-      else
-      {
-        trace_file.close();
-        trace_file.open(trace_file_path);
-        replay_counter++;
-        time_offset = sim->Time();
-        std::getline(trace_file, trace_line);
-        Utils::Helper_Functions::Remove_cr(trace_line);
-        current_trace_line.clear();
-        Utils::Helper_Functions::Tokenize(trace_line, ASCIILineDelimiter, current_trace_line);
-        PRINT_MESSAGE("* Replay round "<< replay_counter << "of "<< total_replay_no << " started  for" << ID())
-      }
-      char* pEnd;
-      sim->Register_sim_event(time_offset + std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
+    auto sim = Simulator;
+
+    std::string trace_line;
+    if (std::getline(trace_file, trace_line))
+    {
+      Utils::Helper_Functions::Remove_cr(trace_line);
+      current_trace_line.clear();
+      Utils::Helper_Functions::Tokenize(trace_line, ASCIILineDelimiter, current_trace_line);
     }
+    else
+    {
+      trace_file.close();
+      trace_file.open(trace_file_path);
+      replay_counter++;
+      time_offset = sim->Time();
+      std::getline(trace_file, trace_line);
+      Utils::Helper_Functions::Remove_cr(trace_line);
+      current_trace_line.clear();
+      Utils::Helper_Functions::Tokenize(trace_line, ASCIILineDelimiter, current_trace_line);
+      PRINT_MESSAGE("* Replay round "<< replay_counter << "of "<< total_replay_no << " started  for" << ID())
+    }
+    char* pEnd;
+    sim->Register_sim_event(time_offset + std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
   }
 
   void
@@ -155,8 +149,8 @@ namespace Host_Components
   {
     stats.Type = Utils::Workload_Type::TRACE_BASED;
     stats.Stream_id = io_queue_id - 1; //In MQSim, there is a simple relation between stream id and the io_queue_id of NVMe
-    stats.Min_LHA = start_lsa_on_device;
-    stats.Max_LHA = end_lsa_on_device;
+    stats.Min_LHA = __start_lsa_on_dev;
+    stats.Max_LHA = __end_lsa_on_dev;
     for (int i = 0; i < MAX_ARRIVAL_TIME_HISTOGRAM + 1; i++)
     {
       stats.Write_arrival_time.push_back(0);
@@ -198,13 +192,13 @@ namespace Host_Components
       uint32_t LBA_count = std::strtoul(line_splitted[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
       sum_request_size += LBA_count;
       LHA_type start_LBA = std::strtoull(line_splitted[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
-      if (start_LBA <= (end_lsa_on_device - start_lsa_on_device))
-        start_LBA += start_lsa_on_device;
+      if (start_LBA <= (__end_lsa_on_dev - __start_lsa_on_dev))
+        start_LBA += __start_lsa_on_dev;
       else
-        start_LBA = start_lsa_on_device + start_LBA % (end_lsa_on_device - start_lsa_on_device);
+        start_LBA = __start_lsa_on_dev + start_LBA % (__end_lsa_on_dev - __start_lsa_on_dev);
       LHA_type end_LBA = start_LBA + LBA_count - 1;
-      if (end_LBA > end_lsa_on_device)
-        end_LBA = start_lsa_on_device + (end_LBA - end_lsa_on_device) - 1;
+      if (end_LBA > __end_lsa_on_dev)
+        end_LBA = __start_lsa_on_dev + (end_LBA - __end_lsa_on_dev) - 1;
 
 
       //Address access pattern statistics
@@ -250,8 +244,8 @@ namespace Host_Components
         }
         stats.Total_accessed_lbas++;
         start_LBA++;
-        if (start_LBA > end_lsa_on_device)
-          start_LBA = start_lsa_on_device;
+        if (start_LBA > __end_lsa_on_dev)
+          start_LBA = __start_lsa_on_dev;
       }
 
       //Request size statistics
@@ -281,7 +275,7 @@ namespace Host_Components
     stats.Average_request_size_sector = (uint32_t)(sum_request_size / stats.Total_generated_reqeusts);
     stats.Average_inter_arrival_time_nano_sec = sum_inter_arrival / stats.Total_generated_reqeusts;
 
-    stats.Initial_occupancy_ratio = initial_occupancy_ratio;
+    stats.Initial_occupancy_ratio = _initial_occupancy_ratio;
     stats.Replay_no = total_replay_no;
   }
 

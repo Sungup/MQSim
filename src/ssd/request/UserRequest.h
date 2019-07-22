@@ -100,7 +100,7 @@ namespace SSD_Components
   // TODO Check following sequence can move to the request's destructor;
   force_inline void
   delete_request_nvme(UserRequest* request) {
-    delete (SubmissionQueueEntry*)request->IO_command_info;
+    ((SQEntry*)request->IO_command_info)->release();
 
     if (Simulator->Is_integrated_execution_mode() && request->Data)
       delete[] (char*)request->Data;

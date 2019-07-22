@@ -19,7 +19,7 @@ namespace Host_Components
       bool enabled_logging, sim_time_type logging_period, std::string logging_file_path);
     ~IO_Flow_Trace_Based() final;
     HostIORequest* Generate_next_request();
-    void NVMe_consume_io_request(CompletionQueueEntry*);
+    void NVMe_consume_io_request(CQEntry*);
     void SATA_consume_io_request(HostIORequest*);
     void Start_simulation();
     void Validate_simulation_config();

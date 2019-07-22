@@ -11,29 +11,37 @@
 
 namespace SSD_Components
 {
-  // TODO Change inheritencies because default list operators is not virtual
-  //  function
-  class Flash_Transaction_Queue
-    : public std::list<NvmTransactionFlash*>,
-      public MQSimEngine::Sim_Reporter
+  class Flash_Transaction_Queue : public MQSimEngine::Sim_Reporter
   {
   private:
     std::string __id;
+    std::list<NvmTransactionFlash*> __queue;
     Queue_Probe __queue_probe;
 
   public:
     Flash_Transaction_Queue();
     explicit Flash_Transaction_Queue(std::string id);
 
+    ~Flash_Transaction_Queue() final = default;
+
     void Set_id(const std::string& id);
 
-    void remove(list<NvmTransactionFlash*>::iterator const& itr_pos);
+    void remove(std::list<NvmTransactionFlash*>::iterator const& itr_pos);
 
     void push_back(NvmTransactionFlash* const&);
     void push_front(NvmTransactionFlash* const&);
-    std::list<NvmTransactionFlash*>::iterator insert(list<NvmTransactionFlash*>::iterator position, NvmTransactionFlash* const& transaction);
+    std::list<NvmTransactionFlash*>::iterator insert(std::list<NvmTransactionFlash*>::iterator position, NvmTransactionFlash* const& transaction);
     void remove(NvmTransactionFlash* const& transaction);
     void pop_front();
+
+    bool empty() const;
+    size_t size() const;
+    NvmTransactionFlash* front();
+
+    std::list<NvmTransactionFlash*>::iterator begin();
+    std::list<NvmTransactionFlash*>::iterator end();
+    std::list<NvmTransactionFlash*>::const_iterator begin() const;
+    std::list<NvmTransactionFlash*>::const_iterator end() const;
 
     void Report_results_in_XML(std::string name_prefix,
                                Utils::XmlWriter& xmlwriter) final;
@@ -46,17 +54,17 @@ namespace SSD_Components
 
   force_inline
   Flash_Transaction_Queue::Flash_Transaction_Queue()
-    : std::list<NvmTransactionFlash*>(),
-      MQSimEngine::Sim_Reporter(),
+    : MQSimEngine::Sim_Reporter(),
       __id(),
+      __queue(),
       __queue_probe()
   { }
 
   force_inline
   Flash_Transaction_Queue::Flash_Transaction_Queue(std::string id)
-    : std::list<NvmTransactionFlash*>(),
-      MQSimEngine::Sim_Reporter(),
+    : MQSimEngine::Sim_Reporter(),
       __id(std::move(id)),
+      __queue(),
       __queue_probe()
   { }
 
@@ -70,41 +78,83 @@ namespace SSD_Components
   Flash_Transaction_Queue::remove(std::list<NvmTransactionFlash*>::iterator const& itr_pos)
   {
     __queue_probe.DequeueRequest(*itr_pos);
-    list<NvmTransactionFlash*>::erase(itr_pos);
+    __queue.erase(itr_pos);
   }
 
   force_inline void
   Flash_Transaction_Queue::push_back(NvmTransactionFlash* const& transaction)
   {
     __queue_probe.EnqueueRequest(transaction);
-    return list<NvmTransactionFlash*>::push_back(transaction);
+    return __queue.push_back(transaction);
   }
 
   force_inline void
   Flash_Transaction_Queue::push_front(NvmTransactionFlash* const& transaction)
   {
     __queue_probe.EnqueueRequest(transaction);
-    return list<NvmTransactionFlash*>::push_front(transaction);
+    return __queue.push_front(transaction);
   }
 
   force_inline std::list<NvmTransactionFlash*>::iterator
   Flash_Transaction_Queue::insert(std::list<NvmTransactionFlash*>::iterator position, NvmTransactionFlash* const& transaction)
   {
     __queue_probe.EnqueueRequest(transaction);
-    return list<NvmTransactionFlash*>::insert(position, transaction);
+    return __queue.insert(position, transaction);
   }
   force_inline void
   Flash_Transaction_Queue::remove(NvmTransactionFlash* const& transaction)
   {
     __queue_probe.DequeueRequest(transaction);
-    return list<NvmTransactionFlash*>::remove(transaction);
+    return __queue.remove(transaction);
   }
 
   force_inline void
   Flash_Transaction_Queue::pop_front()
   {
-    __queue_probe.DequeueRequest(this->front());
-    list<NvmTransactionFlash*>::pop_front();
+    __queue_probe.DequeueRequest(__queue.front());
+    __queue.pop_front();
+  }
+
+  force_inline size_t
+  Flash_Transaction_Queue::size() const
+  {
+    return __queue.size();
+  }
+
+  force_inline bool
+  Flash_Transaction_Queue::empty() const
+  {
+    return __queue.empty();
+  }
+
+  force_inline NvmTransactionFlash*
+  Flash_Transaction_Queue::front()
+  {
+    return __queue.front();
+  }
+
+  force_inline std::list<NvmTransactionFlash*>::const_iterator
+  Flash_Transaction_Queue::begin() const
+  {
+    return __queue.begin();
+  }
+
+  force_inline std::list<NvmTransactionFlash*>::iterator
+  Flash_Transaction_Queue::begin()
+  {
+    return __queue.begin();
+  }
+
+  force_inline std::list<NvmTransactionFlash*>::const_iterator
+  Flash_Transaction_Queue::end() const
+  {
+    return __queue.end();
+  }
+
+  force_inline std::list<NvmTransactionFlash*>::iterator
+  Flash_Transaction_Queue::end()
+  {
+    return __queue.end();
   }
 
   force_inline void

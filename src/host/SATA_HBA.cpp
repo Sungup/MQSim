@@ -24,7 +24,7 @@ SATA_HBA::SATA_HBA(sim_object_id_type id,
 {
   for (uint16_t cmdid = 0; cmdid < (uint16_t)(0xffffffff); cmdid++)
     available_command_ids.insert(cmdid);
-  HostIORequest* t = NULL;
+  HostIORequest* t = nullptr;
   for (uint16_t cmdid = 0; cmdid < ncq_size; cmdid++)
     request_queue_in_memory.push_back(t);
   sata_ncq.Submission_queue_size = ncq_size;
@@ -52,7 +52,7 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
   {
   case HBA_Sim_Events::CONSUME_IO_REQUEST:
   {
-    CompletionQueueEntry* cqe = consume_requests.front();
+    CQEntry* cqe = consume_requests.front();
     consume_requests.pop();
     //Find the request and update statistics
     HostIORequest* request = sata_ncq.queue[cqe->Command_Identifier];
@@ -70,7 +70,7 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
       {
         HostIORequest* new_req = waiting_requests_for_submission.front();
         waiting_requests_for_submission.pop_front();
-        if (sata_ncq.queue[*available_command_ids.begin()] != NULL)
+        if (sata_ncq.queue[*available_command_ids.begin()] != nullptr)
           PRINT_ERROR("Unexpteced situation in SATA_HBA! Overwriting a waiting I/O request in the queue!")
         else
         {
@@ -85,10 +85,10 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
       }
       else break;
 
-      delete cqe;
+      cqe->release();
 
       if(consume_requests.size() > 0)
-        sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
+        sim->Register_sim_event(sim->Time() + hba_processing_delay, this, nullptr, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
     break;
   }
   case HBA_Sim_Events::SUBMIT_IO_REQUEST:
@@ -99,7 +99,7 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
       waiting_requests_for_submission.push_back(request);
     else
     {
-      if (sata_ncq.queue[*available_command_ids.begin()] != NULL)
+      if (sata_ncq.queue[*available_command_ids.begin()] != nullptr)
         PRINT_ERROR("Unexpteced situation in IO_Flow_Base! Overwriting an unhandled I/O request in the queue!")
       else
       {
@@ -114,7 +114,7 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
     }
 
     if (host_requests.size() > 0)
-      sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
+      sim->Register_sim_event(sim->Time() + hba_processing_delay, this, nullptr, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
 
     break;
   }
@@ -126,44 +126,43 @@ void SATA_HBA::Submit_io_request(HostIORequest* request)
   host_requests.push(request);
   if (host_requests.size() == 1) {
     auto sim = Simulator;
-    sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
+    sim->Register_sim_event(sim->Time() + hba_processing_delay, this, nullptr, static_cast<int>(HBA_Sim_Events::SUBMIT_IO_REQUEST));
   }
 }
-void SATA_HBA::SATA_consume_io_request(CompletionQueueEntry* cqe)
+void SATA_HBA::SATA_consume_io_request(CQEntry* cqe)
 {
   consume_requests.push(cqe);
   if (consume_requests.size() == 1) {
     auto sim = Simulator;
-    sim->Register_sim_event(sim->Time() + hba_processing_delay, this, NULL, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
+    sim->Register_sim_event(sim->Time() + hba_processing_delay, this, nullptr, static_cast<int>(HBA_Sim_Events::CONSUME_IO_REQUEST));
   }
 }
-SubmissionQueueEntry* SATA_HBA::Read_ncq_entry(uint64_t address)
+SQEntry* SATA_HBA::Read_ncq_entry(uint64_t address)
 {
-  SubmissionQueueEntry* ncq_entry = new SubmissionQueueEntry;
-  HostIORequest* request = request_queue_in_memory[(uint16_t)((address - sata_ncq.Submission_queue_memory_base_address) / sizeof(SubmissionQueueEntry))];
-  if (request == NULL)
+  HostIORequest* request = request_queue_in_memory[(uint16_t)((address - sata_ncq.Submission_queue_memory_base_address) / SQEntry::size())];
+  if (request == nullptr)
     throw std::invalid_argument("SATA HBA: Request to access an NCQ entry that does not exist.");
 
-  ncq_entry->Command_Identifier = request->IO_queue_info;
   if (request->Type == HostIOReqType::READ)//For simplicity, MQSim's SATA host interface uses NVMe opcodes
   {
-    ncq_entry->Opcode = NVME_READ_OPCODE;
-    ncq_entry->Command_specific[0] = (uint32_t)request->Start_LBA;
-    ncq_entry->Command_specific[1] = (uint32_t)(request->Start_LBA >> 32);
-    ncq_entry->Command_specific[2] = ((uint32_t)((uint16_t)request->LBA_count)) & (uint32_t)(0x0000ffff);
-    ncq_entry->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
-    ncq_entry->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+    return __sq_entry_pool.construct(NVME_READ_OPCODE,
+                                     request->IO_queue_info,
+                                     (DATA_MEMORY_REGION),
+                                     (DATA_MEMORY_REGION + 0x1000),
+                                     (uint32_t)request->Start_LBA,
+                                     (uint32_t)(request->Start_LBA >> 32U),
+                                     ((uint32_t)((uint16_t)request->LBA_count)) & (uint32_t)(0x0000ffff));
   }
   else
   {
-    ncq_entry->Opcode = NVME_WRITE_OPCODE;
-    ncq_entry->Command_specific[0] = (uint32_t)request->Start_LBA;
-    ncq_entry->Command_specific[1] = (uint32_t)(request->Start_LBA >> 32);
-    ncq_entry->Command_specific[2] = ((uint32_t)((uint16_t)request->LBA_count)) & (uint32_t)(0x0000ffff);
-    ncq_entry->PRP_entry_1 = (DATA_MEMORY_REGION);//Dummy addresses, just to emulate data read/write access
-    ncq_entry->PRP_entry_2 = (DATA_MEMORY_REGION + 0x1000);//Dummy addresses
+    return __sq_entry_pool.construct(NVME_WRITE_OPCODE,
+                                     request->IO_queue_info,
+                                     (DATA_MEMORY_REGION),
+                                     (DATA_MEMORY_REGION + 0x1000),
+                                     (uint32_t)request->Start_LBA,
+                                     (uint32_t)(request->Start_LBA >> 32U),
+                                     ((uint32_t)((uint16_t)request->LBA_count)) & (uint32_t)(0x0000ffff));
   }
-  return ncq_entry;
 }
 void SATA_HBA::Update_and_submit_ncq_completion_info()
 {

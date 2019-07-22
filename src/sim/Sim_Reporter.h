@@ -11,6 +11,8 @@ namespace MQSimEngine
   public:
     virtual void Report_results_in_XML(std::string name_prefix,
                                        Utils::XmlWriter& xmlwriter);
+
+    virtual ~Sim_Reporter() = default;
   };
 }
 

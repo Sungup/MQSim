@@ -370,7 +370,7 @@ namespace SSD_Components
       transaction_dispatch_slots.clear();
       planeVector = 0;
 
-      for (Flash_Transaction_Queue::iterator it = sourceQueue1->begin(); it != sourceQueue1->end(); )
+      for (auto it = sourceQueue1->begin(); it != sourceQueue1->end(); )
       {
         if (((NvmTransactionFlashWR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
         {
@@ -387,7 +387,7 @@ namespace SSD_Components
       }
 
       if (sourceQueue2 != nullptr)
-        for (Flash_Transaction_Queue::iterator it = sourceQueue2->begin(); it != sourceQueue2->end(); )
+        for (auto it = sourceQueue2->begin(); it != sourceQueue2->end(); )
         {
           if (((NvmTransactionFlashWR*)*it)->RelatedRead == nullptr && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
           {
@@ -427,7 +427,7 @@ namespace SSD_Components
       transaction_dispatch_slots.clear();
       planeVector = 0;
 
-      for (Flash_Transaction_Queue::iterator it = source_queue->begin(); it != source_queue->end(); )
+      for (auto it = source_queue->begin(); it != source_queue->end(); )
       {
         if (((NvmTransactionFlashER*)*it)->Page_movement_activities.size() == 0 && (*it)->Address.DieID == dieID && !(planeVector & 1 << (*it)->Address.PlaneID))
         {

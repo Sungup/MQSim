@@ -35,7 +35,7 @@ namespace Host_Components
     random_request_type_generator = new Utils::RandomGenerator(random_request_type_generator_seed);
     random_address_generator_seed = seed++;
     random_address_generator = new Utils::RandomGenerator(random_address_generator_seed);
-    if (this->start_lsa_on_device > this->end_lsa_on_device)
+    if (this->__start_lsa_on_dev > this->__end_lsa_on_dev)
       throw std::logic_error("Problem in IO Flow Synthetic, the start LBA address is greater than the end LBA address");
 
     if (address_distribution == Utils::Address_Distribution_Type::RANDOM_HOTCOLD)
@@ -44,7 +44,7 @@ namespace Host_Components
       random_hot_address_generator = new Utils::RandomGenerator(random_hot_address_generator_seed);
       random_hot_cold_generator_seed = seed++;
       random_hot_cold_generator = new Utils::RandomGenerator(random_hot_cold_generator_seed);
-      hot_region_end_lsa = this->start_lsa_on_device + (LHA_type)((double)(this->end_lsa_on_device - this->start_lsa_on_device) * hot_region_ratio);
+      hot_region_end_lsa = this->__start_lsa_on_dev + (LHA_type)((double)(this->__end_lsa_on_dev - this->__start_lsa_on_dev) * hot_region_ratio);
     }
     if (request_size_distribution == Utils::Request_Size_Distribution_Type::NORMAL)
     {
@@ -78,7 +78,7 @@ namespace Host_Components
       if (Simulator->Time() > stop_time)
         return nullptr;
     }
-    else if (_generated_req >= total_requests_to_be_generated)
+    else if (_all_request_generated())
       return nullptr;
     
     LHA_type start_lba;
@@ -89,12 +89,10 @@ namespace Host_Components
     if (random_request_type_generator->Uniform(0, 1) <= read_ratio)
     {
       req_type = HostIOReqType::READ;
-      ++_stat_generated_reads;
     }
     else
     {
       req_type = HostIOReqType::WRITE;
-      ++_stat_generated_writes;
     }
 
     switch (request_size_distribution)
@@ -118,11 +116,11 @@ namespace Host_Components
     {
     case Utils::Address_Distribution_Type::STREAMING:
       start_lba = streaming_next_address;
-      if (start_lba + lba_count > end_lsa_on_device)
-        start_lba = start_lsa_on_device;
+      if (start_lba + lba_count > __end_lsa_on_dev)
+        start_lba = __start_lsa_on_dev;
       streaming_next_address += lba_count;
-      if (streaming_next_address > end_lsa_on_device)
-        streaming_next_address = start_lsa_on_device;
+      if (streaming_next_address > __end_lsa_on_dev)
+        streaming_next_address = __start_lsa_on_dev;
       if (generate_aligned_addresses)
         if(streaming_next_address % alignment_value != 0)
           streaming_next_address += alignment_value - (streaming_next_address % alignment_value);
@@ -132,25 +130,25 @@ namespace Host_Components
     case Utils::Address_Distribution_Type::RANDOM_HOTCOLD:
       if (random_hot_cold_generator->Uniform(0, 1) < hot_region_ratio)// (100-hot)% of requests going to hot% of the address space
       {
-        start_lba = random_hot_address_generator->Uniform_ulong(hot_region_end_lsa + 1, end_lsa_on_device);
-        if (start_lba < hot_region_end_lsa + 1 || start_lba > end_lsa_on_device)
+        start_lba = random_hot_address_generator->Uniform_ulong(hot_region_end_lsa + 1, __end_lsa_on_dev);
+        if (start_lba < hot_region_end_lsa + 1 || start_lba > __end_lsa_on_dev)
           PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
-          if (start_lba + lba_count > end_lsa_on_device)
+          if (start_lba + lba_count > __end_lsa_on_dev)
             start_lba = hot_region_end_lsa + 1;
       }
       else
       {
-        start_lba = random_hot_address_generator->Uniform_ulong(start_lsa_on_device, hot_region_end_lsa);
-        if (start_lba < start_lsa_on_device || start_lba > hot_region_end_lsa)
+        start_lba = random_hot_address_generator->Uniform_ulong(__start_lsa_on_dev, hot_region_end_lsa);
+        if (start_lba < __start_lsa_on_dev || start_lba > hot_region_end_lsa)
           PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
       }
       break;
     case Utils::Address_Distribution_Type::RANDOM_UNIFORM:
-      start_lba = random_address_generator->Uniform_ulong(start_lsa_on_device, end_lsa_on_device);
-      if (start_lba < start_lsa_on_device || start_lba > end_lsa_on_device)
+      start_lba = random_address_generator->Uniform_ulong(__start_lsa_on_dev, __end_lsa_on_dev);
+      if (start_lba < __start_lsa_on_dev || start_lba > __end_lsa_on_dev)
         PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
-      if (start_lba + lba_count > end_lsa_on_device)
-        start_lba = start_lsa_on_device;
+      if (start_lba + lba_count > __end_lsa_on_dev)
+        start_lba = __start_lsa_on_dev;
       break;
     default:
       PRINT_ERROR("Unknown address distribution type!\n")
@@ -159,17 +157,17 @@ namespace Host_Components
     if (generate_aligned_addresses)
       start_lba -= start_lba % alignment_value;
 
-    ++_generated_req;
-
     PRINT_DEBUG("* Host: Request generated - " << (req_type == HostIOReqType::READ ? "Read, " : "Write, ") << "LBA:" << start_lba << ", Size_in_bytes:" << lba_count << "")
 
-    return _host_io_req_pool.construct(Simulator->Time(), start_lba, lba_count, req_type);
+    return _generate_request(Simulator->Time(), start_lba, lba_count, req_type);
   }
 
-  void IO_Flow_Synthetic::NVMe_consume_io_request(CompletionQueueEntry* io_request)
+  void IO_Flow_Synthetic::NVMe_consume_io_request(CQEntry* io_request)
   {
     IO_Flow_Base::NVMe_consume_io_request(io_request);
-    IO_Flow_Base::NVMe_update_and_submit_completion_queue_tail();
+
+    NVMe_update_and_submit_completion_queue_tail();
+
     if (generator_type == Utils::Request_Generator_Type::QUEUE_DEPTH)
     {
       HostIORequest* request = Generate_next_request();
@@ -199,7 +197,7 @@ namespace Host_Components
 
     if (address_distribution == Utils::Address_Distribution_Type::STREAMING)
     {
-      streaming_next_address = random_address_generator->Uniform_ulong(start_lsa_on_device, end_lsa_on_device);
+      streaming_next_address = random_address_generator->Uniform_ulong(__start_lsa_on_dev, __end_lsa_on_dev);
       if (generate_aligned_addresses)
         streaming_next_address -= streaming_next_address % alignment_value;
     }
@@ -235,7 +233,7 @@ namespace Host_Components
     stats.Type = Utils::Workload_Type::SYNTHETIC;
     stats.generator_type = generator_type;
     stats.Stream_id = io_queue_id - 1;
-    stats.Initial_occupancy_ratio = initial_occupancy_ratio;
+    stats.Initial_occupancy_ratio = _initial_occupancy_ratio;
     stats.Working_set_ratio = working_set_ratio;
     stats.Read_ratio = read_ratio;
     stats.random_request_type_generator_seed = random_request_type_generator_seed;
@@ -255,7 +253,7 @@ namespace Host_Components
     stats.random_time_interval_generator_seed = random_time_interval_generator_seed;
     stats.Average_inter_arrival_time_nano_sec = Average_inter_arrival_time_nano_sec;
 
-    stats.Min_LHA = start_lsa_on_device;
-    stats.Max_LHA = end_lsa_on_device;
+    stats.Min_LHA = __start_lsa_on_dev;
+    stats.Max_LHA = __end_lsa_on_dev;
   }
 }

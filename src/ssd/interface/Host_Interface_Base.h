@@ -301,6 +301,7 @@ namespace SSD_Components
     };
 
     UserReqPool _user_req_pool;
+    CQEntryPool _cq_entry_pool;
     Host_Interface_Base* host_interface;
     std::list<DMA_Req_Item*> dma_list;
 
@@ -317,6 +318,7 @@ namespace SSD_Components
   force_inline
   Request_Fetch_Unit_Base::Request_Fetch_Unit_Base(Host_Interface_Base* host_interface)
     : _user_req_pool(),
+      _cq_entry_pool(),
       host_interface(host_interface)
   { }
 

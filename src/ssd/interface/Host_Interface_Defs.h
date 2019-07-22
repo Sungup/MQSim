@@ -6,6 +6,7 @@
 
 #include "../../utils/Exception.h"
 #include "../../utils/InlineTools.h"
+#include "../../utils/ObjectPool.h"
 #include "../../utils/StringTools.h"
 
 // ======================================
@@ -75,49 +76,156 @@ to_host_interface_type(std::string v)
 #define SATA_WRITE_OPCODE 0x0001
 #define SATA_READ_OPCODE 0x0002
 
-const uint64_t NCQ_SUBMISSION_REGISTER = 0x1000;
-const uint64_t NCQ_COMPLETION_REGISTER = 0x1003;
-const uint64_t SUBMISSION_QUEUE_REGISTER_0 = 0x1000;
-const uint64_t COMPLETION_QUEUE_REGISTER_0 = 0x1003;
-const uint64_t SUBMISSION_QUEUE_REGISTER_1 = 0x1010;
-const uint64_t COMPLETION_QUEUE_REGISTER_1 = 0x1013;
-const uint64_t SUBMISSION_QUEUE_REGISTER_2 = 0x1020;
-const uint64_t COMPLETION_QUEUE_REGISTER_2 = 0x1023;
-const uint64_t SUBMISSION_QUEUE_REGISTER_3 = 0x1030;
-const uint64_t COMPLETION_QUEUE_REGISTER_3 = 0x1033;
-const uint64_t SUBMISSION_QUEUE_REGISTER_4 = 0x1040;
-const uint64_t COMPLETION_QUEUE_REGISTER_4 = 0x1043;
-const uint64_t SUBMISSION_QUEUE_REGISTER_5 = 0x1050;
-const uint64_t COMPLETION_QUEUE_REGISTER_5 = 0x1053;
-const uint64_t SUBMISSION_QUEUE_REGISTER_6 = 0x1060;
-const uint64_t COMPLETION_QUEUE_REGISTER_6 = 0x1063;
-const uint64_t SUBMISSION_QUEUE_REGISTER_7 = 0x1070;
-const uint64_t COMPLETION_QUEUE_REGISTER_7 = 0x1073;
-const uint64_t SUBMISSION_QUEUE_REGISTER_8 = 0x1080;
-const uint64_t COMPLETION_QUEUE_REGISTER_8 = 0x1083;
+constexpr uint64_t NCQ_SUBMISSION_REGISTER = 0x1000;
+constexpr uint64_t NCQ_COMPLETION_REGISTER = 0x1003;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_0 = 0x1000;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_0 = 0x1003;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_1 = 0x1010;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_1 = 0x1013;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_2 = 0x1020;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_2 = 0x1023;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_3 = 0x1030;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_3 = 0x1033;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_4 = 0x1040;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_4 = 0x1043;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_5 = 0x1050;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_5 = 0x1053;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_6 = 0x1060;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_6 = 0x1063;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_7 = 0x1070;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_7 = 0x1073;
+constexpr uint64_t SUBMISSION_QUEUE_REGISTER_8 = 0x1080;
+constexpr uint64_t COMPLETION_QUEUE_REGISTER_8 = 0x1083;
 
-struct CompletionQueueEntry
+// ----------------------------
+// Class definition for CQEntry
+// ----------------------------
+class CQEntryBase
 {
-  uint32_t Command_specific;
-  uint32_t Reserved;
-  uint16_t SQ_Head; //SQ Head Pointer, Indicates the current Submission Queue Head pointer for the Submission Queue indicated in the SQ Identifier field
-  uint16_t SQ_ID;//SQ Identifier, Indicates the Submission Queue to which the associated command was issued to.
-  uint16_t Command_Identifier;//Command Identifier, Indicates the identifier of the command that is being completed
-  uint16_t SF_P; //Status Field (SF)+ Phase Tag(P)
-           //SF: Indicates status for the command that is being completed
-           //P:Identifies whether a Completion Queue entry is new
+public:
+  // Currently reserved field.
+  const uint32_t Command_specific;
+  const uint32_t Reserved;
+
+  // SQ Head Pointer, Indicates the current Submission Queue Head pointer for
+  // the Submission Queue indicated in the SQ Identifier field
+  const uint16_t SQ_Head;
+
+  // SQ Identifier, Indicates the Submission Queue to which the associated
+  // command was issued to.
+  const uint16_t SQ_ID;
+
+  // Command Identifier, Indicates the identifier of the command that is being
+  // completed
+  const uint16_t Command_Identifier;
+
+  // Status Field (SF)+ Phase Tag(P)
+  //   SF: Indicates status for the command that is being completed
+  //   P:Identifies whether a Completion Queue entry is new
+  const uint16_t SF_P;
+
+public:
+  CQEntryBase(uint16_t head,
+              uint16_t flow_id,
+              uint16_t SF_P,
+              uint16_t command_identifier);
+
+  static size_t size();
 };
 
-struct SubmissionQueueEntry
+force_inline
+CQEntryBase::CQEntryBase(uint16_t head,
+                         uint16_t flow_id,
+                         uint16_t SF_P,
+                         uint16_t command_identifier)
+  : Command_specific(0),
+    Reserved(0),
+    SQ_Head(head),
+    SQ_ID(flow_id),
+    Command_Identifier(command_identifier),
+    SF_P(SF_P)
+{ }
+
+force_inline size_t
+CQEntryBase::size()
 {
-  uint8_t Opcode;//Is it a read or write request
+  return sizeof(CQEntryBase);
+}
+
+typedef Utils::ObjectPool<CQEntryBase> CQEntryPool;
+typedef CQEntryPool::item_t            CQEntry;
+
+// ----------------------------
+// Class definition for SQEntry
+// ----------------------------
+class SQEntryBase {
+public:
+  // Is it a read or write request
+  uint8_t Opcode;
   uint8_t PRP_FUSE;
-  uint16_t Command_Identifier;//The id of the command in the I/O submission queue
-  uint64_t Namespace_identifier;
+
+  //The id of the command in the I/O submission queue
+  uint16_t Command_Identifier;
+
+  uint32_t Namespace_identifier;
+
   uint64_t Reserved;
+
   uint64_t Metadata_pointer_1;
+
   uint64_t PRP_entry_1;
   uint64_t PRP_entry_2;
+
   uint32_t Command_specific[6];
+
+public:
+  SQEntryBase(uint8_t opcode,
+              uint16_t command_identifier,
+              uint64_t prp_entry_1,
+              uint64_t prp_entry_2,
+              uint32_t cdw10 = 0,
+              uint32_t cdw11 = 0,
+              uint32_t cdw12 = 0,
+              uint32_t cdw13 = 0,
+              uint32_t cdw14 = 0,
+              uint32_t cdw15 = 0);
+
+  static size_t size();
 };
+
+force_inline
+SQEntryBase::SQEntryBase(uint8_t opcode,
+                         uint16_t command_identifier,
+                         uint64_t prp_entry_1,
+                         uint64_t prp_entry_2,
+                         uint32_t cdw10,
+                         uint32_t cdw11,
+                         uint32_t cdw12,
+                         uint32_t cdw13,
+                         uint32_t cdw14,
+                         uint32_t cdw15)
+  : Opcode(opcode),
+    PRP_FUSE(0),
+    Command_Identifier(command_identifier),
+    Namespace_identifier(0),
+    Reserved(0),
+    Metadata_pointer_1(0),
+    PRP_entry_1(prp_entry_1),
+    PRP_entry_2(prp_entry_2),
+    Command_specific {
+      cdw10, cdw11,
+      cdw12, cdw13,
+      cdw14, cdw15
+    }
+{ }
+
+force_inline size_t
+SQEntryBase::size()
+{
+  return sizeof(SQEntryBase);
+}
+
+typedef Utils::ObjectPool<SQEntryBase> SQEntryPool;
+typedef SQEntryPool::item_t            SQEntry;
+
 #endif // !NVME_DEFINISIONS_H

@@ -262,7 +262,7 @@ namespace SSD_Components
       new_reqeust->Stream_id = (stream_id_type)((uint64_t)(dma_req_item->object));
       new_reqeust->Priority_class = ((Input_Stream_Manager_NVMe*)host_interface->input_stream_manager)->Get_priority_class(new_reqeust->Stream_id);
       new_reqeust->STAT_InitiationTime = Simulator->Time();
-      auto* sqe = (SubmissionQueueEntry*)payload;
+      auto* sqe = (SQEntry*)payload;
       switch (sqe->Opcode)
       {
       case NVME_READ_OPCODE:
@@ -302,7 +302,9 @@ namespace SSD_Components
 
     auto* hi = (Host_Interface_NVMe*)host_interface;
     Input_Stream_NVMe* im = ((Input_Stream_NVMe*)hi->input_stream_manager->input_streams[stream_id]);
-    host_interface->Send_read_message_to_host(im->Submission_queue_base_address + im->Submission_head * sizeof(SubmissionQueueEntry), sizeof(SubmissionQueueEntry));
+    host_interface->Send_read_message_to_host(im->Submission_queue_base_address + im->Submission_head *
+                                                                                    SQEntry::size(),
+                                              SQEntry::size());
   }
 
   void Request_Fetch_Unit_NVMe::Fetch_write_data(UserRequest* request)
@@ -312,20 +314,22 @@ namespace SSD_Components
     dma_req_item->object = (void *)request;
     dma_list.push_back(dma_req_item);
 
-    auto* sqe = (SubmissionQueueEntry*) request->IO_command_info;
+    auto* sqe = (SQEntry*) request->IO_command_info;
     host_interface->Send_read_message_to_host((sqe->PRP_entry_2<<31U) | sqe->PRP_entry_1, request->Size_in_byte);
   }
 
   void Request_Fetch_Unit_NVMe::Send_completion_queue_element(UserRequest* request, uint16_t sq_head_value)
   {
     auto* hi = (Host_Interface_NVMe*)host_interface;
-    auto* cqe = new CompletionQueueEntry;
-    cqe->SQ_Head = sq_head_value;
-    cqe->SQ_ID = FLOW_ID_TO_Q_ID(request->Stream_id);
-    cqe->SF_P = 0x0001U & current_phase;
-    cqe->Command_Identifier = ((SubmissionQueueEntry*)request->IO_command_info)->Command_Identifier;
+    auto* cqe = _cq_entry_pool.construct(sq_head_value,
+                                         FLOW_ID_TO_Q_ID(request->Stream_id),
+                                         0x0001U & current_phase,
+                                         ((SQEntry*)request->IO_command_info)->Command_Identifier);
+
     Input_Stream_NVMe* im = ((Input_Stream_NVMe*)hi->input_stream_manager->input_streams[request->Stream_id]);
-    host_interface->Send_write_message_to_host(im->Completion_queue_base_address + im->Completion_tail * sizeof(CompletionQueueEntry), cqe, sizeof(CompletionQueueEntry));
+    host_interface->Send_write_message_to_host(im->Completion_queue_base_address + im->Completion_tail *
+                                                                                     CQEntry::size(), cqe,
+                                               CQEntry::size());
     number_of_sent_cqe++;
     if (number_of_sent_cqe % im->Completion_queue_size == 0)
     {
@@ -338,7 +342,7 @@ namespace SSD_Components
 
   void Request_Fetch_Unit_NVMe::Send_read_data(UserRequest* request)
   {
-    auto* sqe = (SubmissionQueueEntry*)request->IO_command_info;
+    auto* sqe = (SQEntry*)request->IO_command_info;
     host_interface->Send_write_message_to_host(sqe->PRP_entry_1, request->Data, request->Size_in_byte);
   }
 
