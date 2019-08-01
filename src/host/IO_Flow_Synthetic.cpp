@@ -13,9 +13,9 @@ namespace Host_Components
     Utils::Request_Generator_Type generator_type, sim_time_type Average_inter_arrival_time_nano_sec, uint32_t average_number_of_enqueued_requests,
     bool generate_aligned_addresses, uint32_t alignment_value,
     int seed, sim_time_type stop_time, double initial_occupancy_ratio, uint32_t total_req_count, HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
-    bool enabled_logging, sim_time_type logging_period, std::string logging_file_path) :
+    bool enabled_logging, sim_time_type logging_period, const std::string& logging_file_path) :
     IO_Flow_Base(name, flow_id, start_lsa_on_device, LHA_type(start_lsa_on_device + (end_lsa_on_device - start_lsa_on_device) * working_set_ratio), io_queue_id, nvme_submission_queue_size, nvme_completion_queue_size, priority_class, stop_time, initial_occupancy_ratio, total_req_count, SSD_device_type, pcie_root_complex, sata_hba, enabled_logging, logging_period, logging_file_path),
-    read_ratio(read_ratio), address_distribution(address_distribution),
+    __run_until(stop_time), read_ratio(read_ratio), address_distribution(address_distribution),
     working_set_ratio(working_set_ratio), hot_region_ratio(hot_region_ratio),
     request_size_distribution(request_size_distribution), average_request_size(average_request_size), variance_request_size(variance_request_size),
     generator_type(generator_type), Average_inter_arrival_time_nano_sec(Average_inter_arrival_time_nano_sec), average_number_of_enqueued_requests(average_number_of_enqueued_requests),
@@ -73,9 +73,9 @@ namespace Host_Components
 
   HostIORequest* IO_Flow_Synthetic::Generate_next_request()
   {
-    if (stop_time > 0)
+    if (__run_until > 0)
     {
-      if (Simulator->Time() > stop_time)
+      if (Simulator->Time() > __run_until)
         return nullptr;
     }
     else if (_all_request_generated())
@@ -255,5 +255,13 @@ namespace Host_Components
 
     stats.Min_LHA = __start_lsa_on_dev;
     stats.Max_LHA = __end_lsa_on_dev;
+  }
+
+  int
+  IO_Flow_Synthetic::_get_progress() const
+  {
+    return __run_until == 0
+             ? int(double(Get_serviced_request_count()) / total_requests_to_be_generated * 100)
+             : int(double(Simulator->Time()) / __run_until * 100);
   }
 }

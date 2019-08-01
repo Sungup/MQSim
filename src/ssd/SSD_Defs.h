@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include "../utils/InlineTools.h"
+
 //enum class Memory_Type {FLASH};
 
 typedef uint32_t host_pointer_type;
@@ -23,5 +25,23 @@ typedef uint64_t data_cache_content_type;
 */
 #define LPN_TO_UNIQUE_KEY(STREAM,LPN) ((((LPA_type)STREAM)<<56U)|LPN)
 #define UNIQUE_KEY_TO_LPN(STREAM,LPN) ((~(((LPA_type)STREAM)<<56U))&LPN)
+
+#define UINT32_MASK ~(~(0x0ULL) << 32U)
+#define UINT16_MASK ~(~(0x0U) << 16U)
+
+force_inline uint32_t
+msb_of_lba(LHA_type lba) {
+  return lba >> 32U;
+}
+
+force_inline uint32_t
+lsb_of_lba(LHA_type lba) {
+  return UINT32_MASK & lba;
+}
+
+force_inline uint16_t
+lsb_of_lba_count(uint32_t lba_count) {
+  return UINT16_MASK & lba_count;
+}
 
 #endif // !SSD_DEFS_H
