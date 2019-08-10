@@ -192,59 +192,16 @@ namespace SSD_Components
   {
     auto* hi = (Host_Interface_NVMe*)host_interface;
     auto  val = (uint64_t)payload;
-    switch (address)
-    {
-    case SUBMISSION_QUEUE_REGISTER_1:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(0, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_1:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(0, (uint16_t)val);
-      break;
-    case SUBMISSION_QUEUE_REGISTER_2:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(1, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_2:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(1, (uint16_t)val);
-      break;
-    case SUBMISSION_QUEUE_REGISTER_3:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(2, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_3:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(2, (uint16_t)val);
-      break;
-    case SUBMISSION_QUEUE_REGISTER_4:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(3, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_4:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(3, (uint16_t)val);
-      break;
-    case SUBMISSION_QUEUE_REGISTER_5:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(4, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_5:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(4, (uint16_t)val);
-      break;
-    case SUBMISSION_QUEUE_REGISTER_6:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(5, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_6:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(5, (uint16_t)val);
-      break;
-    case SUBMISSION_QUEUE_REGISTER_7:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(6, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_7:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(6, (uint16_t)val);
-      break;
-    case SUBMISSION_QUEUE_REGISTER_8:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(7, (uint16_t)val);
-      break;
-    case COMPLETION_QUEUE_REGISTER_8:
-      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(7, (uint16_t)val);
-      break;
-    default:
+
+    auto stream_id = register_addr_to_stream_id(address);
+
+    if (!is_valid_nvme_stream_id(stream_id))
       throw std::invalid_argument("Unknown register is written!");
-    }
+
+    if (is_cq_address(address))
+      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Completion_queue_head_pointer_update(stream_id, (uint16_t)val);
+    else
+      ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Submission_queue_tail_pointer_update(stream_id, (uint16_t)val);
   }
   
   void Request_Fetch_Unit_NVMe::Process_pcie_read_message(uint64_t /* address */, void * payload, uint32_t payload_size)

@@ -23,10 +23,10 @@ namespace SSD_Components {
 
 namespace Host_Components
 {
-#define SATA_SQ_FULL(Q) (Q.Submission_queue_tail < Q.Submission_queue_size - 1 ? Q.Submission_queue_tail + 1 == Q.Submission_queue_head : Q.Submission_queue_head == 0)
-#define SATA_UPDATE_SQ_TAIL(Q)  Q.Submission_queue_tail++;\
-            if (Q.Submission_queue_tail == Q.Submission_queue_size)\
-              Q.Submission_queue_tail = 0;
+#define SATA_SQ_FULL(Q) (Q.sq_tail < Q.sq_size - 1 ? Q.sq_tail + 1 == Q.sq_head : Q.sq_head == 0)
+#define SATA_UPDATE_SQ_TAIL(Q)  Q.sq_tail++;\
+            if (Q.sq_tail == Q.sq_size)\
+              Q.sq_tail = 0;
 
   enum class HBA_Sim_Events {SUBMIT_IO_REQUEST, CONSUME_IO_REQUEST};
 

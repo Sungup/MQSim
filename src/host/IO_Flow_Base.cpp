@@ -44,7 +44,9 @@ IO_Flow_Base::IO_Flow_Base(const sim_object_id_type& name,
     _initial_occupancy_ratio(initial_occupancy_ratio),
     total_requests_to_be_generated(total_requets_to_be_generated),
     SSD_device_type(SSD_device_type),
-    nvme_queue_pair(),
+    nvme_queue_pair(io_queue_id,
+                    nvme_submission_queue_size,
+                    nvme_completion_queue_size),
     io_queue_id(io_queue_id),
     _generated_req(0),
     _serviced_req(0),
@@ -72,86 +74,24 @@ IO_Flow_Base::IO_Flow_Base(const sim_object_id_type& name,
 
     for (uint16_t cmdid = 0; cmdid < nvme_submission_queue_size; cmdid++)
       request_queue_in_memory.push_back(nullptr);
-
-    nvme_queue_pair.Submission_queue_size = nvme_submission_queue_size;
-    nvme_queue_pair.Submission_queue_head = 0;
-    nvme_queue_pair.Submission_queue_tail = 0;
-    nvme_queue_pair.Completion_queue_size = nvme_completion_queue_size;
-    nvme_queue_pair.Completion_queue_head = 0;
-    nvme_queue_pair.Completion_queue_tail = 0;
-    switch (io_queue_id)//id = 0: admin queues, id = 1 to 8, normal I/O queues
-    {
-    case 0:
-      throw std::logic_error("I/O queue id 0 is reserved for NVMe admin queues and should not be used for I/O flows");
-    case 1:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_1;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_1;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_1;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_1;
-      break;
-    case 2:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_2;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_2;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_2;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_2;
-      break;
-    case 3:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_3;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_3;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_3;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_3;
-      break;
-    case 4:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_4;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_4;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_4;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_4;
-      break;
-    case 5:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_5;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_5;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_5;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_5;
-      break;
-    case 6:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_6;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_6;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_6;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_6;
-      break;
-    case 7:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_7;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_7;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_7;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_7;
-      break;
-    case 8:
-      nvme_queue_pair.Submission_queue_memory_base_address = SUBMISSION_QUEUE_MEMORY_8;
-      nvme_queue_pair.Submission_tail_register_address_on_device = SUBMISSION_QUEUE_REGISTER_8;
-      nvme_queue_pair.Completion_queue_memory_base_address = COMPLETION_QUEUE_MEMORY_8;
-      nvme_queue_pair.Completion_head_register_address_on_device = COMPLETION_QUEUE_REGISTER_8;
-      break;
-    default:
-      break;
-    }
   }
 }
 
 force_inline bool
 IO_Flow_Base::__sq_is_full(const NVMe_Queue_Pair& Q) const
 {
-  return Q.Submission_queue_tail < Q.Submission_queue_size - 1
-           ? Q.Submission_queue_tail + 1 == Q.Submission_queue_head
-           : Q.Submission_queue_head == 0;
+  return Q.sq_tail < Q.sq_size - 1
+           ? Q.sq_tail + 1 == Q.sq_head
+           : Q.sq_head == 0;
 }
 
 force_inline void
 IO_Flow_Base::__update_sq_tail(NVMe_Queue_Pair& Q)
 {
-  ++Q.Submission_queue_tail;
+  ++Q.sq_tail;
 
-  if (Q.Submission_queue_tail == Q.Submission_queue_size)
-    nvme_queue_pair.Submission_queue_tail = 0;
+  if (Q.sq_tail == Q.sq_size)
+    nvme_queue_pair.sq_tail = 0;
 }
 
 void IO_Flow_Base::Start_simulation()
@@ -164,7 +104,6 @@ void IO_Flow_Base::Start_simulation()
   __logging_dev_resp.reset();
   __logging_req_delay.reset();
 }
-
 
 force_inline void
 IO_Flow_Base::__update_stats_by_request(sim_time_type now,
@@ -250,7 +189,7 @@ IO_Flow_Base::__enqueue_to_sq(HostIORequest* request)
   nvme_software_request_queue[cmd_id] = request;
   available_command_ids.erase(cmd_iter);
 
-  request_queue_in_memory[nvme_queue_pair.Submission_queue_tail] = request;
+  request_queue_in_memory[nvme_queue_pair.sq_tail] = request;
 
   __update_sq_tail(nvme_queue_pair);
 
@@ -258,8 +197,8 @@ IO_Flow_Base::__enqueue_to_sq(HostIORequest* request)
 
   // Based on NVMe protocol definition, the updated tail pointer should be
   // informed to the device
-  __pcie_root_complex->Write_to_device(nvme_queue_pair.Submission_tail_register_address_on_device,
-                                       nvme_queue_pair.Submission_queue_tail);
+  __pcie_root_complex->Write_to_device(nvme_queue_pair.sq_tail_register,
+                                       nvme_queue_pair.sq_tail);
 }
 
 void
@@ -303,7 +242,7 @@ IO_Flow_Base::NVMe_consume_io_request(CQEntry* cqe)
 
   request->release();
 
-  nvme_queue_pair.Submission_queue_head = cqe->SQ_Head;
+  nvme_queue_pair.sq_head = cqe->SQ_Head;
 
   /// MQSim always assumes that the request is processed correctly,
   /// so no need to check cqe->SF_P
@@ -326,7 +265,7 @@ IO_Flow_Base::NVMe_consume_io_request(CQEntry* cqe)
 
 SQEntry* IO_Flow_Base::NVMe_read_sqe(uint64_t address)
 {
-  HostIORequest* request = request_queue_in_memory[(uint16_t)((address - nvme_queue_pair.Submission_queue_memory_base_address) / SQEntry::size())];
+  HostIORequest* request = request_queue_in_memory[(uint16_t)((address - nvme_queue_pair.sq_memory_base_address) / SQEntry::size())];
 
   if (request == nullptr)
     throw std::invalid_argument(this->ID() + ": Request to access a submission queue entry that does not exist.");
@@ -346,10 +285,12 @@ SQEntry* IO_Flow_Base::NVMe_read_sqe(uint64_t address)
 
 void IO_Flow_Base::NVMe_update_and_submit_completion_queue_tail()
 {
-  nvme_queue_pair.Completion_queue_head++;
-  if (nvme_queue_pair.Completion_queue_head == nvme_queue_pair.Completion_queue_size)
-    nvme_queue_pair.Completion_queue_head = 0;
-  __pcie_root_complex->Write_to_device(nvme_queue_pair.Completion_head_register_address_on_device, nvme_queue_pair.Completion_queue_head);//Based on NVMe protocol definition, the updated head pointer should be informed to the device
+  nvme_queue_pair.move_cq_head(); // Why move cq head????
+
+  // Based on NVMe protocol definition, the updated head pointer should be
+  // informed to the device
+  __pcie_root_complex->Write_to_device(nvme_queue_pair.cq_head_register,
+                                       nvme_queue_pair.cq_head);
 }
 
 void IO_Flow_Base::Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter)

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 
+#include "../../sim/Sim_Defs.h"
 #include "../../utils/Exception.h"
 #include "../../utils/InlineTools.h"
 #include "../../utils/ObjectPool.h"
@@ -78,24 +79,57 @@ to_host_interface_type(std::string v)
 
 constexpr uint64_t NCQ_SUBMISSION_REGISTER = 0x1000;
 constexpr uint64_t NCQ_COMPLETION_REGISTER = 0x1003;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_0 = 0x1000;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_0 = 0x1003;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_1 = 0x1010;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_1 = 0x1013;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_2 = 0x1020;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_2 = 0x1023;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_3 = 0x1030;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_3 = 0x1033;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_4 = 0x1040;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_4 = 0x1043;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_5 = 0x1050;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_5 = 0x1053;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_6 = 0x1060;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_6 = 0x1063;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_7 = 0x1070;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_7 = 0x1073;
-constexpr uint64_t SUBMISSION_QUEUE_REGISTER_8 = 0x1080;
-constexpr uint64_t COMPLETION_QUEUE_REGISTER_8 = 0x1083;
+constexpr uint64_t INVALID_QUEUE_REGISTER = UINT64_MAX;
+
+/*
+ *
+ *  - Register of SQ0: 0x1000, CQ0: 0x1003
+ *  - Register of SQ1: 0x1010, CQ1: 0x1013
+ *  - Register of SQ2: 0x1020, CQ2: 0x1023
+ *  - Register of SQ3: 0x1030, CQ3: 0x1033
+ *  - Register of SQ4: 0x1040, CQ4: 0x1043
+ *  - Register of SQ5: 0x1050, CQ5: 0x1053
+ *  - Register of SQ6: 0x1060, CQ6: 0x1063
+ *  - Register of SQ7: 0x1070, CQ7: 0x1073
+ *  - Register of SQ8: 0x1080, CQ8: 0x1083
+ */
+
+force_inline uint64_t
+sq_register_address(uint64_t id)
+{
+  return 0x01000ULL | id << 4U;
+}
+
+force_inline uint64_t
+cq_register_address(uint64_t id)
+{
+  return sq_register_address(id) | 0x03ULL;
+}
+
+force_inline bool
+is_cq_address(uint64_t register_address)
+{
+  // CQ Address always ends with 0x0003
+  return (0x0FULL & register_address);
+}
+
+force_inline uint16_t
+queue_id_from_register(uint64_t register_address)
+{
+  return (register_address >> 4ULL) & 0x0FULL;
+}
+
+force_inline stream_id_type
+register_addr_to_stream_id(uint64_t register_address)
+{
+  return queue_id_from_register(register_address) - 1;
+}
+
+force_inline bool
+is_valid_nvme_stream_id(stream_id_type stream_id)
+{
+  return stream_id < 8;
+}
 
 // ----------------------------
 // Class definition for CQEntry

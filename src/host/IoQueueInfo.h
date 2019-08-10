@@ -14,22 +14,63 @@
 
 #include "../sim/Sim_Defs.h"
 #include "HostIORequest.h"
+#include "Host_Defs.h"
 
 namespace Host_Components
 {
   class IoQueueInfo {
   public:
-    uint16_t Submission_queue_head;
-    uint16_t Submission_queue_tail;
-    uint16_t Submission_queue_size;
-    uint64_t Submission_tail_register_address_on_device;
-    uint64_t Submission_queue_memory_base_address;
-    uint16_t Completion_queue_head;
-    uint16_t Completion_queue_tail;
-    uint16_t Completion_queue_size;
-    uint64_t Completion_head_register_address_on_device;
-    uint64_t Completion_queue_memory_base_address;
+    const uint16_t sq_size;
+    uint16_t sq_head;
+    uint16_t sq_tail;
+    const uint64_t sq_tail_register;
+    const uint64_t sq_memory_base_address;
+    const uint16_t cq_size;
+    uint16_t cq_head;
+    uint16_t cq_tail;
+    const uint64_t cq_head_register;
+    const uint64_t cq_memory_base_address;
+
+  public:
+    IoQueueInfo(uint16_t id,
+                uint16_t sq_size,
+                uint16_t cq_size,
+                uint64_t sq_register = INVALID_QUEUE_REGISTER,
+                uint64_t cq_register = INVALID_QUEUE_REGISTER);
+
+    void move_cq_head(uint16_t size = 1);
   };
+
+  force_inline
+  IoQueueInfo::IoQueueInfo(uint16_t id,
+                           uint16_t sq_size,
+                           uint16_t cq_size,
+                           uint64_t sq_register,
+                           uint64_t cq_register)
+    : sq_size(sq_size),
+      sq_head(0),
+      sq_tail(0),
+      sq_tail_register((sq_register == INVALID_QUEUE_REGISTER)
+                         ? sq_register_address(id)
+                         : sq_register),
+      sq_memory_base_address(sq_memory_address(id)),
+      cq_size(cq_size),
+      cq_head(0),
+      cq_tail(0),
+      cq_head_register((cq_register == INVALID_QUEUE_REGISTER)
+                         ? cq_register_address(id)
+                         : cq_register),
+      cq_memory_base_address(cq_memory_address(id))
+  { }
+
+  force_inline void
+  IoQueueInfo::move_cq_head(uint16_t size)
+  {
+    cq_head += size;
+
+    if (cq_size <= cq_head)
+      cq_head -= cq_size;
+  }
 
   // Native Command Queue for SATA
   class NCQ_Control_Structure : public IoQueueInfo
@@ -37,7 +78,17 @@ namespace Host_Components
   public:
     // Contains the I/O requests that are enqueued in the NCQ
     std::unordered_map<sim_time_type, HostIORequest*> queue;
+
+  public:
+    explicit NCQ_Control_Structure(uint16_t ncq_size);
   };
+
+  force_inline
+  NCQ_Control_Structure::NCQ_Control_Structure(uint16_t ncq_size)
+    : IoQueueInfo(1, ncq_size, ncq_size,
+                  NCQ_SUBMISSION_REGISTER, NCQ_COMPLETION_REGISTER),
+      queue()
+  { }
 
   typedef IoQueueInfo NVMe_Queue_Pair;
 }
