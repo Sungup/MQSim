@@ -163,10 +163,10 @@ __collect_results(SsdDevice& ssd,
   cout << endl << "[Flow summary]" << endl;
   for (auto& flow : host.io_flows()) {
     cout << " - Flow ID: " << flow->ID() << endl
-         << "   - total generated requests: " << flow->Get_generated_request_count() << endl
-         << "   - total serviced requests:  " << flow->Get_serviced_request_count() << endl;
-    cout << "   - device response time:     " << flow->Get_device_response_time() << " (us)" << endl
-         << "   - end-to-end request delay: " << flow->Get_end_to_end_request_delay() << " (us)" << endl
+         << "   - total generated requests: " << flow->generated_requests() << endl
+         << "   - total serviced requests:  " << flow->serviced_requests() << endl;
+    cout << "   - device response time:     " << flow->average_response_time() << " (us)" << endl
+         << "   - end-to-end request delay: " << flow->average_end_to_end_delay() << " (us)" << endl
          << endl;
   }
 }

@@ -23,12 +23,9 @@ namespace Host_Components
     }
   }
 
-  IO_Flow_Trace_Based::~IO_Flow_Trace_Based()
-  {}
-
   HostIORequest* IO_Flow_Trace_Based::Generate_next_request()
   {
-    if (current_trace_line.size() == 0 || _all_request_generated())
+    if (current_trace_line.empty() || _all_request_generated())
       return nullptr;
 
     HostIOReqType req_type;
@@ -44,24 +41,12 @@ namespace Host_Components
     lba_count = std::strtoul(current_trace_line[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
 
     start_lba = std::strtoull(current_trace_line[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
-    if (start_lba <= (__end_lsa_on_dev - __start_lsa_on_dev))
-      start_lba += __start_lsa_on_dev;
+    if (start_lba <= (end_lsa - start_lsa))
+      start_lba += start_lsa;
     else
-      start_lba = __start_lsa_on_dev + start_lba % (__end_lsa_on_dev - __start_lsa_on_dev);
+      start_lba = start_lsa + start_lba % (end_lsa - start_lsa);
 
     return _generate_request(Simulator->Time() + time_offset, start_lba, lba_count, req_type);
-  }
-
-  void IO_Flow_Trace_Based::NVMe_consume_io_request(CQEntry* io_request)
-  {
-    IO_Flow_Base::NVMe_consume_io_request(io_request);
-
-    NVMe_update_and_submit_completion_queue_tail();
-  }
-
-  void IO_Flow_Trace_Based::SATA_consume_io_request(HostIORequest* io_request)
-  {
-    IO_Flow_Base::SATA_consume_io_request(io_request);
   }
 
   void IO_Flow_Trace_Based::Start_simulation()
@@ -91,10 +76,9 @@ namespace Host_Components
     trace_file.close();
     PRINT_MESSAGE("Trace file: " << trace_file_path << " seems healthy");
 
-    if (total_replay_no == 1)
-      total_requests_to_be_generated = (int)(((double)percentage_to_be_simulated / 100) * total_requests_in_file);
-    else
-      total_requests_to_be_generated = total_requests_in_file * total_replay_no;
+    _update_max_req_count(total_replay_no == 1
+                            ? int(double(percentage_to_be_simulated) / 100 * total_requests_in_file)
+                            : total_requests_in_file * total_replay_no);
 
     trace_file.open(trace_file_path);
     current_trace_line.clear();
@@ -104,20 +88,16 @@ namespace Host_Components
     Simulator->Register_sim_event(std::strtoll(current_trace_line[ASCIITraceTimeColumn].c_str(), &pEnd, 10), this);
   }
 
-  void IO_Flow_Trace_Based::Validate_simulation_config()
-  {
-  }
-
   void IO_Flow_Trace_Based::Execute_simulator_event(MQSimEngine::SimEvent*)
   {
     HostIORequest* request = Generate_next_request();
     if (request != nullptr)
-      Submit_io_request(request);
+      _submit_io_request(request);
 
     if (_all_request_generated())
       return;
 
-    auto sim = Simulator;
+    auto* sim = Simulator;
 
     std::string trace_line;
     if (std::getline(trace_file, trace_line))
@@ -147,10 +127,11 @@ namespace Host_Components
                                  const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,
                                  const Utils::NvmAccessBitmapFinderBase& find_nvm_subunit_access_bitmap)
   {
+    IO_Flow_Base::get_stats(stats, convert_lha_to_lpa, find_nvm_subunit_access_bitmap);
+
+    //In MQSim, there is a simple relation between stream id and the io_queue_id of NVMe
     stats.Type = Utils::Workload_Type::TRACE_BASED;
-    stats.Stream_id = io_queue_id - 1; //In MQSim, there is a simple relation between stream id and the io_queue_id of NVMe
-    stats.Min_LHA = __start_lsa_on_dev;
-    stats.Max_LHA = __end_lsa_on_dev;
+
     for (int i = 0; i < MAX_ARRIVAL_TIME_HISTOGRAM + 1; i++)
     {
       stats.Write_arrival_time.push_back(0);
@@ -192,13 +173,13 @@ namespace Host_Components
       uint32_t LBA_count = std::strtoul(line_splitted[ASCIITraceSizeColumn].c_str(), &pEnd, 0);
       sum_request_size += LBA_count;
       LHA_type start_LBA = std::strtoull(line_splitted[ASCIITraceAddressColumn].c_str(), &pEnd, 0);
-      if (start_LBA <= (__end_lsa_on_dev - __start_lsa_on_dev))
-        start_LBA += __start_lsa_on_dev;
+      if (start_LBA <= (end_lsa - start_lsa))
+        start_LBA += start_lsa;
       else
-        start_LBA = __start_lsa_on_dev + start_LBA % (__end_lsa_on_dev - __start_lsa_on_dev);
+        start_LBA = start_lsa + start_LBA % (end_lsa - start_lsa);
       LHA_type end_LBA = start_LBA + LBA_count - 1;
-      if (end_LBA > __end_lsa_on_dev)
-        end_LBA = __start_lsa_on_dev + (end_LBA - __end_lsa_on_dev) - 1;
+      if (end_LBA > end_lsa)
+        end_LBA = start_lsa + (end_LBA - end_lsa) - 1;
 
 
       //Address access pattern statistics
@@ -206,7 +187,7 @@ namespace Host_Components
       {
         LPA_type device_address = convert_lha_to_lpa(start_LBA);
         page_status_type access_status_bitmap = find_nvm_subunit_access_bitmap(start_LBA);
-        if (line_splitted[ASCIITraceTypeColumn].compare(ASCIITraceWriteCode) == 0)
+        if (line_splitted[ASCIITraceTypeColumn] == ASCIITraceWriteCode)
         {
           if (stats.Write_address_access_pattern.find(device_address) == stats.Write_address_access_pattern.end())
           {
@@ -244,12 +225,12 @@ namespace Host_Components
         }
         stats.Total_accessed_lbas++;
         start_LBA++;
-        if (start_LBA > __end_lsa_on_dev)
-          start_LBA = __start_lsa_on_dev;
+        if (start_LBA > end_lsa)
+          start_LBA = start_lsa;
       }
 
       //Request size statistics
-      if (line_splitted[ASCIITraceTypeColumn].compare(ASCIITraceWriteCode) == 0)
+      if (line_splitted[ASCIITraceTypeColumn] == ASCIITraceWriteCode)
       {
         if (diff < MAX_ARRIVAL_TIME_HISTOGRAM)
           stats.Write_arrival_time[diff]++;
@@ -275,13 +256,6 @@ namespace Host_Components
     stats.Average_request_size_sector = (uint32_t)(sum_request_size / stats.Total_generated_reqeusts);
     stats.Average_inter_arrival_time_nano_sec = sum_inter_arrival / stats.Total_generated_reqeusts;
 
-    stats.Initial_occupancy_ratio = _initial_occupancy_ratio;
     stats.Replay_no = total_replay_no;
-  }
-
-  int
-  IO_Flow_Trace_Based::_get_progress() const
-  {
-    return int(Get_serviced_request_count() / (double)total_requests_to_be_generated * 100);
   }
 }

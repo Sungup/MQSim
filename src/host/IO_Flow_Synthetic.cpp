@@ -35,7 +35,7 @@ namespace Host_Components
     random_request_type_generator = new Utils::RandomGenerator(random_request_type_generator_seed);
     random_address_generator_seed = seed++;
     random_address_generator = new Utils::RandomGenerator(random_address_generator_seed);
-    if (this->__start_lsa_on_dev > this->__end_lsa_on_dev)
+    if (this->start_lsa > this->end_lsa)
       throw std::logic_error("Problem in IO Flow Synthetic, the start LBA address is greater than the end LBA address");
 
     if (address_distribution == Utils::Address_Distribution_Type::RANDOM_HOTCOLD)
@@ -44,7 +44,7 @@ namespace Host_Components
       random_hot_address_generator = new Utils::RandomGenerator(random_hot_address_generator_seed);
       random_hot_cold_generator_seed = seed++;
       random_hot_cold_generator = new Utils::RandomGenerator(random_hot_cold_generator_seed);
-      hot_region_end_lsa = this->__start_lsa_on_dev + (LHA_type)((double)(this->__end_lsa_on_dev - this->__start_lsa_on_dev) * hot_region_ratio);
+      hot_region_end_lsa = this->start_lsa + (LHA_type)((double)(this->end_lsa - this->start_lsa) * hot_region_ratio);
     }
     if (request_size_distribution == Utils::Request_Size_Distribution_Type::NORMAL)
     {
@@ -116,11 +116,11 @@ namespace Host_Components
     {
     case Utils::Address_Distribution_Type::STREAMING:
       start_lba = streaming_next_address;
-      if (start_lba + lba_count > __end_lsa_on_dev)
-        start_lba = __start_lsa_on_dev;
+      if (start_lba + lba_count > end_lsa)
+        start_lba = start_lsa;
       streaming_next_address += lba_count;
-      if (streaming_next_address > __end_lsa_on_dev)
-        streaming_next_address = __start_lsa_on_dev;
+      if (streaming_next_address > end_lsa)
+        streaming_next_address = start_lsa;
       if (generate_aligned_addresses)
         if(streaming_next_address % alignment_value != 0)
           streaming_next_address += alignment_value - (streaming_next_address % alignment_value);
@@ -130,25 +130,25 @@ namespace Host_Components
     case Utils::Address_Distribution_Type::RANDOM_HOTCOLD:
       if (random_hot_cold_generator->Uniform(0, 1) < hot_region_ratio)// (100-hot)% of requests going to hot% of the address space
       {
-        start_lba = random_hot_address_generator->Uniform_ulong(hot_region_end_lsa + 1, __end_lsa_on_dev);
-        if (start_lba < hot_region_end_lsa + 1 || start_lba > __end_lsa_on_dev)
+        start_lba = random_hot_address_generator->Uniform_ulong(hot_region_end_lsa + 1, end_lsa);
+        if (start_lba < hot_region_end_lsa + 1 || start_lba > end_lsa)
           PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
-          if (start_lba + lba_count > __end_lsa_on_dev)
+          if (start_lba + lba_count > end_lsa)
             start_lba = hot_region_end_lsa + 1;
       }
       else
       {
-        start_lba = random_hot_address_generator->Uniform_ulong(__start_lsa_on_dev, hot_region_end_lsa);
-        if (start_lba < __start_lsa_on_dev || start_lba > hot_region_end_lsa)
+        start_lba = random_hot_address_generator->Uniform_ulong(start_lsa, hot_region_end_lsa);
+        if (start_lba < start_lsa || start_lba > hot_region_end_lsa)
           PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
       }
       break;
     case Utils::Address_Distribution_Type::RANDOM_UNIFORM:
-      start_lba = random_address_generator->Uniform_ulong(__start_lsa_on_dev, __end_lsa_on_dev);
-      if (start_lba < __start_lsa_on_dev || start_lba > __end_lsa_on_dev)
+      start_lba = random_address_generator->Uniform_ulong(start_lsa, end_lsa);
+      if (start_lba < start_lsa || start_lba > end_lsa)
         PRINT_ERROR("Out of range address is generated in IO_Flow_Synthetic!\n")
-      if (start_lba + lba_count > __end_lsa_on_dev)
-        start_lba = __start_lsa_on_dev;
+      if (start_lba + lba_count > end_lsa)
+        start_lba = start_lsa;
       break;
     default:
       PRINT_ERROR("Unknown address distribution type!\n")
@@ -162,33 +162,33 @@ namespace Host_Components
     return _generate_request(Simulator->Time(), start_lba, lba_count, req_type);
   }
 
-  void IO_Flow_Synthetic::NVMe_consume_io_request(CQEntry* io_request)
+  force_inline void
+  IO_Flow_Synthetic::__submit_next_request()
   {
-    IO_Flow_Base::NVMe_consume_io_request(io_request);
-
-    NVMe_update_and_submit_completion_queue_tail();
-
-    if (generator_type == Utils::Request_Generator_Type::QUEUE_DEPTH)
-    {
-      HostIORequest* request = Generate_next_request();
-      /* In the demand based execution mode, the Generate_next_request() function may return nullptr
-      * if 1) the simulation stop is met, or 2) the number of generated I/O requests reaches its threshold.*/
-      if (request != nullptr)
-        Submit_io_request(request);
-    }
+    auto* request = Generate_next_request();
+    /*
+     * In the demand based execution mode, the Generate_next_request() function
+     * may return nullptr if 1) the simulation stop is met, or 2) the number of
+     * generated I/O requests reaches its threshold.
+     */
+    if (request != nullptr)
+      _submit_io_request(request);
   }
 
-  void IO_Flow_Synthetic::SATA_consume_io_request(HostIORequest* io_request)
+  void IO_Flow_Synthetic::consume_nvme_io(CQEntry* io_request)
   {
-    IO_Flow_Base::SATA_consume_io_request(io_request);
+    IO_Flow_Base::consume_nvme_io(io_request);
+
     if (generator_type == Utils::Request_Generator_Type::QUEUE_DEPTH)
-    {
-      HostIORequest* request = Generate_next_request();
-      /* In the demand based execution mode, the Generate_next_request() function may return nullptr
-      * if 1) the simulation stop is met, or 2) the number of generated I/O requests reaches its threshold.*/
-      if (request != nullptr)
-        Submit_io_request(request);
-    }
+      __submit_next_request();
+  }
+
+  void IO_Flow_Synthetic::consume_sata_io(HostIORequest* io_request)
+  {
+    IO_Flow_Base::consume_sata_io(io_request);
+
+    if (generator_type == Utils::Request_Generator_Type::QUEUE_DEPTH)
+      __submit_next_request();
   }
 
   void IO_Flow_Synthetic::Start_simulation() 
@@ -197,7 +197,7 @@ namespace Host_Components
 
     if (address_distribution == Utils::Address_Distribution_Type::STREAMING)
     {
-      streaming_next_address = random_address_generator->Uniform_ulong(__start_lsa_on_dev, __end_lsa_on_dev);
+      streaming_next_address = random_address_generator->Uniform_ulong(start_lsa, end_lsa);
       if (generate_aligned_addresses)
         streaming_next_address -= streaming_next_address % alignment_value;
     }
@@ -207,8 +207,6 @@ namespace Host_Components
       Simulator->Register_sim_event((sim_time_type)1, this, 0, 0);
   }
 
-  void IO_Flow_Synthetic::Validate_simulation_config() {}
-
   void IO_Flow_Synthetic::Execute_simulator_event(MQSimEngine::SimEvent* event)
   {
     if (generator_type == Utils::Request_Generator_Type::BANDWIDTH)
@@ -216,24 +214,26 @@ namespace Host_Components
       HostIORequest* req = Generate_next_request();
       if (req != nullptr)
       {
-        auto sim = Simulator;
-        Submit_io_request(req);
+        auto* sim = Simulator;
+        _submit_io_request(req);
         sim->Register_sim_event(sim->Time() + (sim_time_type)random_time_interval_generator->Exponential((double)Average_inter_arrival_time_nano_sec), this, 0, 0);
       }
     }
-    else for (uint32_t i = 0; i < average_number_of_enqueued_requests; i++)
-      Submit_io_request(Generate_next_request());
+    else {
+      for (uint32_t i = 0; i < average_number_of_enqueued_requests; i++)
+        _submit_io_request(Generate_next_request());
+    }
   }
 
   void
   IO_Flow_Synthetic::get_stats(Utils::Workload_Statistics& stats,
-                               const Utils::LhaToLpaConverterBase& /* convert_lha_to_lpa */,
-                               const Utils::NvmAccessBitmapFinderBase& /* find_nvm_subunit_access_bitmap */)
+                               const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,
+                               const Utils::NvmAccessBitmapFinderBase& find_nvm_subunit_access_bitmap)
   {
+    IO_Flow_Base::get_stats(stats, convert_lha_to_lpa, find_nvm_subunit_access_bitmap);
+
     stats.Type = Utils::Workload_Type::SYNTHETIC;
     stats.generator_type = generator_type;
-    stats.Stream_id = io_queue_id - 1;
-    stats.Initial_occupancy_ratio = _initial_occupancy_ratio;
     stats.Working_set_ratio = working_set_ratio;
     stats.Read_ratio = read_ratio;
     stats.random_request_type_generator_seed = random_request_type_generator_seed;
@@ -252,16 +252,13 @@ namespace Host_Components
     stats.Request_queue_depth = average_number_of_enqueued_requests;
     stats.random_time_interval_generator_seed = random_time_interval_generator_seed;
     stats.Average_inter_arrival_time_nano_sec = Average_inter_arrival_time_nano_sec;
-
-    stats.Min_LHA = __start_lsa_on_dev;
-    stats.Max_LHA = __end_lsa_on_dev;
   }
 
   int
   IO_Flow_Synthetic::_get_progress() const
   {
     return __run_until == 0
-             ? int(double(Get_serviced_request_count()) / total_requests_to_be_generated * 100)
+             ? IO_Flow_Base::_get_progress()
              : int(double(Simulator->Time()) / __run_until * 100);
   }
 }

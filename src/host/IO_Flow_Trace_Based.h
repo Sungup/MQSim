@@ -17,20 +17,14 @@ namespace Host_Components
       std::string trace_file_path, Trace_Time_Unit time_unit, uint32_t total_replay_count, uint32_t percentage_to_be_simulated,
       HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
       bool enabled_logging, sim_time_type logging_period, const std::string& logging_file_path);
-    ~IO_Flow_Trace_Based() final;
+    ~IO_Flow_Trace_Based() final = default;
     HostIORequest* Generate_next_request();
-    void NVMe_consume_io_request(CQEntry*);
-    void SATA_consume_io_request(HostIORequest*);
     void Start_simulation();
-    void Validate_simulation_config();
     void Execute_simulator_event(MQSimEngine::SimEvent*);
 
     void get_stats(Utils::Workload_Statistics& stats,
                    const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,
                    const Utils::NvmAccessBitmapFinderBase& find_nvm_subunit_access_bitmap) final;
-
-  protected:
-    int _get_progress() const final;
 
   private:
     Trace_Time_Unit time_unit;

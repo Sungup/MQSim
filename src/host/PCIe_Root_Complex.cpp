@@ -28,7 +28,7 @@ void PCIe_Root_Complex::Write_to_memory(uint64_t address, const void* payload)
     case HostInterface_Types::NVME:
     {
       uint32_t flow_id = QUEUE_ID_TO_FLOW_ID(((CQEntry*)payload)->SQ_ID);
-      IO_flows[flow_id]->NVMe_consume_io_request((CQEntry*)payload);
+      IO_flows[flow_id]->consume_nvme_io((CQEntry *) payload);
       break;
     }
     case HostInterface_Types::SATA:
@@ -66,7 +66,7 @@ void PCIe_Root_Complex::Read_from_memory(const uint64_t address, const uint32_t 
     case HostInterface_Types::NVME:
     {
       uint16_t flow_id = QUEUE_ID_TO_FLOW_ID(uint16_t(address >> NVME_COMP_Q_MEMORY_REGION));
-      payload = IO_flows[flow_id]->NVMe_read_sqe(address);
+      payload = IO_flows[flow_id]->read_nvme_sqe(address);
       payload_size = SQEntry::size();
       break;
     }

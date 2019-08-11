@@ -79,10 +79,10 @@ HostSystem::__init_nvme_queue()
   for (auto& flow : __io_flows)
     __ssd_device.create_new_stream(
       flow->priority_class(),
-      flow->Get_start_lsa_on_device(),
-      flow->Get_end_lsa_address_on_device(),
-      flow->queue_info().sq_memory_base_address,
-      flow->queue_info().cq_memory_base_address
+      flow->start_lsa,
+      flow->end_lsa,
+      flow->sq_base_address(),
+      flow->cq_base_address()
   );
 }
 
@@ -90,8 +90,8 @@ force_inline void
 HostSystem::__init_sata_queue()
 {
   __ssd_device.set_ncq_address(
-    __sata_hba->queue_info().sq_memory_base_address,
-    __sata_hba->queue_info().cq_memory_base_address
+    __sata_hba->sq_base_address(),
+    __sata_hba->cq_base_address()
   );
 }
 

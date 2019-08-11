@@ -23,11 +23,6 @@ namespace SSD_Components {
 
 namespace Host_Components
 {
-#define SATA_SQ_FULL(Q) (Q.sq_tail < Q.sq_size - 1 ? Q.sq_tail + 1 == Q.sq_head : Q.sq_head == 0)
-#define SATA_UPDATE_SQ_TAIL(Q)  Q.sq_tail++;\
-            if (Q.sq_tail == Q.sq_size)\
-              Q.sq_tail = 0;
-
   enum class HBA_Sim_Events {SUBMIT_IO_REQUEST, CONSUME_IO_REQUEST};
 
   class SATA_HBA : MQSimEngine::Sim_Object
@@ -46,7 +41,9 @@ namespace Host_Components
     void Submit_io_request(HostIORequest* request);
     void SATA_consume_io_request(CQEntry* cqe);
     SQEntry* Read_ncq_entry(uint64_t address);
-    const IoQueueInfo& queue_info();
+
+    uint64_t sq_base_address() const;
+    uint64_t cq_base_address() const;
   private:
     SQEntryPool __sq_entry_pool;
 

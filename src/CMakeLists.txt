@@ -46,6 +46,11 @@ set(MQSIM_HOST_SOURCES
     host/IO_Flow_Synthetic.h
     host/IO_Flow_Trace_Based.cpp
     host/IO_Flow_Trace_Based.h
+    host/IoFlowLog.cpp
+    host/IoFlowLog.h
+    host/IoFlowStats.cpp
+    host/IoFlowStats.h
+    host/IoQueueInfo.h
     host/PCIe_Link.cpp
     host/PCIe_Link.h
     host/PCIeMessage.h
@@ -54,7 +59,8 @@ set(MQSIM_HOST_SOURCES
     host/PCIeSwitch.cpp
     host/PCIeSwitch.h
     host/SATA_HBA.cpp
-    host/SATA_HBA.h host/IoQueueInfo.h)
+    host/SATA_HBA.h
+    host/SubmissionQueue.h)
 
 set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/NVM_Chip.h
@@ -161,6 +167,7 @@ set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml_iterators.hpp
     utils/rapidxml/rapidxml_print.hpp
     utils/rapidxml/rapidxml_utils.hpp
+    utils/CountingStats.h
     utils/CMRRandomGenerator.cpp
     utils/CMRRandomGenerator.h
     utils/DistributionTypes.h
@@ -172,13 +179,14 @@ set(MQSIM_UTILS_SOURCES
     utils/Logical_Address_Partitioning_Unit.cpp
     utils/Logical_Address_Partitioning_Unit.h
     utils/ObjectPool.h
+    utils/ProgressBar.h
     utils/RandomGenerator.cpp
     utils/RandomGenerator.h
     utils/ServiceHandler.h
     utils/StringTools.h
     utils/Workload_Statistics.h
     utils/XMLWriter.cpp
-    utils/XMLWriter.h utils/CountingStats.h)
+    utils/XMLWriter.h)
 
 add_executable(MQSim
                main.cpp
