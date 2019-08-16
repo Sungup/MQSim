@@ -149,7 +149,7 @@ SyntheticFlowParamSet::__update_hidden_data()
 
 SyntheticFlowParamSet::SyntheticFlowParamSet()
   : IOFlowParamSet(Flow_Type::SYNTHETIC),
-    Synthetic_Generator_Type(Utils::Request_Generator_Type::QUEUE_DEPTH),
+    Synthetic_Generator_Type(Utils::RequestFlowControlType::QUEUE_DEPTH),
     Address_Distribution(Utils::Address_Distribution_Type::RANDOM_UNIFORM),
     Request_Size_Distribution(Utils::Request_Size_Distribution_Type::FIXED),
     Working_Set_Percentage(85),
@@ -174,7 +174,7 @@ SyntheticFlowParamSet::SyntheticFlowParamSet()
 
 SyntheticFlowParamSet::SyntheticFlowParamSet(int seed)
   : IOFlowParamSet(Flow_Type::SYNTHETIC),
-    Synthetic_Generator_Type(Utils::Request_Generator_Type::QUEUE_DEPTH),
+    Synthetic_Generator_Type(Utils::RequestFlowControlType::QUEUE_DEPTH),
     Address_Distribution(Utils::Address_Distribution_Type::RANDOM_UNIFORM),
     Request_Size_Distribution(Utils::Request_Size_Distribution_Type::FIXED),
     Working_Set_Percentage(85),
@@ -199,7 +199,7 @@ SyntheticFlowParamSet::SyntheticFlowParamSet(int seed)
 
 SyntheticFlowParamSet::SyntheticFlowParamSet(rapidxml::xml_node<>* node)
   : IOFlowParamSet(Flow_Type::SYNTHETIC),
-    Synthetic_Generator_Type(Utils::Request_Generator_Type::QUEUE_DEPTH),
+    Synthetic_Generator_Type(Utils::RequestFlowControlType::QUEUE_DEPTH),
     Address_Distribution(Utils::Address_Distribution_Type::RANDOM_UNIFORM),
     Request_Size_Distribution(Utils::Request_Size_Distribution_Type::FIXED),
     Working_Set_Percentage(85),
@@ -228,7 +228,7 @@ SyntheticFlowParamSet::load_default(int seed)
   IOFlowParamSet::_load_default();
 
   Working_Set_Percentage = 85;
-  Synthetic_Generator_Type = Utils::Request_Generator_Type::QUEUE_DEPTH;
+  Synthetic_Generator_Type = Utils::RequestFlowControlType::QUEUE_DEPTH;
   Read_Percentage = 100;
 
   Address_Distribution = Utils::Address_Distribution_Type::RANDOM_UNIFORM;

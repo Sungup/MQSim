@@ -1,34 +1,30 @@
 #include "RandomGenerator.h"
-#include <math.h>
+#include <cmath>
 #include <stdexcept>
 
 namespace Utils
 {
   RandomGenerator::RandomGenerator(int seed)
-  {
-    rand = new CMRRandomGenerator(seed / 200 + 1, seed % 200);
-  }
-
-  RandomGenerator::~RandomGenerator()
-  {
-    delete rand;
-  }
+    : rand(seed / 200 + 1, seed % 200),
+      Normal_z2(0.0),
+      seed(seed)
+    { }
 
   uint32_t RandomGenerator::Get_uint(uint32_t maxValue)
   {
-    uint32_t v = (uint32_t)(FloatRandom() * (maxValue + 1));
+    auto v = (uint32_t)(FloatRandom() * (maxValue + 1));
     return v;
   }
 
   int32_t RandomGenerator::Get_int(int32_t maxValue)
   {
-    int32_t v = (int32_t)(FloatRandom() * (maxValue + 1));
+    auto v = (int32_t)(FloatRandom() * (maxValue + 1));
     return v;
   }
 
   double RandomGenerator::FloatRandom()
   {
-    return rand->NextDouble();
+    return rand.NextDouble();
   }
 
   double RandomGenerator::Uniform(double a, double b)

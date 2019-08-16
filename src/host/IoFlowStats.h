@@ -58,7 +58,7 @@ namespace Host_Components {
     uint32_t avg_request_delay() const;
 
     void Report_results_in_XML(std::string name_prefix,
-                               Utils::XmlWriter& writer);
+                               Utils::XmlWriter& writer) final;
   };
 
   force_inline

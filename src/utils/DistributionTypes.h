@@ -31,7 +31,7 @@ namespace Utils
   // Not implemented generator type.
   //  Time_INTERVAL: general requests based on the arrival rate definitions,
   //  DEMAND_BASED: just generate a request, every time that there is a demand
-  enum class Request_Generator_Type {
+  enum class RequestFlowControlType {
     BANDWIDTH,
     QUEUE_DEPTH
   };
@@ -69,11 +69,11 @@ to_string(Utils::Workload_Type v)
 }
 
 force_inline std::string
-to_string(Utils::Request_Generator_Type v)
+to_string(Utils::RequestFlowControlType v)
 {
   switch (v) {
-  case Utils::Request_Generator_Type::BANDWIDTH:   return "BANDWIDTH";
-  case Utils::Request_Generator_Type::QUEUE_DEPTH: return "QUEUE_DEPTH";
+  case Utils::RequestFlowControlType::BANDWIDTH:   return "BANDWIDTH";
+  case Utils::RequestFlowControlType::QUEUE_DEPTH: return "QUEUE_DEPTH";
   }
 }
 
@@ -114,13 +114,13 @@ to_workload_type(std::string v)
   throw mqsim_error("Wrong workload type for input synthetic flow");
 }
 
-force_inline Utils::Request_Generator_Type
+force_inline Utils::RequestFlowControlType
 to_request_generator_type(std::string v)
 {
   Utils::to_upper(v);
 
-  if (v == "BANDWIDTH")   return Utils::Request_Generator_Type::BANDWIDTH;
-  if (v == "QUEUE_DEPTH") return Utils::Request_Generator_Type::QUEUE_DEPTH;
+  if (v == "BANDWIDTH")   return Utils::RequestFlowControlType::BANDWIDTH;
+  if (v == "QUEUE_DEPTH") return Utils::RequestFlowControlType::QUEUE_DEPTH;
 
   throw mqsim_error("Unknown synthetic generator type specified in the input file");
 }

@@ -63,10 +63,10 @@ FTL::Perform_precondition(Utils::WorkloadStatsList&  workload_stats)
     {
       switch (stat.generator_type)
       {
-      case Utils::Request_Generator_Type::BANDWIDTH:
+      case Utils::RequestFlowControlType::BANDWIDTH:
         overall_rate += 1.0 / double(stat.Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
         break;
-      case Utils::Request_Generator_Type::QUEUE_DEPTH:
+      case Utils::RequestFlowControlType::QUEUE_DEPTH:
       {
         sim_time_type max_arrival_time = sim_time_type(stat.Read_ratio * double(avg_flash_read_latency) + (1 - stat.Read_ratio) * double(avg_flash_program_latency));
         double avg_arrival_time = double(max_arrival_time) / double(stat.Request_queue_depth);
@@ -665,10 +665,10 @@ FTL::Perform_precondition(Utils::WorkloadStatsList&  workload_stats)
         {
           switch (stat.generator_type)
           {
-          case Utils::Request_Generator_Type::BANDWIDTH:
+          case Utils::RequestFlowControlType::BANDWIDTH:
             flow_rate = 1.0 / double(stat.Average_inter_arrival_time_nano_sec) * SIM_TIME_TO_SECONDS_COEFF * stat.Average_request_size_sector;
             break;
-          case Utils::Request_Generator_Type::QUEUE_DEPTH:
+          case Utils::RequestFlowControlType::QUEUE_DEPTH:
           {
             sim_time_type max_arrival_time = sim_time_type(stat.Read_ratio * double(avg_flash_read_latency) + (1 - stat.Read_ratio) * double(avg_flash_program_latency));
             double avg_arrival_time = double(max_arrival_time) / double(stat.Request_queue_depth);

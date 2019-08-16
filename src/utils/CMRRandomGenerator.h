@@ -58,7 +58,7 @@ namespace Utils
           v[i] = itof((int64_t)u[i], m);
       }
 
-      static void v_copy(int64_t* u, int64_t* v)
+      static void v_copy(const int64_t* u, int64_t* v)
       {
         for (int i = 0; i <= 2; i++)
           v[i] = u[i];
@@ -78,7 +78,7 @@ namespace Utils
             b[i][j] = a[i][j];
       }
 
-      static void mv_mul(int64_t a[][3], int64_t* u, int64_t* v, int64_t m)
+      static void mv_mul(int64_t a[][3], const int64_t* u, int64_t* v, int64_t m)
       {
         int64_t w[3];
         for (int i = 0; i <= 2; i++)

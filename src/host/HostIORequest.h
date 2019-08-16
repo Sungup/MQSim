@@ -53,4 +53,15 @@ namespace Host_Components
   typedef HostIOReqPool::item_t                HostIORequest;
 }
 
+force_inline std::string
+to_string(Host_Components::HostIOReqType type)
+{
+  namespace hc = Host_Components;
+
+  switch(type) {
+  case hc::HostIOReqType::READ:   return "READ";
+  case hc::HostIOReqType::WRITE:  return "WRITE";
+  }
+}
+
 #endif // !HOST_IO_REQUEST_H

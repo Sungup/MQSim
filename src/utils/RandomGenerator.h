@@ -8,9 +8,16 @@ namespace Utils
 {
   class RandomGenerator
   {
+  private:
+    CMRRandomGenerator rand;
+    double Normal_z2;
+
   public:
-    RandomGenerator(int);
-    ~RandomGenerator();
+    const int seed;
+
+  public:
+    explicit RandomGenerator(int seed);
+    ~RandomGenerator() = default;
 
     uint32_t Get_uint(uint32_t max_value);
     int32_t Get_int(int32_t max_value);
@@ -33,10 +40,6 @@ namespace Utils
     double Pareto(double alpha, double beta);
     double Inverse(double min, double max);
     double Triangular(double min, double middle, double max);
-  private:
-    CMRRandomGenerator* rand;
-    int seed;
-    double Normal_z2;
   };
 }
 

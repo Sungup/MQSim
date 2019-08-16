@@ -104,7 +104,7 @@ namespace Utils
     bool generate_aligned_addresses;
     uint32_t alignment_value;;
 
-    Utils::Request_Generator_Type generator_type;
+    Utils::RequestFlowControlType generator_type;
     uint32_t Request_queue_depth;
     int random_time_interval_generator_seed;
     sim_time_type Average_inter_arrival_time_nano_sec;

@@ -76,7 +76,7 @@ typedef std::vector<IOFlowScenario>        IOFlowScenariosList;
 // --------------------------------
 class SyntheticFlowParamSet : public IOFlowParamSet {
 public:
-  Utils::Request_Generator_Type         Synthetic_Generator_Type;
+  Utils::RequestFlowControlType         Synthetic_Generator_Type;
   Utils::Address_Distribution_Type      Address_Distribution;
   Utils::Request_Size_Distribution_Type Request_Size_Distribution;
 
@@ -99,7 +99,7 @@ public:
   // Variance of request size in sectors
   uint32_t Variance_Request_Size;
 
-  int Seed;
+  mutable int Seed;
 
   // Average number of I/O requests from this flow in the
   uint32_t Average_No_of_Reqs_in_Queue;
@@ -136,6 +136,8 @@ public:
   double working_set_rate() const;
   sim_time_type avg_arrival_time() const;
 
+  int gen_seed() const;
+
   void XML_serialize(Utils::XmlWriter& xmlwriter) const final;
   void XML_deserialize(rapidxml::xml_node<> *node) final;
 };
@@ -155,6 +157,12 @@ SyntheticFlowParamSet::working_set_rate() const
 force_inline sim_time_type
 SyntheticFlowParamSet::avg_arrival_time() const
 { return __avg_arrival_time; }
+
+force_inline int
+SyntheticFlowParamSet::gen_seed() const
+{
+  return Seed++;
+}
 // --------------------------------
 // TraceFlowParameterSet Definition
 // --------------------------------
