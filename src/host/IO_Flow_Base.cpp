@@ -228,7 +228,7 @@ Host_Components::build_io_flow(const sim_object_id_type& host_id,
 
   switch (flow_params.Type) {
   case Flow_Type::SYNTHETIC:
-    return std::make_shared<IO_Flow_Synthetic>(
+    return build_synthetic_flow(
       host_id + ".IO_Flow.Synth.No_" + std::to_string(flow_id),
       host_params,
       synthetic_params,
@@ -237,31 +237,22 @@ Host_Components::build_io_flow(const sim_object_id_type& host_id,
       sq_size,
       cq_size,
       interface_type,
-      &root_complex,
+      root_complex,
       sata_hba
     );
 
   case Flow_Type::TRACE:
     return std::make_shared<IO_Flow_Trace_Based>(
       host_id + ".IO_Flow.Trace." + trace_params.File_Path,
+      host_params,
+      trace_params,
+      lapu,
       flow_id,
-      lapu.available_start_lha(flow_id),
-      lapu.available_end_lha(flow_id),
-      FLOW_ID_TO_Q_ID(flow_id),
       sq_size,
       cq_size,
-      trace_params.Priority_Class,
-      trace_params.init_occupancy_rate(),
-      trace_params.File_Path,
-      trace_params.Time_Unit,
-      trace_params.Relay_Count,
-      trace_params.Percentage_To_Be_Executed,
       interface_type,
       &root_complex,
-      sata_hba,
-      host_params.Enable_ResponseTime_Logging,
-      host_params.ResponseTime_Logging_Period_Length,
-      host_params.stream_log_path(flow_id)
+      sata_hba
     );
   }
 }

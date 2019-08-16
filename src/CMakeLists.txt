@@ -60,7 +60,7 @@ set(MQSIM_HOST_SOURCES
     host/PCIeSwitch.h
     host/SATA_HBA.cpp
     host/SATA_HBA.h
-    host/SubmissionQueue.h)
+    host/SubmissionQueue.h host/SynFlowRandGen.cpp host/SynFlowRandGen.h)
 
 set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/NVM_Chip.h

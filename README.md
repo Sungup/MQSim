@@ -149,7 +149,7 @@ The following parameters are used to define a trace-based workload:
 7. **Initial_Occupancy_Percentage:** the percentage of the storage space (i.e., logical pages) that is filled during preconditioning. Range = {all integer values in the range 1 to 100}.
 8. **File_Path:** the relative/absolute path to the input trace file.
 9. **Percentage_To_Be_Executed:** the percentage of requests in the input trace file that should be executed. Range = {all integer values in the range 1 to 100}.
-10. **Relay_Count:** the number of times that the trace execution should be repeated. Range = {all positive integer values}.
+10. **Replay_Count:** the number of times that the trace execution should be repeated. Range = {all positive integer values}.
 11. **Time_Unit:** the unit of arrival times in the input trace file. Range = {PICOSECOND, NANOSECOND, MICROSECOND}
 
 ### Defining a Synthetic Workload

@@ -9,32 +9,40 @@
 
 namespace Host_Components
 {
-  class IO_Flow_Trace_Based : public IO_Flow_Base
-  {
+  class IO_Flow_Trace_Based : public IO_Flow_Base {
+  private:
+    const uint32_t percentage_to_be_simulated;
+    const std::string trace_file_path;
+    const uint32_t total_replay_no;
+
+    uint32_t total_requests_in_file;
+    uint32_t replay_counter;
+    sim_time_type time_offset;
+
+    std::vector<std::string> current_trace_line;
+    std::ifstream trace_file;
+
   public:
-    IO_Flow_Trace_Based(const sim_object_id_type& name, uint16_t flow_id, LHA_type start_lsa_on_device, LHA_type end_lsa_on_device, uint16_t io_queue_id,
-      uint16_t nvme_submission_queue_size, uint16_t nvme_completion_queue_size, IO_Flow_Priority_Class priority_class, double initial_occupancy_ratio,
-      std::string trace_file_path, Trace_Time_Unit time_unit, uint32_t total_replay_count, uint32_t percentage_to_be_simulated,
-      HostInterface_Types SSD_device_type, PCIe_Root_Complex* pcie_root_complex, SATA_HBA* sata_hba,
-      bool enabled_logging, sim_time_type logging_period, const std::string& logging_file_path);
+    IO_Flow_Trace_Based(const sim_object_id_type& name,
+                        const HostParameterSet& host_params,
+                        const TraceFlowParameterSet& flow_params,
+                        const Utils::LogicalAddrPartition& lapu,
+                        uint16_t flow_id,
+                        uint16_t sq_size,
+                        uint16_t cq_size,
+                        HostInterface_Types interface_type,
+                        PCIe_Root_Complex* root_complex,
+                        SATA_HBA* sata_hba);
     ~IO_Flow_Trace_Based() final = default;
+
     HostIORequest* Generate_next_request();
-    void Start_simulation();
-    void Execute_simulator_event(MQSimEngine::SimEvent*);
+    void Start_simulation() final;
+    void Execute_simulator_event(MQSimEngine::SimEvent* event) final;
 
     void get_stats(Utils::Workload_Statistics& stats,
                    const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,
                    const Utils::NvmAccessBitmapFinderBase& find_nvm_subunit_access_bitmap) final;
 
-  private:
-    Trace_Time_Unit time_unit;
-    uint32_t percentage_to_be_simulated;
-    std::string trace_file_path;
-    std::ifstream trace_file;
-    uint32_t total_replay_no, replay_counter;
-    uint32_t total_requests_in_file;
-    std::vector<std::string> current_trace_line;
-    sim_time_type time_offset;
   };
 }
 

@@ -343,7 +343,7 @@ TraceFlowParameterSet::TraceFlowParameterSet()
   : IOFlowParamSet(Flow_Type::TRACE),
     File_Path(),
     Percentage_To_Be_Executed(100),
-    Relay_Count(1),
+    Replay_Count(1),
     Time_Unit(Trace_Time_Unit::NANOSECOND)
 { }
 
@@ -351,7 +351,7 @@ TraceFlowParameterSet::TraceFlowParameterSet(rapidxml::xml_node<>* node)
   : IOFlowParamSet(Flow_Type::TRACE),
     File_Path(),
     Percentage_To_Be_Executed(100),
-    Relay_Count(1),
+    Replay_Count(1),
     Time_Unit(Trace_Time_Unit::NANOSECOND)
 {
   XML_deserialize(node);
@@ -365,7 +365,7 @@ TraceFlowParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
 
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, File_Path);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Percentage_To_Be_Executed);
-  XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Relay_Count);
+  XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Replay_Count);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Time_Unit);
 
   xmlwriter.Write_close_tag();
@@ -378,8 +378,8 @@ TraceFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 
   try {
     for (auto param = node->first_node(); param; param = param->next_sibling()) {
-      if (strcmp(param->name(), "Relay_Count") == 0)
-        Relay_Count = std::stoi(param->value());
+      if (strcmp(param->name(), "Replay_Count") == 0)
+        Replay_Count = std::stoi(param->value());
 
       else if (strcmp(param->name(), "Percentage_To_Be_Executed") == 0)
         Percentage_To_Be_Executed = std::stoi(param->value());

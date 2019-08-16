@@ -170,7 +170,7 @@ class TraceFlowParameterSet : public IOFlowParamSet {
 public:
   std::string File_Path;
   int Percentage_To_Be_Executed;
-  int Relay_Count; 
+  int Replay_Count;
   Trace_Time_Unit Time_Unit;
 
 public:
