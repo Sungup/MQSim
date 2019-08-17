@@ -143,7 +143,7 @@ SyntheticFlowParamSet::__update_hidden_data()
 
   __avg_arrival_time = (Bandwidth == 0)
                          ? 0
-                         : NanoSecondCoeff
+                         : NSEC_TO_SEC_COEFF
                              / ((Bandwidth / SECTOR_SIZE_IN_BYTE) / Average_Request_Size);
 }
 
@@ -343,16 +343,14 @@ TraceFlowParameterSet::TraceFlowParameterSet()
   : IOFlowParamSet(Flow_Type::TRACE),
     File_Path(),
     Percentage_To_Be_Executed(100),
-    Replay_Count(1),
-    Time_Unit(Trace_Time_Unit::NANOSECOND)
+    Replay_Count(1)
 { }
 
 TraceFlowParameterSet::TraceFlowParameterSet(rapidxml::xml_node<>* node)
   : IOFlowParamSet(Flow_Type::TRACE),
     File_Path(),
     Percentage_To_Be_Executed(100),
-    Replay_Count(1),
-    Time_Unit(Trace_Time_Unit::NANOSECOND)
+    Replay_Count(1)
 {
   XML_deserialize(node);
 }
@@ -366,7 +364,6 @@ TraceFlowParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, File_Path);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Percentage_To_Be_Executed);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Replay_Count);
-  XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Time_Unit);
 
   xmlwriter.Write_close_tag();
 }
@@ -386,9 +383,6 @@ TraceFlowParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
 
       else if (strcmp(param->name(), "File_Path") == 0)
         File_Path = param->value();
-
-      else if (strcmp(param->name(), "Time_Unit") == 0)
-        Time_Unit = to_trace_time_unit(param->value());
 
     }
   } catch (...) {

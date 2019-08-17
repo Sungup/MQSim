@@ -159,8 +159,8 @@ StreamDistributor::generate(uint32_t lba_count)
     __next_address = _align_address(__next_address) + _align_unit;
 
   if(__next_address == lba)
-    PRINT_MESSAGE("Synthetic Message Generator: The same address is "
-                  "always repeated due to configuration parameters!")
+    std::cout << "Synthetic Message Generator: The same address is always "
+                 "repeated due to configuration parameters!" << std::endl;
 
   return _align_address(lba);
 }

@@ -18,7 +18,7 @@ public:
   sim_time_type SATA_Processing_Delay;
 
   bool Enable_ResponseTime_Logging;
-  sim_time_type ResponseTime_Logging_Period_Length; // nanoseconds
+  sim_time_type ResponseTime_Logging_Period; // nanoseconds
 
   // This parameter is not serialized. This is used to inform the HostSystem
   // class about the input file path.

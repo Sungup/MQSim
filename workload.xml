@@ -62,7 +62,6 @@
 				 <File_Path>traces/tpcc-small.trace</File_Path>
 				 <Percentage_To_Be_Executed>100</Percentage_To_Be_Executed>
 				 <Replay_Count>1</Replay_Count>
-				 <Time_Unit>NANOSECOND</Time_Unit>
 		</TraceFlowParameterSet>
 	</IO_Scenario>
 </MQSim_IO_Scenarios>

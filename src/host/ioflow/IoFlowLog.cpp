@@ -11,10 +11,10 @@
 using namespace std;
 using namespace Host_Components;
 
-IoFlowLog::IoFlowLog(std::string path, sim_time_type period)
-  : __enable(period != MAXIMUM_TIME),
-    __period(period),
-    __path(std::move(path)),
+IoFlowLog::IoFlowLog(const HostParameterSet& params, uint16_t flow_id)
+  : __enable(params.Enable_ResponseTime_Logging),
+    __period(__enable ? params.ResponseTime_Logging_Period : MAXIMUM_TIME),
+    __path(params.stream_log_path(flow_id)),
     __logging_at(0),
     __log(),
     __dev_response(),

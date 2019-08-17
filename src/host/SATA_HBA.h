@@ -13,9 +13,9 @@
 #include "../sim/Sim_Object.h"
 
 #include "HostIORequest.h"
-#include "IO_Flow_Base.h"
+#include "ioflow/IO_Flow_Base.h"
 #include "PCIe_Root_Complex.h"
-#include "IoQueueInfo.h"
+#include "ioflow/IoQueueInfo.h"
 
 namespace SSD_Components {
   class Host_Interface_Base;

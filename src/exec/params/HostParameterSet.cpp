@@ -9,7 +9,7 @@ HostParameterSet::HostParameterSet(const std::string& workload_defs_path)
     PCIe_Lane_Count(4),
     SATA_Processing_Delay(400000),
     Enable_ResponseTime_Logging(false),
-    ResponseTime_Logging_Period_Length(400000),
+    ResponseTime_Logging_Period(400000),
     Input_file_path(remove_ext(workload_defs_path))
 { }
 
@@ -22,7 +22,7 @@ HostParameterSet::XML_serialize(Utils::XmlWriter& xmlwriter) const
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, PCIe_Lane_Count);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, SATA_Processing_Delay);
   XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, Enable_ResponseTime_Logging);
-  XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, ResponseTime_Logging_Period_Length);
+  XML_WRITER_MACRO_WRITE_ATTR_STR(xmlwriter, ResponseTime_Logging_Period);
 
   xmlwriter.Write_close_tag();
 }
@@ -44,8 +44,8 @@ HostParameterSet::XML_deserialize(rapidxml::xml_node<> *node)
       else if (strcmp(param->name(), "Enable_ResponseTime_Logging") == 0)
         Enable_ResponseTime_Logging = to_bool(param->value());
 
-      else if (strcmp(param->name(), "ResponseTime_Logging_Period_Length") == 0)
-        ResponseTime_Logging_Period_Length = std::stoul(param->value());
+      else if (strcmp(param->name(), "ResponseTime_Logging_Period") == 0)
+        ResponseTime_Logging_Period = std::stoul(param->value());
     }
 
   } catch (...) {

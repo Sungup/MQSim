@@ -28,29 +28,31 @@ set(MQSIM_EXEC_SOURCES
     exec/params/FlashParameterSet.h
     exec/params/HostParameterSet.cpp
     exec/params/HostParameterSet.h
-    exec/HostSystem.cpp
-    exec/HostSystem.h
     exec/params/IOFlowParamSet.cpp
     exec/params/IOFlowParamSet.h
     exec/params/ParameterSetBase.h
+    exec/HostSystem.cpp
+    exec/HostSystem.h
     exec/SsdDevice.cpp
     exec/SsdDevice.h)
 
 set(MQSIM_HOST_SOURCES
-    host/ASCII_Trace_Definition.h
+    host/ioflow/IO_Flow_Base.cpp
+    host/ioflow/IO_Flow_Base.h
+    host/ioflow/IO_Flow_Synthetic.cpp
+    host/ioflow/IO_Flow_Synthetic.h
+    host/ioflow/IO_Flow_Trace_Based.cpp
+    host/ioflow/IO_Flow_Trace_Based.h
+    host/ioflow/IoFlowLog.cpp
+    host/ioflow/IoFlowLog.h
+    host/ioflow/IoFlowStats.cpp
+    host/ioflow/IoFlowStats.h
+    host/ioflow/IoQueueInfo.h
+    host/ioflow/SubmissionQueue.h
+    host/ioflow/SynFlowRandGen.cpp
+    host/ioflow/SynFlowRandGen.h
     host/Host_Defs.h
     host/HostIORequest.h
-    host/IO_Flow_Base.cpp
-    host/IO_Flow_Base.h
-    host/IO_Flow_Synthetic.cpp
-    host/IO_Flow_Synthetic.h
-    host/IO_Flow_Trace_Based.cpp
-    host/IO_Flow_Trace_Based.h
-    host/IoFlowLog.cpp
-    host/IoFlowLog.h
-    host/IoFlowStats.cpp
-    host/IoFlowStats.h
-    host/IoQueueInfo.h
     host/PCIe_Link.cpp
     host/PCIe_Link.h
     host/PCIeMessage.h
@@ -59,8 +61,7 @@ set(MQSIM_HOST_SOURCES
     host/PCIeSwitch.cpp
     host/PCIeSwitch.h
     host/SATA_HBA.cpp
-    host/SATA_HBA.h
-    host/SubmissionQueue.h host/SynFlowRandGen.cpp host/SynFlowRandGen.h)
+    host/SATA_HBA.h)
 
 set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/NVM_Chip.h
@@ -111,6 +112,7 @@ set(MQSIM_SSD_SOURCES
     ssd/dcm/Data_Cache_Manager_Flash_Simple.h
     ssd/dcm/DataCacheDefs.h
     ssd/dcm/DataCacheSlot.h
+    ssd/dcm/MemoryTransferInfo.h
     ssd/fbm/BlockPoolSlotType.h
     ssd/fbm/Flash_Block_Manager.cpp
     ssd/fbm/Flash_Block_Manager.h
@@ -160,7 +162,7 @@ set(MQSIM_SSD_SOURCES
     ssd/Queue_Probe.h
     ssd/SSD_Defs.h
     ssd/Stats.cpp
-    ssd/Stats.h ssd/dcm/MemoryTransferInfo.h)
+    ssd/Stats.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp

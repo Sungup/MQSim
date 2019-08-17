@@ -3,8 +3,8 @@
 #include "../sim/Engine.h"
 #include "../ssd/interface/Host_Interface_NVMe.h"
 #include "../host/PCIe_Root_Complex.h"
-#include "../host/IO_Flow_Synthetic.h"
-#include "../host/IO_Flow_Trace_Based.h"
+#include "../host/ioflow/IO_Flow_Synthetic.h"
+#include "../host/ioflow/IO_Flow_Trace_Based.h"
 #include "../utils/StringTools.h"
 #include "../utils/Logical_Address_Partitioning_Unit.h"
 

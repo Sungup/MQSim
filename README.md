@@ -51,7 +51,7 @@ You can specify your preferred SSD configuration in the XML format. If the SSD c
 2. **PCIe_Lane_Count:** the number of PCIe lanes. Range = {all positive integer values}.
 3. **SATA_Processing_Delay:** defines the aggregate hardware and software processing delay to send/receive a SATA message to the SSD device in nanoseconds. Range = {all positive integer values}.
 4. **Enable_ResponseTime_Logging:** the toggle to enable response time logging. If enabled, response time is calculated for each running I/O flow over simulation epochs and is reported in a log file at the end of each epoch. Range = {true, false}.
-5. **ResponseTime_Logging_Period_Length:** defines the epoch length for response time logging in nanoseconds. Range = {all positive integer values}.
+5. **ResponseTime_Logging_Period:** defines the epoch length for response time logging in nanoseconds. Range = {all positive integer values}.
 
 ### SSD Device
 1. **Seed:** the seed value that is used for random number generation. Range = {all positive integer values}.

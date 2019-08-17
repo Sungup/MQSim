@@ -11,10 +11,10 @@
 #include "../ssd/SSD_Defs.h"
 #include "../utils/DistributionTypes.h"
 
+constexpr sim_time_type MAX_ARRIVAL_TIME_HISTOGRAM  = 1000000;
+constexpr uint32_t      MAX_REQSIZE_HISTOGRAM_ITEMS = 1024;
 namespace Utils
 {
-#define MAX_REQSIZE_HISTOGRAM_ITEMS 1024
-#define MAX_ARRIVAL_TIME_HISTOGRAM (1000000)
 #define MIN_HOT_REGION_TRAFFIC_RATIO 0.5
 #define HOT_REGION_METRIC 2.5
 #define STATISTICALLY_SUFFICIENT_WRITES_FOR_PRECONDITIONING 10000

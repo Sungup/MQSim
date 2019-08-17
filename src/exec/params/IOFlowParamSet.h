@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "../../host/ASCII_Trace_Definition.h"
 #include "../../nvm_chip/flash_memory/FlashTypes.h"
 #include "../../ssd/dcm/DataCacheDefs.h"
 #include "../../ssd/interface/Host_Interface_Defs.h"
@@ -171,7 +170,6 @@ public:
   std::string File_Path;
   int Percentage_To_Be_Executed;
   int Replay_Count;
-  Trace_Time_Unit Time_Unit;
 
 public:
   TraceFlowParameterSet();

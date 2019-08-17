@@ -33,6 +33,7 @@ typedef std::string sim_object_id_type;
 
 #define SIM_TIME_TO_MICROSECONDS_COEFF 1000
 #define SIM_TIME_TO_SECONDS_COEFF 1000000000
+constexpr sim_time_type NSEC_TO_SEC_COEFF = 1000000000;
 constexpr sim_time_type NSEC_TO_USEC_COEFF = 1000;
 
 #endif // !DEFINITIONS_H

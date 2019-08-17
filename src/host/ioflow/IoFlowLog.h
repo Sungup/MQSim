@@ -12,8 +12,9 @@
 #include <fstream>
 #include <string>
 
-#include "../sim/Sim_Defs.h"
-#include "../utils/CountingStats.h"
+#include "../../exec/params/HostParameterSet.h"
+#include "../../sim/Sim_Defs.h"
+#include "../../utils/CountingStats.h"
 
 namespace Host_Components {
   class IoFlowLog {
@@ -29,7 +30,7 @@ namespace Host_Components {
     Utils::AvgStats<sim_time_type> __req_delay;
 
   public:
-    IoFlowLog(std::string path, sim_time_type period);
+    IoFlowLog(const HostParameterSet& params, uint16_t flow_id);
 
     void init();
 

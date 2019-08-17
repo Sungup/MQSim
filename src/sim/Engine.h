@@ -98,7 +98,7 @@ namespace MQSimEngine {
   force_inline double
   Engine::seconds() const
   {
-    return double(_sim_time) / SIM_TIME_TO_SECONDS_COEFF;
+    return double(_sim_time) / NSEC_TO_SEC_COEFF;
   }
 
   force_inline bool

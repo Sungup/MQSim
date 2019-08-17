@@ -5,17 +5,17 @@
 #include <string>
 #include <vector>
 
-#include "../exec/params/HostParameterSet.h"
-#include "../sim/Sim_Defs.h"
-#include "../sim/Sim_Object.h"
-#include "../ssd/interface/Host_Interface_Defs.h"
-#include "../ssd/SSD_Defs.h"
-#include "../utils/CountingStats.h"
-#include "../utils/Logical_Address_Partitioning_Unit.h"
-#include "../utils/ProgressBar.h"
-#include "../utils/ServiceHandler.h"
-#include "../utils/Workload_Statistics.h"
-#include "HostIORequest.h"
+#include "../../exec/params/HostParameterSet.h"
+#include "../../sim/Sim_Defs.h"
+#include "../../sim/Sim_Object.h"
+#include "../../ssd/interface/Host_Interface_Defs.h"
+#include "../../ssd/SSD_Defs.h"
+#include "../../utils/CountingStats.h"
+#include "../../utils/Logical_Address_Partitioning_Unit.h"
+#include "../../utils/ProgressBar.h"
+#include "../../utils/ServiceHandler.h"
+#include "../../utils/Workload_Statistics.h"
+#include "../HostIORequest.h"
 #include "IoQueueInfo.h"
 #include "IoFlowStats.h"
 #include "IoFlowLog.h"
@@ -32,7 +32,6 @@ namespace Host_Components
 
   private:
     const uint16_t               __flow_id;
-    const stream_id_type         __stream_id;
     const IO_Flow_Priority_Class __priority_class;
 
     // If stop_time is zero, then the flow stops generating request when
@@ -89,28 +88,24 @@ namespace Host_Components
 
     bool _all_request_generated() const;
 
-    void _submit_io_request(HostIORequest* request);
+    bool _submit_io_request(HostIORequest* request);
 
     virtual int _get_progress() const;
 
   public:
     IO_Flow_Base(const sim_object_id_type& name,
+                 const HostParameterSet& host_params,
+                 const IOFlowParamSet& flow_params,
+                 const Utils::LogicalAddrPartition& lapu,
                  uint16_t flow_id,
-                 LHA_type start_lsa_on_device,
-                 LHA_type end_lsa_address_on_device,
-                 uint16_t io_queue_id,
-                 uint16_t nvme_submission_queue_size,
-                 uint16_t nvme_completion_queue_size,
-                 IO_Flow_Priority_Class priority_class,
-                 sim_time_type stop_time,
-                 double initial_occupancy_ratio,
-                 uint32_t total_requets_to_be_generated,
-                 HostInterface_Types SSD_device_type,
-                 PCIe_Root_Complex* pcie_root_complex,
-                 SATA_HBA* sata_hba,
-                 bool enabled_logging,
-                 sim_time_type logging_period,
-                 std::string logging_file_path);
+                 LHA_type start_lsa,
+                 LHA_type end_lsa,
+                 uint16_t sq_size,
+                 uint16_t cq_size,
+                 uint32_t max_request_count,
+                 HostInterface_Types interface_type,
+                 PCIe_Root_Complex* root_complex,
+                 SATA_HBA* sata_hba);
 
     ~IO_Flow_Base() override = default;
 
@@ -167,10 +162,15 @@ namespace Host_Components
     return __max_req_count <= __stats.generated_req();
   }
 
-  force_inline void
-  IO_Flow_Base::_submit_io_request(Host_Components::HostIORequest * request)
+  force_inline bool
+  IO_Flow_Base::_submit_io_request(HostIORequest* request)
   {
+    if (!request)
+      return false;
+
     __req_submitter(request);
+
+    return true;
   }
 
   force_inline uint64_t

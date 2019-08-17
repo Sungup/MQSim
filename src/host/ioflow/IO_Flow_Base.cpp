@@ -1,9 +1,9 @@
 #include "IO_Flow_Base.h"
 
-#include "../sim/Engine.h"
+#include "../../sim/Engine.h"
 
-#include "PCIe_Root_Complex.h"
-#include "SATA_HBA.h"
+#include "../PCIe_Root_Complex.h"
+#include "../SATA_HBA.h"
 
 // Children for IO_Flow_Base
 #include "IO_Flow_Synthetic.h"
@@ -12,46 +12,38 @@
 using namespace Host_Components;
 
 IO_Flow_Base::IO_Flow_Base(const sim_object_id_type& name,
+                           const HostParameterSet& host_params,
+                           const IOFlowParamSet& flow_params,
+                           const Utils::LogicalAddrPartition& lapu,
                            uint16_t flow_id,
-                           LHA_type start_lsa_on_device,
-                           LHA_type end_lsa_on_device,
-                           uint16_t io_queue_id,
-                           uint16_t nvme_submission_queue_size,
-                           uint16_t nvme_completion_queue_size,
-                           IO_Flow_Priority_Class priority_class,
-                           sim_time_type /* stop_time */,
-                           double initial_occupancy_ratio,
-                           uint32_t total_requets_to_be_generated,
-                           HostInterface_Types SSD_device_type,
-                           PCIe_Root_Complex* pcie_root_complex,
-                           SATA_HBA* sata_hba,
-                           bool enabled_logging,
-                           sim_time_type logging_period,
-                           std::string logging_file_path)
+                           LHA_type start_lsa,
+                           LHA_type end_lsa,
+                           uint16_t sq_size,
+                           uint16_t cq_size,
+                           uint32_t max_request_count,
+                           HostInterface_Types interface_type,
+                           PCIe_Root_Complex* root_complex,
+                           SATA_HBA* sata_hba)
   : MQSimEngine::Sim_Object(name),
     __flow_id(flow_id),
-    __stream_id(io_queue_id - 1),
-    __priority_class(priority_class),
-    __max_req_count(total_requets_to_be_generated),
-    __initial_occupancy_ratio(initial_occupancy_ratio),
-    __pcie_root_complex(pcie_root_complex),
+    __priority_class(flow_params.Priority_Class),
+    __max_req_count(max_request_count),
+    __initial_occupancy_ratio(flow_params.init_occupancy_rate()),
+    __pcie_root_complex(root_complex),
     __sata_hba(sata_hba),
-    __nvme_queue_pair(io_queue_id,
-                      nvme_submission_queue_size,
-                      nvme_completion_queue_size),
+    __nvme_queue_pair(FLOW_ID_TO_Q_ID(flow_id), sq_size, cq_size),
     __submission_queue(__nvme_queue_pair),
     __host_io_req_pool(),
     __sq_entry_pool(),
     __req_submitter(this,
-                    SSD_device_type == HostInterface_Types::NVME
+                    interface_type == HostInterface_Types::NVME
                       ? &IO_Flow_Base::__submit_nvme_request
                       : &IO_Flow_Base::__submit_sata_request),
     __stats(),
-    __log(std::move(logging_file_path),
-          enabled_logging ? logging_period : MAXIMUM_TIME),
+    __log(host_params, flow_id),
     __progress_bar(ID()),
-    start_lsa(start_lsa_on_device),
-    end_lsa(end_lsa_on_device)
+    start_lsa(start_lsa),
+    end_lsa(end_lsa)
 { }
 
 void
@@ -167,7 +159,7 @@ IO_Flow_Base::get_stats(Utils::Workload_Statistics& stats,
                         const Utils::LhaToLpaConverterBase& convert_lha_to_lpa,
                         const Utils::NvmAccessBitmapFinderBase& find_nvm_subunit_access_bitmap)
 {
-  stats.Stream_id = __stream_id;
+  stats.Stream_id = __flow_id;
   stats.Initial_occupancy_ratio = __initial_occupancy_ratio;
 
   stats.Min_LHA = start_lsa;
@@ -228,7 +220,7 @@ Host_Components::build_io_flow(const sim_object_id_type& host_id,
 
   switch (flow_params.Type) {
   case Flow_Type::SYNTHETIC:
-    return build_synthetic_flow(
+    return Host_Components::build_synthetic_flow(
       host_id + ".IO_Flow.Synth.No_" + std::to_string(flow_id),
       host_params,
       synthetic_params,

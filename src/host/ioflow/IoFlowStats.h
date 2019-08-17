@@ -12,11 +12,11 @@
 #include <cstdint>
 #include <string>
 
-#include "../sim/Sim_Defs.h"
-#include "../sim/Sim_Reporter.h"
-#include "../utils/CountingStats.h"
+#include "../../sim/Sim_Defs.h"
+#include "../../sim/Sim_Reporter.h"
+#include "../../utils/CountingStats.h"
 
-#include "HostIORequest.h"
+#include "../HostIORequest.h"
 
 namespace Host_Components {
   class IoFlowStats : public MQSimEngine::Sim_Reporter {

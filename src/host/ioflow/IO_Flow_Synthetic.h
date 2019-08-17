@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "../utils/RandomGenerator.h"
-#include "../utils/DistributionTypes.h"
+#include "../../utils/RandomGenerator.h"
+#include "../../utils/DistributionTypes.h"
 
 #include "IO_Flow_Base.h"
 #include "SynFlowRandGen.h"
@@ -30,10 +30,13 @@ namespace Host_Components
     AddressDistributorPtr __address_distributor;
     ReqSizeDistributorPtr __req_size_distributor;
 
+  private:
+    HostIORequest* __generate_next_req();
+
   protected:
     int _get_progress() const final;
 
-    HostIORequest* _generate_next_req();
+    bool _submit_next_request();
 
   public:
     IO_Flow_Synthetic(const sim_object_id_type& name,
@@ -62,9 +65,6 @@ namespace Host_Components
   class IoFlowSyntheticQD : public IO_Flow_Synthetic {
   private:
     const uint32_t __target_queue_depth;
-
-  private:
-    void __submit_next_request();
 
   public:
     IoFlowSyntheticQD(const sim_object_id_type& name,

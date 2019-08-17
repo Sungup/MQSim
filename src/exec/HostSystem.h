@@ -2,7 +2,7 @@
 #define HOST_SYSTEM_H
 
 #include "../host/HostIORequest.h"
-#include "../host/IO_Flow_Base.h"
+#include "../host/ioflow/IO_Flow_Base.h"
 #include "../host/PCIe_Link.h"
 #include "../host/PCIe_Root_Complex.h"
 #include "../host/PCIeSwitch.h"

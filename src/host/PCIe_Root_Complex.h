@@ -7,7 +7,7 @@
 #include "HostIORequest.h"
 #include "PCIe_Link.h"
 #include "PCIeMessage.h"
-#include "IO_Flow_Base.h"
+#include "ioflow/IO_Flow_Base.h"
 
 namespace Host_Components
 {

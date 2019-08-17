@@ -1,7 +1,7 @@
 #include "IO_Flow_Synthetic.h"
 
 #include <stdexcept>
-#include "../sim/Engine.h"
+#include "../../sim/Engine.h"
 
 using namespace Host_Components;
 
@@ -19,24 +19,20 @@ IO_Flow_Synthetic::IO_Flow_Synthetic(const sim_object_id_type& name,
                                      PCIe_Root_Complex* root_complex,
                                      SATA_HBA* sata_hba)
   : IO_Flow_Base(name,
+                 host_params,
+                 flow_params,
+                 lapu,
                  flow_id,
                  lapu.available_start_lha(flow_id),
                  LHA_type(lapu.available_start_lha(flow_id)
                            + (double(lapu.available_end_lha(flow_id)- lapu.available_start_lha(flow_id))
                                * flow_params.working_set_rate())),
-                 FLOW_ID_TO_Q_ID(flow_id),
                  sq_size,
                  cq_size,
-                 flow_params.Priority_Class,
-                 flow_params.Stop_Time,
-                 flow_params.init_occupancy_rate(),
                  flow_params.Total_Requests_To_Generate,
                  interface_type,
                  root_complex,
-                 sata_hba,
-                 host_params.Enable_ResponseTime_Logging,
-                 host_params.ResponseTime_Logging_Period_Length,
-                 host_params.stream_log_path(flow_id)),
+                 sata_hba),
     __run_until(flow_params.Stop_Time),
     __read_ratio(flow_params.read_rate() != 0.0
                   ? flow_params.read_rate() : -1.0),
@@ -55,16 +51,8 @@ IO_Flow_Synthetic::IO_Flow_Synthetic(const sim_object_id_type& name,
                       "for workload " + name);
 }
 
-int
-IO_Flow_Synthetic::_get_progress() const
-{
-  return __run_until == 0
-           ? IO_Flow_Base::_get_progress()
-           : int(double(Simulator->Time()) / __run_until * 100);
-}
-
 force_inline HostIORequest*
-IO_Flow_Synthetic::_generate_next_req()
+IO_Flow_Synthetic::__generate_next_req()
 {
   if ((__run_until > 0 && Simulator->Time() > __run_until) ||
       (__run_until == 0 && _all_request_generated()))
@@ -83,6 +71,20 @@ IO_Flow_Synthetic::_generate_next_req()
                 << "Size_in_bytes:" << lba_count << "")
 
   return _generate_request(Simulator->Time(), start_lba, lba_count, req_type);
+}
+
+int
+IO_Flow_Synthetic::_get_progress() const
+{
+  return __run_until == 0
+         ? IO_Flow_Base::_get_progress()
+         : int(double(Simulator->Time()) / __run_until * 100);
+}
+
+force_inline bool
+IO_Flow_Synthetic::_submit_next_request()
+{
+  return _submit_io_request(__generate_next_req());
 }
 
 void
@@ -136,20 +138,6 @@ IoFlowSyntheticQD::IoFlowSyntheticQD(const sim_object_id_type& name,
     __target_queue_depth(flow_params.Average_No_of_Reqs_in_Queue)
 { }
 
-force_inline void
-IoFlowSyntheticQD::__submit_next_request()
-{
-  /*
-   * In the demand based execution mode, the __generate_next_req() function
-   * may return nullptr if 1) the simulation stop is met, or 2) the number of
-   * generated I/O requests reaches its threshold.
-   */
-  auto* request = _generate_next_req();
-
-  if (request != nullptr)
-    _submit_io_request(request);
-}
-
 void
 IoFlowSyntheticQD::Start_simulation()
 {
@@ -158,12 +146,17 @@ IoFlowSyntheticQD::Start_simulation()
   Simulator->Register_sim_event(1, this, nullptr, 0);
 }
 
+/*
+ * In the demand based execution mode, the __generate_next_req() function
+ * may return nullptr if 1) the simulation stop is met, or 2) the number of
+ * generated I/O requests reaches its threshold.
+ */
 void
 IoFlowSyntheticQD::consume_nvme_io(CQEntry *cqe)
 {
   IO_Flow_Base::consume_nvme_io(cqe);
 
-  __submit_next_request();
+  _submit_next_request();
 }
 
 void
@@ -171,7 +164,7 @@ IoFlowSyntheticQD::consume_sata_io(Host_Components::HostIORequest *request)
 {
   IO_Flow_Base::consume_sata_io(request);
 
-  __submit_next_request();
+  _submit_next_request();
 }
 
 void
@@ -182,12 +175,8 @@ IoFlowSyntheticQD::Execute_simulator_event(MQSimEngine::SimEvent* /* event */)
    * completed. So there is no need register next simulator event.
    * Also, this block only entered only one time.
    */
-  for (uint32_t i = 0; i < __target_queue_depth; i++) {
-    auto* req = _generate_next_req();
-
-    if (req)
-      _submit_io_request(req);
-  }
+  for (uint32_t i = 0; i < __target_queue_depth; i++)
+    _submit_next_request();
 }
 
 void
@@ -251,13 +240,8 @@ IoFlowSyntheticBW::Execute_simulator_event(MQSimEngine::SimEvent* /* event */)
    * entered periodically enqueuing event into simulator object after
    * _submit_io_request().
    */
-  auto* req = _generate_next_req();
-
-  if (req) {
-    _submit_io_request(req);
-
+  if (_submit_next_request())
     Simulator->Register_sim_event(__next_trigger_time(), this, nullptr, 0);
-  }
 }
 
 void
