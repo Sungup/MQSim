@@ -1,10 +1,13 @@
 #ifndef PCIE_SWITCH_H
 #define PCIE_SWITCH_H
 
-#include "../utils/InlineTools.h"
+#include <memory>
+
+#include "../../utils/InlineTools.h"
 
 #include "PCIe_Link.h"
 #include "PCIeMessage.h"
+#include "PCIePort.h"
 
 namespace SSD_Components
 {
@@ -15,15 +18,18 @@ namespace Host_Components
 {
   class PCIeSwitch {
   private:
-    PCIe_Link& __link;
+    PCIePort<PCIeSwitch> __port;
+
     SSD_Components::Host_Interface_Base* __interface;
 
     PCIeMessagePool& __msg_pool;
 
+  private:
+    void __deliver_to_dev(PCIeMessage* message);
+
   public:
     explicit PCIeSwitch(PCIe_Link& pcie_link);
 
-    void deliver_to_device(PCIeMessage* message);
     void send_to_host(PCIeMessage* message);
 
     void connect_ssd(SSD_Components::Host_Interface_Base* interface);
@@ -32,6 +38,12 @@ namespace Host_Components
     template <typename... _Args>
     PCIeMessage* make_pcie_message(_Args&& ... args);
   };
+
+  force_inline void
+  PCIeSwitch::send_to_host(PCIeMessage* message)
+  {
+    __port.deliver(message);
+  }
 
   force_inline void
   PCIeSwitch::connect_ssd(SSD_Components::Host_Interface_Base* interface)

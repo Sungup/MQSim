@@ -3,10 +3,9 @@
 
 #include "../utils/Exception.h"
 
-#define QUEUE_ID_TO_FLOW_ID(Q) Q - 1
-#define FLOW_ID_TO_Q_ID(F) F + 1
-#define NVME_COMP_Q_MEMORY_REGION 40U
 #define DATA_MEMORY_REGION 0xFF0000000000
+
+constexpr uint32_t NVME_CQ_MEM_REGION = 40U;
 
 /*
  * Following addresses is the sq and cq memory address on system. Original MQSim
@@ -31,13 +30,23 @@ sq_memory_address(uint64_t id)
                                  "queues and should not be used for I/O flows");
   if (id > 8)  throw mqsim_error("Assigned id is too large");
 
-  return id << 40U;
+  return id << NVME_CQ_MEM_REGION;
 }
 
 force_inline uint64_t
 cq_memory_address(uint64_t id)
-{
-  return sq_memory_address(id) | 0x00F0ULL << 32U;
-}
+{ return sq_memory_address(id) | 0x00F0ULL << 32U; }
+
+force_inline uint16_t
+cq_addr_to_qid(uint64_t address)
+{ return address >> NVME_CQ_MEM_REGION; }
+
+force_inline uint16_t
+qid_to_flow_id(uint16_t qid)
+{ return qid - 1; }
+
+force_inline uint16_t
+flow_id_to_qid(uint16_t flow_id)
+{ return flow_id + 1; }
 
 #endif//!HOST_DEFS_H

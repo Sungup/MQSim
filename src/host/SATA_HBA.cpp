@@ -72,7 +72,8 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
           sata_ncq.move_sq_tail();
         }
         new_req->Enqueue_time = sim->Time();
-        pcie_root_complex.Write_to_device(sata_ncq.sq_tail_register, sata_ncq.sq_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
+        pcie_root_complex.write_to_device(sata_ncq.sq_tail_register,
+                                          sata_ncq.sq_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
       }
       else break;
 
@@ -101,7 +102,8 @@ void SATA_HBA::Execute_simulator_event(MQSimEngine::SimEvent* event)
         sata_ncq.move_sq_tail();
       }
       request->Enqueue_time = sim->Time();
-      pcie_root_complex.Write_to_device(sata_ncq.sq_tail_register, sata_ncq.sq_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
+      pcie_root_complex.write_to_device(sata_ncq.sq_tail_register,
+                                        sata_ncq.sq_tail);//Based on NVMe protocol definition, the updated tail pointer should be informed to the device
     }
 
     if (host_requests.size() > 0)
@@ -160,7 +162,7 @@ void SATA_HBA::Update_and_submit_ncq_completion_info()
   sata_ncq.cq_head++;
   if (sata_ncq.cq_head == sata_ncq.cq_size)
     sata_ncq.cq_head = 0;
-  pcie_root_complex.Write_to_device(sata_ncq.cq_head_register, sata_ncq.cq_head);//Based on NVMe protocol definition, the updated head pointer should be informed to the device
+  pcie_root_complex.write_to_device(sata_ncq.cq_head_register, sata_ncq.cq_head);//Based on NVMe protocol definition, the updated head pointer should be informed to the device
 }
 
 uint64_t

@@ -31,7 +31,7 @@ IO_Flow_Base::IO_Flow_Base(const sim_object_id_type& name,
     __initial_occupancy_ratio(flow_params.init_occupancy_rate()),
     __pcie_root_complex(root_complex),
     __sata_hba(sata_hba),
-    __nvme_queue_pair(FLOW_ID_TO_Q_ID(flow_id), sq_size, cq_size),
+    __nvme_queue_pair(flow_id_to_qid(flow_id), sq_size, cq_size),
     __submission_queue(__nvme_queue_pair),
     __host_io_req_pool(),
     __sq_entry_pool(),
@@ -74,7 +74,7 @@ IO_Flow_Base::__enqueue_to_sq(HostIORequest* request)
 
   // Based on NVMe protocol definition, the updated tail pointer should be
   // informed to the device
-  __pcie_root_complex->Write_to_device(__nvme_queue_pair.sq_tail_register,
+  __pcie_root_complex->write_to_device(__nvme_queue_pair.sq_tail_register,
                                        __nvme_queue_pair.sq_tail);
 }
 
@@ -95,7 +95,7 @@ IO_Flow_Base::__update_and_submit_cq_tail()
 
   // Based on NVMe protocol definition, the updated head pointer should be
   // informed to the device
-  __pcie_root_complex->Write_to_device(__nvme_queue_pair.cq_head_register,
+  __pcie_root_complex->write_to_device(__nvme_queue_pair.cq_head_register,
                                        __nvme_queue_pair.cq_head);
 }
 

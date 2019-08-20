@@ -1,23 +1,19 @@
 #include "PCIeSwitch.h"
 
-#include "../ssd/interface/Host_Interface_Base.h"
+#include "../../ssd/interface/Host_Interface_Base.h"
 
 using namespace Host_Components;
 
 PCIeSwitch::PCIeSwitch(PCIe_Link& pcie_link)
-  : __link(pcie_link),
+  : __port(this, &PCIeSwitch::__deliver_to_dev,
+           pcie_link, PCIeDest::DEVICE),
     __interface(nullptr),
     __msg_pool(pcie_link.shared_pcie_message_pool())
 { }
 
 void
-PCIeSwitch::deliver_to_device(PCIeMessage* message)
+PCIeSwitch::__deliver_to_dev(PCIeMessage* message)
 {
   __interface->Consume_pcie_message(message);
 }
 
-void
-PCIeSwitch::send_to_host(PCIeMessage* message)
-{
-  __link.Deliver(message);
-}

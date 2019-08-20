@@ -249,7 +249,7 @@ namespace SSD_Components
   {
     auto* hi = (Host_Interface_SATA*)host_interface;
     auto* cqe = _cq_entry_pool.construct(sq_head_value,
-                                         FLOW_ID_TO_Q_ID(SATA_STREAM_ID),
+                                         flow_id_to_qid(SATA_STREAM_ID),
                                          0x0001U & current_phase,
                                          ((SQEntry*)request->IO_command_info)->Command_Identifier);
 

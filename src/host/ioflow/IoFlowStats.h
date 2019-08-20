@@ -16,7 +16,7 @@
 #include "../../sim/Sim_Reporter.h"
 #include "../../utils/CountingStats.h"
 
-#include "../HostIORequest.h"
+#include "HostIORequest.h"
 
 namespace Host_Components {
   class IoFlowStats : public MQSimEngine::Sim_Reporter {

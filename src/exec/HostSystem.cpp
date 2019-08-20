@@ -1,17 +1,12 @@
 #include "HostSystem.h"
 
-#include "../sim/Engine.h"
 #include "../ssd/interface/Host_Interface_NVMe.h"
-#include "../host/PCIe_Root_Complex.h"
 #include "../host/ioflow/IO_Flow_Synthetic.h"
-#include "../host/ioflow/IO_Flow_Trace_Based.h"
-#include "../utils/StringTools.h"
-#include "../utils/Logical_Address_Partitioning_Unit.h"
 
 HostSystem::HostSystem(const HostParameterSet& params,
-                         const IOFlowScenario& scenario,
-                         const Utils::LogicalAddrPartition& lapu,
-                         SsdDevice& ssd)
+                       const IOFlowScenario& scenario,
+                       const Utils::LogicalAddrPartition& lapu,
+                       SsdDevice& ssd)
   : MQSimEngine::Sim_Object("Host"),
     __io_flows(),
     __ssd_device(ssd),
@@ -29,9 +24,6 @@ HostSystem::HostSystem(const HostParameterSet& params,
 {
   Simulator->AddObject(this);
 
-  __link.Set_root_complex(&__root_complex);
-  __link.Set_pcie_switch(&__pcie_switch);
-
   Simulator->AddObject(&__link);
 
   // No flow should ask for I/O queue id 0, it is reserved for NVMe admin
@@ -42,7 +34,7 @@ HostSystem::HostSystem(const HostParameterSet& params,
   const uint16_t cq_size = ssd.nvme_cq_size();
 
   // Create IO flows
-  for (uint16_t flow_id = 0; flow_id < scenario.size(); flow_id++) {
+  for (uint16_t flow_id = 0; flow_id < uint16_t(scenario.size()); flow_id++) {
     auto flow = Host_Components::build_io_flow(ID(),
                                                params,
                                                *scenario[flow_id],

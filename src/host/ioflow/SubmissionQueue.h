@@ -15,7 +15,7 @@
 #include <unordered_set>
 
 #include "IoQueueInfo.h"
-#include "../HostIORequest.h"
+#include "HostIORequest.h"
 
 namespace Host_Components {
   class SubmissionQueue {

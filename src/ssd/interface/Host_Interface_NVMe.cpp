@@ -279,7 +279,7 @@ namespace SSD_Components
   {
     auto* hi = (Host_Interface_NVMe*)host_interface;
     auto* cqe = _cq_entry_pool.construct(sq_head_value,
-                                         FLOW_ID_TO_Q_ID(request->Stream_id),
+                                         flow_id_to_qid(request->Stream_id),
                                          0x0001U & current_phase,
                                          ((SQEntry*)request->IO_command_info)->Command_Identifier);
 

@@ -15,7 +15,7 @@
 #include "../../utils/ProgressBar.h"
 #include "../../utils/ServiceHandler.h"
 #include "../../utils/Workload_Statistics.h"
-#include "../HostIORequest.h"
+#include "HostIORequest.h"
 #include "IoQueueInfo.h"
 #include "IoFlowStats.h"
 #include "IoFlowLog.h"

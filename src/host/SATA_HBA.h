@@ -12,7 +12,7 @@
 #include "../sim/Sim_Defs.h"
 #include "../sim/Sim_Object.h"
 
-#include "HostIORequest.h"
+#include "ioflow/HostIORequest.h"
 #include "ioflow/IO_Flow_Base.h"
 #include "PCIe_Root_Complex.h"
 #include "ioflow/IoQueueInfo.h"

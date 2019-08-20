@@ -15,7 +15,7 @@
 #include "../../sim/Sim_Defs.h"
 #include "../../ssd/interface/Host_Interface_Defs.h"
 
-#include "../HostIORequest.h"
+#include "HostIORequest.h"
 #include "../Host_Defs.h"
 
 namespace Host_Components

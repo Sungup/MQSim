@@ -1,6 +1,6 @@
 #include "Host_Interface_Base.h"
 
-#include "../../host/PCIeSwitch.h"
+#include "../../host/pcie/PCIeSwitch.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
 
 // Children classes for builder
@@ -63,7 +63,7 @@ Host_Interface_Base::Send_read_message_to_host(uint64_t address, uint32_t reques
 
   __pcie_switch->send_to_host(
     __pcie_switch->make_pcie_message(PCIe_Message_Type::READ_REQ,
-                                     PCIe_Destination_Type::HOST,
+                                     PCIeDest::HOST,
                                      address,
                                      request_read_data_size)
                              );
@@ -77,12 +77,24 @@ Host_Interface_Base::Send_write_message_to_host(uint64_t address, void* message,
   __pcie_switch->send_to_host(
     // TODO This block can make the memory leak while runnign simulator.
     __pcie_switch->make_pcie_message(PCIe_Message_Type::WRITE_REQ,
-                                     PCIe_Destination_Type::HOST,
+                                     PCIeDest::HOST,
                                      address,
                                      message_size,
                                      MQSimEngine::copy_data(message,
                                                             message_size))
                              );
+}
+
+void
+Host_Interface_Base::Consume_pcie_message(Host_Components::PCIeMessage* message)
+{
+  if (message->type == Host_Components::PCIe_Message_Type::READ_COMP)
+    request_fetch_unit->Process_pcie_read_message(message->address, message->payload(), message->payload_size);
+  else
+    request_fetch_unit->Process_pcie_write_message(message->address, message->payload(), message->payload_size);
+
+  // TODO Check need to free for the write message's payload data
+  message->release();
 }
 
 // -------------------------

@@ -1,11 +1,11 @@
 #ifndef HOST_SYSTEM_H
 #define HOST_SYSTEM_H
 
-#include "../host/HostIORequest.h"
+#include "../host/ioflow/HostIORequest.h"
 #include "../host/ioflow/IO_Flow_Base.h"
-#include "../host/PCIe_Link.h"
+#include "../host/pcie/PCIe_Link.h"
 #include "../host/PCIe_Root_Complex.h"
-#include "../host/PCIeSwitch.h"
+#include "../host/pcie/PCIeSwitch.h"
 #include "../host/SATA_HBA.h"
 #include "../sim/Sim_Object.h"
 #include "../ssd/interface/Host_Interface_Base.h"

@@ -5,7 +5,7 @@
 #include "../request/UserRequest.h"
 #include "../../sim/Sim_Object.h"
 #include "../../sim/Sim_Reporter.h"
-#include "../../host/PCIeMessage.h"
+#include "../../host/pcie/PCIeMessage.h"
 #include "../dcm/Data_Cache_Manager_Base.h"
 
 // Renewed Headers
@@ -400,18 +400,6 @@ namespace SSD_Components
   Host_Interface_Base::connect_to_user_request_signal(UserRequestServiceHandlerBase& handler)
   {
     __connected_user_req_signal_handlers.emplace_back(&handler);
-  }
-
-  force_inline void
-  Host_Interface_Base::Consume_pcie_message(Host_Components::PCIeMessage* message)
-  {
-    if (message->type == Host_Components::PCIe_Message_Type::READ_COMP)
-      request_fetch_unit->Process_pcie_read_message(message->address, message->payload(), message->payload_size);
-    else
-      request_fetch_unit->Process_pcie_write_message(message->address, message->payload(), message->payload_size);
-
-    // TODO Check need to free for the write message's payload data
-    message->release();
   }
 
   force_inline HostInterface_Types
