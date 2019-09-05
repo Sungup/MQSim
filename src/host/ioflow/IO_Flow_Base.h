@@ -42,10 +42,10 @@ namespace Host_Components
     // performed
     const double __initial_occupancy_ratio;
 
-    PCIe_Root_Complex* __pcie_root_complex;
+    PCIe_Root_Complex& __pcie_root_complex;
     SATA_HBA*          __sata_hba;
 
-    NVMe_Queue_Pair __nvme_queue_pair;
+    IoQueueInfo     __nvme_queue_info;
     SubmissionQueue __submission_queue;
 
     // The I/O requests that are still waiting to be enqueued in the I/O queue
@@ -69,9 +69,9 @@ namespace Host_Components
     void __update_stats_by_request(sim_time_type now,
                                    const HostIORequest* request);
 
-    void __enqueue_to_sq(HostIORequest* request);
-
     void __end_of_request(HostIORequest* request);
+
+    void __enqueue_to_sq(HostIORequest* request);
 
     void __update_and_submit_cq_tail();
 
@@ -104,7 +104,7 @@ namespace Host_Components
                  uint16_t cq_size,
                  uint32_t max_request_count,
                  HostInterface_Types interface_type,
-                 PCIe_Root_Complex* root_complex,
+                 PCIe_Root_Complex& root_complex,
                  SATA_HBA* sata_hba);
 
     ~IO_Flow_Base() override = default;
@@ -115,7 +115,7 @@ namespace Host_Components
 
     IO_Flow_Priority_Class priority_class() const;
 
-    SQEntry* read_nvme_sqe(uint64_t address);
+    SQEntry* read_sq_entry(uint64_t address);
 
     uint64_t sq_base_address() const;
     uint64_t cq_base_address() const;
@@ -176,13 +176,13 @@ namespace Host_Components
   force_inline uint64_t
   IO_Flow_Base::sq_base_address() const
   {
-    return __nvme_queue_pair.sq_memory_base_address;
+    return __nvme_queue_info.sq_memory_base_address;
   }
 
   force_inline uint64_t
   IO_Flow_Base::cq_base_address() const
   {
-    return __nvme_queue_pair.cq_memory_base_address;
+    return __nvme_queue_info.cq_memory_base_address;
   }
 
   force_inline uint32_t

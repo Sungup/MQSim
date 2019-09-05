@@ -23,13 +23,13 @@ PCIe_Root_Complex::__read_nvme_sqe(uint64_t address)
 {
   uint16_t flow_id = qid_to_flow_id(cq_addr_to_qid(address));
 
-  return IO_flows[flow_id]->read_nvme_sqe(address);
+  return IO_flows[flow_id]->read_sq_entry(address);
 }
 
 force_inline void*
 PCIe_Root_Complex::__read_sata_ncq(uint64_t address)
 {
-  return sata_hba->Read_ncq_entry(address);
+  return sata_hba->read_sq_entry(address);
 }
 
 force_inline void
@@ -43,7 +43,7 @@ PCIe_Root_Complex::__consume_nvme_io(const void *payload)
 force_inline void
 PCIe_Root_Complex::__consume_sata_io(const void *payload)
 {
-  sata_hba->SATA_consume_io_request((CQEntry*)payload);
+  sata_hba->consume_sata_io((CQEntry *) payload);
 }
 
 force_inline void

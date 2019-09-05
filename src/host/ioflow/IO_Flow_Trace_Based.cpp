@@ -94,7 +94,7 @@ IO_Flow_Trace_Based::IO_Flow_Trace_Based(const sim_object_id_type& name,
                                          uint16_t sq_size,
                                          uint16_t cq_size,
                                          HostInterface_Types interface_type,
-                                         PCIe_Root_Complex* root_complex,
+                                         PCIe_Root_Complex& root_complex,
                                          SATA_HBA* sata_hba)
   : IO_Flow_Base(name,
                  host_params,

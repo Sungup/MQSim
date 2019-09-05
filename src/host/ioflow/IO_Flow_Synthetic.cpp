@@ -16,7 +16,7 @@ IO_Flow_Synthetic::IO_Flow_Synthetic(const sim_object_id_type& name,
                                      uint16_t sq_size,
                                      uint16_t cq_size,
                                      HostInterface_Types interface_type,
-                                     PCIe_Root_Complex* root_complex,
+                                     PCIe_Root_Complex& root_complex,
                                      SATA_HBA* sata_hba)
   : IO_Flow_Base(name,
                  host_params,
@@ -123,8 +123,8 @@ IoFlowSyntheticQD::IoFlowSyntheticQD(const sim_object_id_type& name,
                                      uint16_t nvme_submission_queue_size,
                                      uint16_t nvme_completion_queue_size,
                                      HostInterface_Types SSD_device_type,
-                                     PCIe_Root_Complex *pcie_root_complex,
-                                     SATA_HBA *sata_hba)
+                                     PCIe_Root_Complex& pcie_root_complex,
+                                     SATA_HBA* sata_hba)
   : IO_Flow_Synthetic(name,
                       host_params,
                       flow_params,
@@ -201,8 +201,8 @@ IoFlowSyntheticBW::IoFlowSyntheticBW(const sim_object_id_type& name,
                                      uint16_t nvme_submission_queue_size,
                                      uint16_t nvme_completion_queue_size,
                                      HostInterface_Types SSD_device_type,
-                                     PCIe_Root_Complex *pcie_root_complex,
-                                     SATA_HBA *sata_hba)
+                                     PCIe_Root_Complex& pcie_root_complex,
+                                     SATA_HBA* sata_hba)
   : IO_Flow_Synthetic(name,
                       host_params,
                       flow_params,
@@ -282,7 +282,7 @@ Host_Components::build_synthetic_flow(const sim_object_id_type& name,
       sq_size,
       cq_size,
       interface_type,
-      &root_complex,
+      root_complex,
       sata_hba
     );
 
@@ -296,7 +296,7 @@ Host_Components::build_synthetic_flow(const sim_object_id_type& name,
       sq_size,
       cq_size,
       interface_type,
-      &root_complex,
+      root_complex,
       sata_hba
     );
   }

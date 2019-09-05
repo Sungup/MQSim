@@ -20,7 +20,7 @@
 namespace Host_Components {
   class SubmissionQueue {
   private:
-    NVMe_Queue_Pair& __pair;
+    IoQueueInfo& __pair;
     std::vector<HostIORequest*> __queue;
 
     // The I/O requests that are enqueued in the I/O queue of the SSD device
@@ -32,7 +32,7 @@ namespace Host_Components {
     void __put_ready_id(uint16_t id);
 
   public:
-    explicit SubmissionQueue(NVMe_Queue_Pair& pair);
+    explicit SubmissionQueue(IoQueueInfo& pair);
 
     bool is_full() const;
     uint16_t enqueue(HostIORequest* request);
@@ -42,7 +42,7 @@ namespace Host_Components {
   };
 
   force_inline
-  SubmissionQueue::SubmissionQueue(Host_Components::NVMe_Queue_Pair& pair)
+  SubmissionQueue::SubmissionQueue(IoQueueInfo& pair)
     : __pair(pair),
       __queue(pair.sq_size, nullptr)
   {
@@ -58,7 +58,7 @@ namespace Host_Components {
     auto cmd_id = *cmd_iter;
 
     if (__map[cmd_id])
-      throw mqsim_error("Unexpected situation in IO_Flow_Base! "
+      throw mqsim_error("Unexpected situation in submission queue! "
                         "Overwriting an unhandled I/O request in the queue!");
 
     __ready_ids.erase(cmd_iter);

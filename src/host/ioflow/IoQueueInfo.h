@@ -36,11 +36,8 @@ namespace Host_Components
     const uint64_t cq_memory_base_address;
 
   public:
-    IoQueueInfo(uint16_t id,
-                uint16_t sq_size,
-                uint16_t cq_size,
-                uint64_t sq_register = INVALID_QUEUE_REGISTER,
-                uint64_t cq_register = INVALID_QUEUE_REGISTER);
+    explicit IoQueueInfo(uint16_t ncq_size);
+    IoQueueInfo(uint16_t id, uint16_t sq_size, uint16_t cq_size);
 
     void move_cq_head(uint16_t size = 1);
     void move_sq_tail(uint16_t size = 1);
@@ -52,23 +49,31 @@ namespace Host_Components
   force_inline
   IoQueueInfo::IoQueueInfo(uint16_t id,
                            uint16_t sq_size,
-                           uint16_t cq_size,
-                           uint64_t sq_register,
-                           uint64_t cq_register)
+                           uint16_t cq_size)
     : sq_head(0),
       sq_tail(0),
       cq_head(0),
       cq_tail(0),
       sq_size(sq_size),
-      sq_tail_register((sq_register == INVALID_QUEUE_REGISTER)
-                         ? sq_register_address(id)
-                         : sq_register),
+      sq_tail_register(sq_register_address(id)),
       sq_memory_base_address(sq_memory_address(id)),
       cq_size(cq_size),
-      cq_head_register((cq_register == INVALID_QUEUE_REGISTER)
-                         ? cq_register_address(id)
-                         : cq_register),
+      cq_head_register(cq_register_address(id)),
       cq_memory_base_address(cq_memory_address(id))
+  { }
+
+  force_inline
+  IoQueueInfo::IoQueueInfo(uint16_t ncq_size)
+    : sq_head(0),
+      sq_tail(0),
+      cq_head(0),
+      cq_tail(0),
+      sq_size(ncq_size),
+      sq_tail_register(NCQ_SUBMISSION_REGISTER),
+      sq_memory_base_address(sq_memory_address(1)),
+      cq_size(ncq_size),
+      cq_head_register(NCQ_COMPLETION_REGISTER),
+      cq_memory_base_address(cq_memory_address(1))
   { }
 
   force_inline void
@@ -94,26 +99,6 @@ namespace Host_Components
   {
     return (sq_tail < (sq_size - 1)) ? sq_tail + 1 ==  sq_head : sq_head == 0;
   }
-
-  // Native Command Queue for SATA
-  class NCQ_Control_Structure : public IoQueueInfo
-  {
-  public:
-    // Contains the I/O requests that are enqueued in the NCQ
-    std::unordered_map<sim_time_type, HostIORequest*> queue;
-
-  public:
-    explicit NCQ_Control_Structure(uint16_t ncq_size);
-  };
-
-  force_inline
-  NCQ_Control_Structure::NCQ_Control_Structure(uint16_t ncq_size)
-    : IoQueueInfo(1, ncq_size, ncq_size,
-                  NCQ_SUBMISSION_REGISTER, NCQ_COMPLETION_REGISTER),
-      queue()
-  { }
-
-  typedef IoQueueInfo NVMe_Queue_Pair;
 }
 
 #endif /* Predefined include guard __MQSim__QueueStructure__ */
