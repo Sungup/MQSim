@@ -5,7 +5,7 @@
 
 #include "../../utils/InlineTools.h"
 
-#include "PCIe_Link.h"
+#include "PCIeLink.h"
 #include "PCIeMessage.h"
 #include "PCIePort.h"
 
@@ -28,7 +28,7 @@ namespace Host_Components
     void __deliver_to_dev(PCIeMessage* message);
 
   public:
-    explicit PCIeSwitch(PCIe_Link& pcie_link);
+    explicit PCIeSwitch(PCIeLink& pcie_link);
 
     void send_to_host(PCIeMessage* message);
 

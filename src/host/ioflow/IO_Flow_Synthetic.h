@@ -47,7 +47,7 @@ namespace Host_Components
                       uint16_t sq_size,
                       uint16_t cq_size,
                       HostInterface_Types interface_type,
-                      PCIe_Root_Complex& root_complex,
+                      PCIeRootComplex& root_complex,
                       SATA_HBA* sata_hba);
 
     ~IO_Flow_Synthetic() override = default;
@@ -75,7 +75,7 @@ namespace Host_Components
                       uint16_t nvme_submission_queue_size,
                       uint16_t nvme_completion_queue_size,
                       HostInterface_Types SSD_device_type,
-                      PCIe_Root_Complex& pcie_root_complex,
+                      PCIeRootComplex& pcie_root_complex,
                       SATA_HBA* sata_hba);
 
     ~IoFlowSyntheticQD() override = default;
@@ -111,7 +111,7 @@ namespace Host_Components
                       uint16_t nvme_submission_queue_size,
                       uint16_t nvme_completion_queue_size,
                       HostInterface_Types SSD_device_type,
-                      PCIe_Root_Complex& pcie_root_complex,
+                      PCIeRootComplex& pcie_root_complex,
                       SATA_HBA* sata_hba);
 
     ~IoFlowSyntheticBW() override = default;
@@ -135,7 +135,7 @@ namespace Host_Components
                                  uint16_t sq_size,
                                  uint16_t cq_size,
                                  HostInterface_Types interface_type,
-                                 PCIe_Root_Complex& root_complex,
+                                 PCIeRootComplex& root_complex,
                                  SATA_HBA* sata_hba);
 }
 

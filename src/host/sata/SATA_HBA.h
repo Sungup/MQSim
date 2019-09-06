@@ -9,14 +9,14 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../ssd/interface/Host_Interface_Defs.h"
-#include "../sim/Sim_Defs.h"
-#include "../sim/Sim_Object.h"
+#include "../../ssd/interface/Host_Interface_Defs.h"
+#include "../../sim/Sim_Defs.h"
+#include "../../sim/Sim_Object.h"
 
-#include "ioflow/HostIORequest.h"
-#include "ioflow/IO_Flow_Base.h"
-#include "PCIe_Root_Complex.h"
-#include "ioflow/IoQueueInfo.h"
+#include "../ioflow/HostIORequest.h"
+#include "../ioflow/IO_Flow_Base.h"
+#include "../pcie/PCIeRootComplex.h"
+#include "../ioflow/IoQueueInfo.h"
 
 namespace SSD_Components {
   class Host_Interface_Base;
@@ -35,7 +35,7 @@ namespace Host_Components {
     // hardware layers to send/receive a SATA message
     sim_time_type __hba_processing_delay;
 
-    PCIe_Root_Complex& __pcie_root_complex;
+    PCIeRootComplex& __pcie_root_complex;
     IoFlowList& __flows;
 
     IoQueueInfo __nvme_queue_info;
@@ -87,7 +87,7 @@ namespace Host_Components {
     SATA_HBA(sim_object_id_type id,
              uint16_t ncq_size,
              sim_time_type hba_processing_delay,
-             PCIe_Root_Complex& pcie_root_complex,
+             PCIeRootComplex& pcie_root_complex,
              IoFlowList& IO_flows);
 
     ~SATA_HBA() final = default;
@@ -150,7 +150,7 @@ namespace Host_Components {
                             HostInterface_Types interface_type,
                             uint16_t ncq_depth,
                             sim_time_type sata_ctrl_delay,
-                            PCIe_Root_Complex& root_complex,
+                            PCIeRootComplex& root_complex,
                             IoFlowList& io_flows);
 }
 

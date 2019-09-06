@@ -29,8 +29,8 @@
     <ClCompile Include="src\host\IO_Flow_Base.cpp" />
     <ClCompile Include="src\host\IO_Flow_Synthetic.cpp" />
     <ClCompile Include="src\host\IO_Flow_Trace_Based.cpp" />
-    <ClCompile Include="src\host\PCIe_Link.cpp" />
-    <ClCompile Include="src\host\PCIe_Root_Complex.cpp" />
+    <ClCompile Include="src\host\PCIeLink.cpp" />
+    <ClCompile Include="src\host\PCIeRootComplex.cpp" />
     <ClCompile Include="src\host\PCIeSwitch.cpp" />
     <ClCompile Include="src\host\SATA_HBA.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -96,9 +96,9 @@
     <ClInclude Include="src\host\IO_Flow_Base.h" />
     <ClInclude Include="src\host\IO_Flow_Synthetic.h" />
     <ClInclude Include="src\host\IO_Flow_Trace_Based.h" />
-    <ClInclude Include="src\host\PCIe_Link.h" />
+    <ClInclude Include="src\host\PCIeLink.h" />
     <ClInclude Include="src\host\PCIeMessage.h" />
-    <ClInclude Include="src\host\PCIe_Root_Complex.h" />
+    <ClInclude Include="src\host\PCIeRootComplex.h" />
     <ClInclude Include="src\host\PCIeSwitch.h" />
     <ClInclude Include="src\host\SATA_HBA.h" />
     <ClInclude Include="src\nvm_chip\flash_memory\Block.h" />

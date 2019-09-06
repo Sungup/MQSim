@@ -3,10 +3,10 @@
 
 #include "../host/ioflow/HostIORequest.h"
 #include "../host/ioflow/IO_Flow_Base.h"
-#include "../host/pcie/PCIe_Link.h"
-#include "../host/PCIe_Root_Complex.h"
+#include "../host/pcie/PCIeLink.h"
+#include "../host/pcie/PCIeRootComplex.h"
 #include "../host/pcie/PCIeSwitch.h"
-#include "../host/SATA_HBA.h"
+#include "../host/sata/SATA_HBA.h"
 #include "../sim/Sim_Object.h"
 #include "../ssd/interface/Host_Interface_Base.h"
 #include "../utils/Workload_Statistics.h"
@@ -19,8 +19,8 @@ private:
   Host_Components::IoFlowList __io_flows;
   SsdDevice&                  __ssd_device;
 
-  Host_Components::PCIe_Link         __link;
-  Host_Components::PCIe_Root_Complex __root_complex;
+  Host_Components::PCIeLink         __link;
+  Host_Components::PCIeRootComplex __root_complex;
   Host_Components::PCIeSwitch        __pcie_switch;
   Host_Components::SataHbaPtr        __sata_hba;
 

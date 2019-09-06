@@ -1,19 +1,19 @@
 #include "SATA_HBA.h"
 
-#include "ioflow/IO_Flow_Base.h"
-#include "PCIe_Root_Complex.h"
+#include "../ioflow/IO_Flow_Base.h"
+#include "../pcie/PCIeRootComplex.h"
 
 // --------------------
 // Includes for builder
 // --------------------
-#include "../ssd/interface/Host_Interface_Base.h"
+#include "../../ssd/interface/Host_Interface_Base.h"
 
 using namespace Host_Components;
 
 SATA_HBA::SATA_HBA(sim_object_id_type id,
                    uint16_t ncq_size,
                    sim_time_type hba_processing_delay,
-                   PCIe_Root_Complex& pcie_root_complex,
+                   PCIeRootComplex& pcie_root_complex,
                    IoFlowList& IO_flows)
  : MQSimEngine::Sim_Object(std::move(id)),
    __hba_processing_delay(hba_processing_delay),
@@ -172,7 +172,7 @@ Host_Components::build_sata_hba(const sim_object_id_type& id,
                                 HostInterface_Types interface_type,
                                 uint16_t ncq_depth,
                                 sim_time_type sata_ctrl_delay,
-                                PCIe_Root_Complex& root_complex,
+                                PCIeRootComplex& root_complex,
                                 IoFlowList& io_flows)
 {
   if (interface_type == HostInterface_Types::SATA)

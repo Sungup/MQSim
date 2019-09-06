@@ -1,24 +1,24 @@
 #ifndef PCIE_ROOT_COMPLEX_H
 #define PCIE_ROOT_COMPLEX_H
 
-#include "../ssd/interface/Host_Interface_Defs.h"
+#include "../../ssd/interface/Host_Interface_Defs.h"
 
-#include "ioflow/IO_Flow_Base.h"
+#include "../ioflow/IO_Flow_Base.h"
 
-#include "Host_Defs.h"
-#include "pcie/PCIe_Link.h"
-#include "pcie/PCIeMessage.h"
-#include "pcie/PCIePort.h"
+#include "../Host_Defs.h"
+#include "PCIeLink.h"
+#include "PCIeMessage.h"
+#include "PCIePort.h"
 
 namespace Host_Components
 {
-  class PCIe_Root_Complex {
+  class PCIeRootComplex {
   private:
-    PCIePort<PCIe_Root_Complex> __port;
+    PCIePort<PCIeRootComplex> __port;
 
-    HostInterface_Types SSD_device_type;
-    SATA_HBA * sata_hba;
-    IoFlowList& IO_flows;
+    HostInterface_Types __ssd_type;
+    SATA_HBA * __sata_hba;
+    IoFlowList& __io_flows;
 
     PCIeMessagePool& __msg_pool;
 
@@ -37,9 +37,9 @@ namespace Host_Components
     void __consume_pcie_message(PCIeMessage* messages);
 
   public:
-    PCIe_Root_Complex(PCIe_Link& pcie_link,
-                      IoFlowList& IO_flows,
-                      HostInterface_Types SSD_device_type);
+    PCIeRootComplex(PCIeLink& pcie_link,
+                    IoFlowList& IO_flows,
+                    HostInterface_Types SSD_device_type);
 
     void write_to_device(uint64_t address, uint16_t write_value);
 
@@ -48,7 +48,7 @@ namespace Host_Components
   };
 
   force_inline void
-  PCIe_Root_Complex::write_to_device(uint64_t address, uint16_t write_value)
+  PCIeRootComplex::write_to_device(uint64_t address, uint16_t write_value)
   {
     // IO_Flow/SATA --> PCIe root complex -->NVMe
     __port.deliver(__msg_pool.construct(PCIe_Message_Type::WRITE_REQ,
@@ -58,9 +58,9 @@ namespace Host_Components
   }
 
   force_inline void
-  PCIe_Root_Complex::assign_sata_hba(SATA_HBA* hba)
+  PCIeRootComplex::assign_sata_hba(SATA_HBA* hba)
   {
-    sata_hba = hba;
+    __sata_hba = hba;
   }
 }
 

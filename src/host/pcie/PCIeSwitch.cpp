@@ -4,7 +4,7 @@
 
 using namespace Host_Components;
 
-PCIeSwitch::PCIeSwitch(PCIe_Link& pcie_link)
+PCIeSwitch::PCIeSwitch(PCIeLink& pcie_link)
   : __port(this, &PCIeSwitch::__deliver_to_dev,
            pcie_link, PCIeDest::DEVICE),
     __interface(nullptr),

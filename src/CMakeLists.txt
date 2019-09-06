@@ -48,20 +48,20 @@ set(MQSIM_HOST_SOURCES
     host/ioflow/IoFlowStats.cpp
     host/ioflow/IoFlowStats.h
     host/ioflow/IoQueueInfo.h
+    host/ioflow/HostIORequest.h
     host/ioflow/SubmissionQueue.h
     host/ioflow/SynFlowRandGen.cpp
     host/ioflow/SynFlowRandGen.h
     host/Host_Defs.h
-    host/ioflow/HostIORequest.h
-    host/pcie/PCIe_Link.cpp
-    host/pcie/PCIe_Link.h
+    host/pcie/PCIeLink.cpp
+    host/pcie/PCIeLink.h
     host/pcie/PCIeMessage.h
-    host/PCIe_Root_Complex.cpp
-    host/PCIe_Root_Complex.h
+    host/pcie/PCIeRootComplex.cpp
+    host/pcie/PCIeRootComplex.h
     host/pcie/PCIeSwitch.cpp
     host/pcie/PCIeSwitch.h
-    host/SATA_HBA.cpp
-    host/SATA_HBA.h host/pcie/PCIePort.h)
+    host/sata/SATA_HBA.cpp
+    host/sata/SATA_HBA.h host/pcie/PCIePort.h)
 
 set(MQSIM_NVM_CHIP_SOURCES
     nvm_chip/NVM_Chip.h

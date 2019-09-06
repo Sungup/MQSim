@@ -2,8 +2,8 @@
 
 #include "../../sim/Engine.h"
 
-#include "../PCIe_Root_Complex.h"
-#include "../SATA_HBA.h"
+#include "../pcie/PCIeRootComplex.h"
+#include "../sata/SATA_HBA.h"
 
 // Children for IO_Flow_Base
 #include "IO_Flow_Synthetic.h"
@@ -22,7 +22,7 @@ IO_Flow_Base::IO_Flow_Base(const sim_object_id_type& name,
                            uint16_t cq_size,
                            uint32_t max_request_count,
                            HostInterface_Types interface_type,
-                           PCIe_Root_Complex& root_complex,
+                           PCIeRootComplex& root_complex,
                            SATA_HBA* sata_hba)
   : MQSimEngine::Sim_Object(name),
     __flow_id(flow_id),
@@ -209,7 +209,7 @@ Host_Components::build_io_flow(const sim_object_id_type& host_id,
                                const IOFlowParamSet& flow_params,
                                const Utils::LogicalAddrPartition& lapu,
                                uint16_t flow_id,
-                               Host_Components::PCIe_Root_Complex& root_complex,
+                               Host_Components::PCIeRootComplex& root_complex,
                                Host_Components::SATA_HBA* sata_hba,
                                HostInterface_Types interface_type,
                                uint16_t sq_size,

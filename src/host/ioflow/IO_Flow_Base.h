@@ -24,7 +24,7 @@
 namespace Host_Components
 {
   class SATA_HBA;
-  class PCIe_Root_Complex;
+  class PCIeRootComplex;
 
   class IO_Flow_Base : public MQSimEngine::Sim_Object
   {
@@ -42,7 +42,7 @@ namespace Host_Components
     // performed
     const double __initial_occupancy_ratio;
 
-    PCIe_Root_Complex& __pcie_root_complex;
+    PCIeRootComplex& __pcie_root_complex;
     SATA_HBA*          __sata_hba;
 
     IoQueueInfo     __nvme_queue_info;
@@ -104,7 +104,7 @@ namespace Host_Components
                  uint16_t cq_size,
                  uint32_t max_request_count,
                  HostInterface_Types interface_type,
-                 PCIe_Root_Complex& root_complex,
+                 PCIeRootComplex& root_complex,
                  SATA_HBA* sata_hba);
 
     ~IO_Flow_Base() override = default;
@@ -222,7 +222,7 @@ namespace Host_Components
                           const IOFlowParamSet& flow_params,
                           const Utils::LogicalAddrPartition& lapu,
                           uint16_t flow_id,
-                          PCIe_Root_Complex& root_complex,
+                          PCIeRootComplex& root_complex,
                           SATA_HBA* sata_hba,
                           HostInterface_Types interface_type,
                           uint16_t sq_size,

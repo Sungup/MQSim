@@ -61,10 +61,10 @@
     <ClCompile Include="src\host\IO_Flow_Trace_Based.cpp">
       <Filter>host</Filter>
     </ClCompile>
-    <ClCompile Include="src\host\PCIe_Link.cpp">
+    <ClCompile Include="src\host\PCIeLink.cpp">
       <Filter>host</Filter>
     </ClCompile>
-    <ClCompile Include="src\host\PCIe_Root_Complex.cpp">
+    <ClCompile Include="src\host\PCIeRootComplex.cpp">
       <Filter>host</Filter>
     </ClCompile>
     <ClCompile Include="src\host\PCIeSwitch.cpp">
@@ -255,13 +255,13 @@
     <ClInclude Include="src\host\IO_Flow_Trace_Based.h">
       <Filter>host</Filter>
     </ClInclude>
-    <ClInclude Include="src\host\PCIe_Link.h">
+    <ClInclude Include="src\host\PCIeLink.h">
       <Filter>host</Filter>
     </ClInclude>
     <ClInclude Include="src\host\PCIeMessage.h">
       <Filter>host</Filter>
     </ClInclude>
-    <ClInclude Include="src\host\PCIe_Root_Complex.h">
+    <ClInclude Include="src\host\PCIeRootComplex.h">
       <Filter>host</Filter>
     </ClInclude>
     <ClInclude Include="src\host\PCIeSwitch.h">

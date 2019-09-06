@@ -9,15 +9,15 @@
 #ifndef __MQSim__PCIePort__
 #define __MQSim__PCIePort__
 
-#include "PCIe_Link.h"
+#include "PCIeLink.h"
 
 namespace Host_Components {
   class PCIePortBase {
   private:
-    PCIe_Link& __link;
+    PCIeLink& __link;
 
   public:
-    PCIePortBase(PCIe_Link& link, PCIeDest port_direction)
+    PCIePortBase(PCIeLink& link, PCIeDest port_direction)
       : __link(link)
     {
       __link.set_port(this, port_direction);
@@ -41,7 +41,7 @@ namespace Host_Components {
 
   public:
     PCIePort(T* device, Handler handler,
-             PCIe_Link& link, PCIeDest port_direction)
+             PCIeLink& link, PCIeDest port_direction)
       : PCIePortBase(link, port_direction),
         __callee(device),
         __handler(handler)
