@@ -42,8 +42,9 @@ namespace Host_Components
     // performed
     const double __initial_occupancy_ratio;
 
+    HostIOReqPool __host_io_req_pool;
+
     PCIeRootComplex& __pcie_root_complex;
-    SATA_HBA*          __sata_hba;
 
     IoQueueInfo     __nvme_queue_info;
     SubmissionQueue __submission_queue;
@@ -52,8 +53,9 @@ namespace Host_Components
     // (the I/O queue is full)
     std::deque<HostIORequest*> __waiting_queue;
 
-    HostIOReqPool __host_io_req_pool;
     SQEntryPool   __sq_entry_pool;
+
+    SATA_HBA*        __sata_hba;
 
     RequestSubmitter __req_submitter;
 

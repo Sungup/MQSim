@@ -20,6 +20,15 @@ namespace SSD_Components
     WRITE
   };
 
+  force_inline UserRequestType
+  opcode_to_req_type(uint8_t opcode) {
+    switch (opcode) {
+    case __READ_OPCODE:  return UserRequestType::READ;
+    case __WRITE_OPCODE: return UserRequestType::WRITE;
+    default: throw mqsim_error("Unexpected user request type");
+    }
+  }
+
   class NvmTransaction;
   class UserRequestBase
   {
@@ -42,17 +51,41 @@ namespace SSD_Components
     void* IO_command_info;//used to store host I/O command info
     void* Data;
 
-    explicit UserRequestBase(uint64_t id);
+    UserRequestBase(uint64_t id,
+                    stream_id_type stream_id,
+                    IO_Flow_Priority_Class priority,
+                    UserRequestType type,
+                    LHA_type start_lba,
+                    uint32_t lba_count,
+                    void* payload,
+                    sim_time_type initiate_time);
+
     bool is_finished() const;
     void assign_data(void* payload, size_t payload_size);
-
   };
 
   force_inline
-  UserRequestBase::UserRequestBase(uint64_t id)
-    : ID(id),
+  UserRequestBase::UserRequestBase(uint64_t id,
+                                   stream_id_type stream_id,
+                                   IO_Flow_Priority_Class priority,
+                                   UserRequestType type,
+                                   LHA_type start_lba,
+                                   uint32_t lba_count,
+                                   void* payload,
+                                   sim_time_type initiate_time)
+    : Priority_class(priority),
+      ID(id),
+      Start_LBA(start_lba),
+      STAT_InitiationTime(initiate_time),
+      STAT_ResponseTime(0),
       Sectors_serviced_from_cache(0),
-      ToBeIgnored(false)
+      Size_in_byte(lba_count * SECTOR_SIZE_IN_BYTE),
+      SizeInSectors(lba_count),
+      Type(type),
+      Stream_id(stream_id),
+      ToBeIgnored(false),
+      IO_command_info(payload),
+      Data(nullptr)
   { }
 
   force_inline bool
@@ -81,8 +114,12 @@ namespace SSD_Components
   public:
     UserReqPool();
 
-    item_t* construct();
+    item_t* construct(stream_id_type stream_id,
+                      IO_Flow_Priority_Class priority,
+                      void* payload);
   };
+
+  typedef UserReqPool::item_t UserRequest;
 
   force_inline
   UserReqPool::UserReqPool()
@@ -90,12 +127,23 @@ namespace SSD_Components
   { }
 
   force_inline UserReqPool::item_t*
-  UserReqPool::construct()
+  UserReqPool::construct(stream_id_type stream_id,
+                         IO_Flow_Priority_Class priority,
+                         void *payload)
   {
-    return Utils::ObjectPool<UserRequestBase>::construct(__last_id++);
-  }
+    auto* sqe = static_cast<SQEntry*>(payload);
 
-  typedef UserReqPool::item_t                UserRequest;
+    return Utils::ObjectPool<UserRequestBase>::construct(
+      __last_id++,
+      stream_id,
+      priority,
+      opcode_to_req_type(sqe->Opcode),
+      to_start_lba(*sqe),
+      to_lba_count(*sqe),
+      payload,
+      Simulator->Time()
+    );
+  }
 
   // TODO Check following sequence can move to the request's destructor;
   force_inline void
@@ -106,7 +154,8 @@ namespace SSD_Components
       delete[] (char*)request->Data;
 
     if (!request->Transaction_list.empty())
-      throw mqsim_error("Deleting an unhandled user requests in the host interface! MQSim thinks something is going wrong!");
+      throw mqsim_error("Deleting an unhandled user requests in the host "
+                        "interface! MQSim thinks something is going wrong!");
 
     request->release();
   }

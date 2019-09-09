@@ -13,6 +13,7 @@
 #include <cstring>
 
 #include "HostInterfaceHandler.h"
+#include "../../utils/ObjectPool.h"
 #include "../phy/PhyHandler.h"
 #include "../NvmTransactionFlashRD.h"
 #include "../NvmTransactionFlashWR.h"
@@ -283,31 +284,43 @@ namespace SSD_Components
   IMPL_ISMB_AVG_IO_OPERATION_TIME(wr, transfer)
   IMPL_ISMB_AVG_IO_OPERATION_TIME(wr, waiting)
 
+  // ================================================
+  // Declare of DmaReqBase, DmaReqPool and DmaReqItem
+  // ================================================
+  class DmaReqBase
+  {
+  public:
+    static constexpr uint8_t REQUEST_INFO = 0;
+    static constexpr uint8_t WRITE_DATA = 1;
+
+    const uint8_t Type;
+    const void* object;
+
+    force_inline
+    DmaReqBase(uint8_t type, void* object)
+      : Type(type),
+        object(object)
+    { }
+  };
+
+  typedef Utils::ObjectPool<DmaReqBase> DmaReqPool;
+  typedef DmaReqPool::item_t            DmaReqItem;
+
   // ==================================
   // Declare of Request_Fetch_Unit_Base
   // ==================================
   class Request_Fetch_Unit_Base
   {
   protected:
-    enum class DMA_Req_Type {
-      REQUEST_INFO,
-      WRITE_DATA
-    };
-
-    struct DMA_Req_Item
-    {
-      DMA_Req_Type Type;
-      void * object;
-    };
-
     UserReqPool _user_req_pool;
     CQEntryPool _cq_entry_pool;
-    Host_Interface_Base* host_interface;
-    std::list<DMA_Req_Item*> dma_list;
+    DmaReqPool  _dma_req_pool;
+    Host_Interface_Base* _interface;
+    std::list<DmaReqItem*> _dma_req_list;
 
   public:
     explicit Request_Fetch_Unit_Base(Host_Interface_Base* host_interface);
-    virtual ~Request_Fetch_Unit_Base();
+    virtual ~Request_Fetch_Unit_Base() = default;
     virtual void Fetch_next_request(stream_id_type stream_id) = 0;
     virtual void Fetch_write_data(UserRequest* request) = 0;
     virtual void Send_read_data(UserRequest* request) = 0;
@@ -319,15 +332,9 @@ namespace SSD_Components
   Request_Fetch_Unit_Base::Request_Fetch_Unit_Base(Host_Interface_Base* host_interface)
     : _user_req_pool(),
       _cq_entry_pool(),
-      host_interface(host_interface)
+      _dma_req_pool(),
+      _interface(host_interface)
   { }
-
-  force_inline
-  Request_Fetch_Unit_Base::~Request_Fetch_Unit_Base()
-  {
-    for (auto &dma_info : dma_list)
-      delete dma_info;
-  }
 
   // ==============================
   // Declare of Host_Interface_Base

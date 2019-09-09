@@ -44,4 +44,10 @@ lsb_of_lba_count(uint32_t lba_count) {
   return UINT16_MASK & lba_count;
 }
 
+force_inline uint64_t
+merge_lba(uint64_t msb, uint64_t lsb)
+{
+  return msb << 32U | lsb;
+}
+
 #endif // !SSD_DEFS_H

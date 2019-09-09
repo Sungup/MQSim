@@ -160,7 +160,7 @@ namespace SSD_Components
 
   void Request_Fetch_Unit_SATA::Process_pcie_write_message(uint64_t address, void * payload, uint32_t /* payload_size */)
   {
-    auto* hi = (Host_Interface_SATA*)host_interface;
+    auto* hi = (Host_Interface_SATA*)_interface;
     auto val = (uint64_t)payload;
     switch (address)
     {
@@ -177,86 +177,73 @@ namespace SSD_Components
 
   void Request_Fetch_Unit_SATA::Process_pcie_read_message(uint64_t /* address */, void * payload, uint32_t payload_size)
   {
-    auto* hi = (Host_Interface_SATA*)host_interface;
-    DMA_Req_Item* dma_req_item = dma_list.front();
-    dma_list.pop_front();
+    auto* hi = (Host_Interface_SATA*)_interface;
+    DmaReqItem* dma_req_item = _dma_req_list.front();
+    _dma_req_list.pop_front();
 
     switch (dma_req_item->Type)
     {
-    case DMA_Req_Type::REQUEST_INFO:
+    case DmaReqBase::REQUEST_INFO:
     {
-      auto* new_reqeust = _user_req_pool.construct();
-      new_reqeust->IO_command_info = payload;
-      new_reqeust->Stream_id = (stream_id_type)((uint64_t)(dma_req_item->object));
-      new_reqeust->STAT_InitiationTime = Simulator->Time();
-      auto* sqe = (SQEntry*)payload;
-      switch (sqe->Opcode)
-      {
-      case SATA_READ_OPCODE:
-        new_reqeust->Type = UserRequestType::READ;
-        new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31U | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
-        new_reqeust->SizeInSectors = sqe->Command_specific[2] & (LHA_type)(0x0000ffff);
-        new_reqeust->Size_in_byte = new_reqeust->SizeInSectors * SECTOR_SIZE_IN_BYTE;
-        break;
-      case SATA_WRITE_OPCODE:
-        new_reqeust->Type = UserRequestType::WRITE;
-        new_reqeust->Start_LBA = ((LHA_type)sqe->Command_specific[1]) << 31U | (LHA_type)sqe->Command_specific[0];//Command Dword 10 and Command Dword 11
-        new_reqeust->SizeInSectors = sqe->Command_specific[2] & (LHA_type)(0x0000ffff);
-        new_reqeust->Size_in_byte = new_reqeust->SizeInSectors * SECTOR_SIZE_IN_BYTE;
-        break;
-      default:
-        throw std::invalid_argument("SATA command is not supported!");
-      }
-      ((Input_Stream_Manager_SATA*)(hi->input_stream_manager))->Handle_new_arrived_request(new_reqeust);
+      auto stream_id = stream_id_type(uint64_t(dma_req_item->object));
+      constexpr IO_Flow_Priority_Class priority = IO_Flow_Priority_Class::MEDIUM;
+
+      auto* new_request = _user_req_pool.construct(stream_id, priority, payload);
+
+      ((Input_Stream_Manager_SATA*)(hi->input_stream_manager))->Handle_new_arrived_request(new_request);
       break;
     }
-    case DMA_Req_Type::WRITE_DATA:
+    case DmaReqBase::WRITE_DATA:
       ((UserRequest*)dma_req_item->object)->assign_data(payload, payload_size);
       ((Input_Stream_Manager_SATA*)(hi->input_stream_manager))->Handle_arrived_write_data((UserRequest*)dma_req_item->object);
       break;
     default:
       break;
     }
-    delete dma_req_item;
+
+    dma_req_item->release();
   }
 
   void Request_Fetch_Unit_SATA::Fetch_next_request(stream_id_type /* stream_id */)
   {
-    auto* dma_req_item = new DMA_Req_Item;
-    dma_req_item->Type = DMA_Req_Type::REQUEST_INFO;
-    dma_req_item->object = (void *)SATA_STREAM_ID;
-    dma_list.push_back(dma_req_item);
+    _dma_req_list.push_back(_dma_req_pool.construct(DmaReqBase::REQUEST_INFO,
+                                                    (void*)SATA_STREAM_ID));
 
-    auto* hi = (Host_Interface_SATA*)host_interface;
+    auto* hi = (Host_Interface_SATA*)_interface;
     Input_Stream_SATA* im = ((Input_Stream_SATA*)hi->input_stream_manager->input_streams[SATA_STREAM_ID]);
-    host_interface->Send_read_message_to_host(im->Submission_queue_base_address + im->Submission_head *
-                                                                                    SQEntry::size(),
-                                              SQEntry::size());
+    _interface->Send_read_message_to_host(im->Submission_queue_base_address + im->Submission_head *
+                                                                              SQEntry::size(),
+                                          SQEntry::size());
   }
 
   void Request_Fetch_Unit_SATA::Fetch_write_data(UserRequest* request)
   {
-    auto* dma_req_item = new DMA_Req_Item;
-    dma_req_item->Type = DMA_Req_Type::WRITE_DATA;
-    dma_req_item->object = (void *)request;
-    dma_list.push_back(dma_req_item);
+    _dma_req_list.push_back(_dma_req_pool.construct(DmaReqBase::WRITE_DATA,
+                                                    (void *)request));
 
     auto* sqe = (SQEntry*)request->IO_command_info;
-    host_interface->Send_read_message_to_host((sqe->PRP_entry_2 << 31U) | sqe->PRP_entry_1, request->Size_in_byte);
+
+    /*
+     * TODO Is this code direct valid page using PRP entry???
+     *      Each PRP entry contains fully accessible address pointer different
+     *      from Read operation. Read operation use two 32bit reserved field
+     *      to pointing starting LBA address.
+     */
+    _interface->Send_read_message_to_host((sqe->PRP_entry_2 << 31U) | sqe->PRP_entry_1, request->Size_in_byte);
   }
 
   void Request_Fetch_Unit_SATA::Send_completion_queue_element(UserRequest* request, uint16_t sq_head_value)
   {
-    auto* hi = (Host_Interface_SATA*)host_interface;
+    auto* hi = (Host_Interface_SATA*)_interface;
     auto* cqe = _cq_entry_pool.construct(sq_head_value,
                                          flow_id_to_qid(SATA_STREAM_ID),
                                          0x0001U & current_phase,
                                          ((SQEntry*)request->IO_command_info)->Command_Identifier);
 
     Input_Stream_SATA* im = ((Input_Stream_SATA*)hi->input_stream_manager->input_streams[SATA_STREAM_ID]);
-    host_interface->Send_write_message_to_host(im->Completion_queue_base_address + im->Completion_tail *
-                                                                                     CQEntry::size(), cqe,
-                                               CQEntry::size());
+    _interface->Send_write_message_to_host(im->Completion_queue_base_address + im->Completion_tail *
+                                                                               CQEntry::size(), cqe,
+                                           CQEntry::size());
     number_of_sent_cqe++;
     if (number_of_sent_cqe % ncq_depth == 0)
     {
@@ -270,7 +257,7 @@ namespace SSD_Components
   void Request_Fetch_Unit_SATA::Send_read_data(UserRequest* request)
   {
     auto* sqe = (SQEntry*)request->IO_command_info;
-    host_interface->Send_write_message_to_host(sqe->PRP_entry_1, request->Data, request->Size_in_byte);
+    _interface->Send_write_message_to_host(sqe->PRP_entry_1, request->Data, request->Size_in_byte);
   }
 
   Host_Interface_SATA::Host_Interface_SATA(const sim_object_id_type& id,

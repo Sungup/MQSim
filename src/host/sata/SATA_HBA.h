@@ -38,7 +38,7 @@ namespace Host_Components {
     PCIeRootComplex& __pcie_root_complex;
     IoFlowList& __flows;
 
-    IoQueueInfo __nvme_queue_info;
+    IoQueueInfo     __nvme_queue_info;
     SubmissionQueue __submission_queue;
 
     // The I/O requests that are still waiting (since the I/O queue is full) to

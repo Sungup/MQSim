@@ -10,6 +10,8 @@
 #include "../../utils/ObjectPool.h"
 #include "../../utils/StringTools.h"
 
+#include "../SSD_Defs.h"
+
 // ======================================
 // Enumerators and its string converters.
 // ======================================
@@ -70,12 +72,16 @@ to_host_interface_type(std::string v)
 
 }
 
-#define NVME_FLUSH_OPCODE 0x0000
-#define NVME_WRITE_OPCODE 0x0001
-#define NVME_READ_OPCODE 0x0002
+constexpr uint8_t __FLUSH_OPCODE = 0x0000;
+constexpr uint8_t __WRITE_OPCODE = 0x0001;
+constexpr uint8_t __READ_OPCODE  = 0x0002;
 
-#define SATA_WRITE_OPCODE 0x0001
-#define SATA_READ_OPCODE 0x0002
+constexpr uint8_t NVME_FLUSH_OPCODE = __FLUSH_OPCODE;
+constexpr uint8_t NVME_WRITE_OPCODE = __WRITE_OPCODE;
+constexpr uint8_t NVME_READ_OPCODE  = __READ_OPCODE;
+
+constexpr uint8_t SATA_WRITE_OPCODE = __WRITE_OPCODE;
+constexpr uint8_t SATA_READ_OPCODE  = __READ_OPCODE;
 
 constexpr uint64_t NCQ_SUBMISSION_REGISTER = 0x1000;
 constexpr uint64_t NCQ_COMPLETION_REGISTER = 0x1003;
@@ -195,37 +201,49 @@ typedef CQEntryPool::item_t            CQEntry;
 class SQEntryBase {
 public:
   // Is it a read or write request
-  uint8_t Opcode;
-  uint8_t PRP_FUSE;
+  const uint8_t Opcode;
+  const uint8_t PRP_FUSE;
 
   //The id of the command in the I/O submission queue
-  uint16_t Command_Identifier;
+  const uint16_t Command_Identifier;
 
-  uint32_t Namespace_identifier;
+  const uint32_t Namespace_identifier;
 
-  uint64_t Reserved;
+  const uint64_t Reserved;
 
-  uint64_t Metadata_pointer_1;
+  const uint64_t Metadata_pointer_1;
 
-  uint64_t PRP_entry_1;
-  uint64_t PRP_entry_2;
+  const uint64_t PRP_entry_1;
+  const uint64_t PRP_entry_2;
 
-  uint32_t Command_specific[6];
+  const uint32_t Command_specific[6];
 
 public:
   SQEntryBase(uint8_t opcode,
               uint16_t command_identifier,
               uint64_t prp_entry_1,
               uint64_t prp_entry_2,
-              uint32_t cdw10 = 0,
-              uint32_t cdw11 = 0,
-              uint32_t cdw12 = 0,
+              uint32_t cdw10 = 0, // lsb of lba
+              uint32_t cdw11 = 0, // msb of lba
+              uint32_t cdw12 = 0, // lsb of lba_count (only lsb 16bit)
               uint32_t cdw13 = 0,
               uint32_t cdw14 = 0,
               uint32_t cdw15 = 0);
 
   static size_t size();
 };
+
+force_inline uint64_t
+to_start_lba(const SQEntryBase& item)
+{
+  return merge_lba(item.Command_specific[1], item.Command_specific[0]);
+}
+
+force_inline uint32_t
+to_lba_count(const SQEntryBase& item)
+{
+  return lsb_of_lba_count(item.Command_specific[2]);
+}
 
 force_inline
 SQEntryBase::SQEntryBase(uint8_t opcode,
