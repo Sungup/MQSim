@@ -31,7 +31,7 @@ void
 ReqSizeDistributor::get_stats(Utils::Workload_Statistics& stats) const
 {
   stats.Request_size_distribution_type = Utils::Request_Size_Distribution_Type::FIXED;
-  stats.Average_request_size_sector = _avg_size;
+  stats.avg_request_sectors = _avg_size;
 }
 
 /// 2. Normalized size distributor

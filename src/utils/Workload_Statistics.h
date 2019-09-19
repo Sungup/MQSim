@@ -111,10 +111,34 @@ namespace Utils
 
     Utils::Request_Size_Distribution_Type Request_size_distribution_type;
     int random_request_size_generator_seed;
-    uint32_t Average_request_size_sector;
+    uint32_t avg_request_sectors;
     uint32_t STDEV_reuqest_size;
     std::vector<uint32_t> Write_size_histogram, Read_size_histogram;//Histogram with 1 sector resolution
+
+  public:
+    double io_rate(sim_time_type avg_rd_lat, sim_time_type avg_wr_lat) const;
   };
+
+  force_inline double
+  Workload_Statistics::io_rate(sim_time_type avg_rd_lat,
+                               sim_time_type avg_wr_lat) const
+  {
+    using namespace Utils;
+
+    double avg_arrival_time = Average_inter_arrival_time_nano_sec;
+
+    if (Type == Workload_Type::SYNTHETIC &&
+        generator_type == RequestFlowControlType::QUEUE_DEPTH) {
+      // QD 1 average arrival time
+      avg_arrival_time = (Read_ratio * avg_rd_lat)
+                           + ((1 - Read_ratio) * avg_wr_lat);
+
+      // QD N's average arrival time
+      avg_arrival_time /= Request_queue_depth;
+    }
+
+    return 1.0 / avg_arrival_time * NSEC_TO_SEC_COEFF * avg_request_sectors;
+  }
 
   typedef std::vector<Workload_Statistics>     WorkloadStatsList;
 }

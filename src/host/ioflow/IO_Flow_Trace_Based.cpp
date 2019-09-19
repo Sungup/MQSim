@@ -323,7 +323,7 @@ IO_Flow_Trace_Based::get_stats(Utils::Workload_Statistics& stats,
   stats.Type = Utils::Workload_Type::TRACE_BASED;
   stats.Total_generated_reqeusts = total_reqs;
   stats.Total_accessed_lbas = total_lbas;
-  stats.Average_request_size_sector = uint32_t(sum_request_size / total_reqs);
+  stats.avg_request_sectors = uint32_t(sum_request_size / total_reqs);
   stats.Average_inter_arrival_time_nano_sec = sum_arrival_interval / total_reqs;
 
   stats.Replay_no = __max_replay;

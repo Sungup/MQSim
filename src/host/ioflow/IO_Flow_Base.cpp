@@ -164,6 +164,10 @@ IO_Flow_Base::get_stats(Utils::Workload_Statistics& stats,
 
   stats.Min_LHA = start_lsa;
   stats.Max_LHA = end_lsa;
+
+  // Initialize stats value to avoid dirty value. Only synthetic workload flow
+  // uses aligned address generator.
+  stats.generate_aligned_addresses = false;
 }
 
 SQEntry* IO_Flow_Base::read_sq_entry(uint64_t address)

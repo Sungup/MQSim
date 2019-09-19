@@ -8,6 +8,7 @@
 #include "Stats.h"
 
 // Refined header list
+#include <map>
 #include "../exec/params/DeviceParameterSet.h"
 #include "tsu/TSU_Base.h"
 #include "fbm/Flash_Block_Manager_Base.h"
@@ -39,6 +40,69 @@ namespace SSD_Components
     FlashBlockManagerPtr  __block_manager;
     AddressMappingUnitPtr __address_mapper;
     GCnWLUnitPtr          __gc_and_wl;
+
+  private:
+    double __overall_io_rate(const Utils::WorkloadStatsList& workload_stats) const;
+
+    /// LPA set generator
+    uint32_t __gen_synthetic_lpa_set(Utils::Workload_Statistics& stat,
+                                     Utils::Address_Distribution_Type& decision_dist_type,
+                                     std::map<LPA_type, page_status_type>& lpa_set,
+                                     std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram,
+                                     uint32_t& hot_region_last_index_in_histogram);
+
+    uint32_t __gen_trace_lpa_set(Utils::Workload_Statistics& stat,
+                                 std::map<LPA_type, page_status_type>& lpa_set,
+                                 std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram,
+                                 uint32_t& hot_region_last_index_in_histogram);
+
+    uint32_t __gen_lpa_set(Utils::Workload_Statistics& stat,
+                           Utils::Address_Distribution_Type& decision_dist_type,
+                           std::map<LPA_type, page_status_type>& lpa_set,
+                           std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram,
+                           uint32_t& hot_region_last_index_in_histogram);
+
+    /// Steady state block status probability
+    void __make_rga_gc_probability(const Utils::Workload_Statistics& stats,
+                                   double rho,
+                                   uint32_t d_choices,
+                                   std::vector<double>& steady_state_probability) const;
+
+    void __make_randp_gc_probability(const Utils::Workload_Statistics& stats,
+                                     double rho,
+                                     std::vector<double>& steady_state_probability) const;
+
+    void __make_randpp_gc_probability(const Utils::Workload_Statistics& stats,
+                                      std::vector<double>& steady_state_probability) const;
+
+    void __make_random_uniform_probability(const Utils::Workload_Statistics& stats,
+                                           double rho,
+                                           std::vector<double>& steady_state_probability) const;
+
+    void __make_random_hotcold_probability(const Utils::Workload_Statistics& stats,
+                                           double rho,
+                                           std::vector<double>& steady_state_probability) const;
+
+    void __make_streaming_probability(const Utils::Workload_Statistics& stats,
+                                      double rho,
+                                      std::vector<double>& steady_state_probability) const;
+
+    void __make_steady_state_probability(const Utils::Workload_Statistics& stats,
+                                         Utils::Address_Distribution_Type decision_dist_type,
+                                         std::vector<double>& steady_state_probability);
+
+    /// Warm-up related functions
+    void __warm_up(const Utils::Workload_Statistics& stat,
+                   uint32_t total_workloads,
+                   double overall_rate,
+                   Utils::Address_Distribution_Type decision_dist_type,
+                   uint32_t hot_region_last_index_in_histogram,
+                   const std::map<LPA_type, page_status_type>& lpa_set,
+                   std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram);
+
+    uint32_t __unit_precondition(Utils::Workload_Statistics& stat,
+                                 uint32_t total_workloads,
+                                 double overall_rate);
 
   public:
     FTL(const sim_object_id_type& id,

@@ -1,21 +1,6 @@
 #include "Helper_Functions.h"
 #include <cmath>
 
-double
-Utils::Combination_count(double n, double k)
-{
-  if (k > n) return 0;
-  if (k * 2 > n) k = n - k;
-  if (k == 0) return 1;
-
-  double result = n;
-  for (int i = 2; i <= k; ++i) {
-    result *= (n - i + 1);
-    result /= i;
-  }
-  return result;
-}
-
 void
 Utils::Euler_estimation(std::vector<double>& mu,
                         uint32_t b,
@@ -26,27 +11,27 @@ Utils::Euler_estimation(std::vector<double>& mu,
                         int itr_max)
 {
   std::vector<double> w_0, w;
-  for (int i = 0; i <= mu.size(); i++)
-  {
-    if (i == 0)
-    {
-      w_0.push_back(1);
-      w.push_back(1);
-    }
-    else
-    {
-      w_0.push_back(0);
-      w.push_back(0);
-      for (int j = i; j < mu.size(); j++)
-        w_0[i] += mu[j];
-    }
+
+  w_0.reserve(mu.size());
+  w.reserve(mu.size());
+
+  w_0.emplace_back(1);
+  w.emplace_back(1);
+
+  for (size_t i = 1; i <= mu.size(); i++) {
+    double w_0_val = 0;
+
+    for (size_t j = i; j < mu.size(); j++)
+      w_0_val += mu[j];
+
+    w_0.emplace_back(w_0_val);
+    w.emplace_back(0);
   }
 
   double t = h;
   int itr = 0;
   double diff = 100000000000000;
-  while (itr < itr_max && diff > max_diff)
-  {
+  while (itr < itr_max && diff > max_diff) {
     double sigma = 0;
     for (uint32_t j = 1; j <= b; j++)
       sigma += std::pow(w_0[j], d);
@@ -54,13 +39,12 @@ Utils::Euler_estimation(std::vector<double>& mu,
     for (uint32_t i = 1; i < b; i++)
       w[i] = w_0[i] + h * (1 - std::pow(w_0[i], d) - (b - sigma) * ((i * (w_0[i] - w_0[i + 1])) / (b * rho)));
 
-
     diff = std::abs(w[0] - w_0[0]);
     for (uint32_t i = 1; i <= b; i++)
       if (std::abs(w[i] - w_0[i]) > diff)
         diff = std::abs(w[i] - w_0[i]);
 
-    for (int i = 1; i < w_0.size(); i++)
+    for (size_t i = 1; i < w_0.size(); i++)
       w_0[i] = w[i];
 
     t += h;
