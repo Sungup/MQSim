@@ -75,23 +75,41 @@ namespace SSD_Components
     void __make_randpp_gc_probability(const Utils::Workload_Statistics& stats,
                                       std::vector<double>& steady_state_probability) const;
 
-    void __make_random_uniform_probability(const Utils::Workload_Statistics& stats,
-                                           double rho,
-                                           std::vector<double>& steady_state_probability) const;
+    void __make_uniform_probability(const Utils::Workload_Statistics& stats,
+                                    double rho,
+                                    std::vector<double>& steady_state_probability) const;
 
-    void __make_random_hotcold_probability(const Utils::Workload_Statistics& stats,
-                                           double rho,
-                                           std::vector<double>& steady_state_probability) const;
+    void __make_hotcold_probability(const Utils::Workload_Statistics& stats,
+                                    double rho,
+                                    std::vector<double>& steady_state_probability) const;
 
-    void __make_streaming_probability(const Utils::Workload_Statistics& stats,
-                                      double rho,
-                                      std::vector<double>& steady_state_probability) const;
+    void __make_stream_probability(const Utils::Workload_Statistics& stats,
+                                   double rho,
+                                   std::vector<double>& steady_state_probability) const;
 
     void __make_steady_state_probability(const Utils::Workload_Statistics& stats,
                                          Utils::Address_Distribution_Type decision_dist_type,
                                          std::vector<double>& steady_state_probability);
 
     /// Warm-up related functions
+    uint32_t __cmt_entries(const Utils::Workload_Statistics & stat,
+                           uint32_t total_workloads,
+                           uint32_t histogram_size,
+                           double overall_rate) const;
+
+    void __hotcold_warmup(const Utils::Workload_Statistics& stat,
+                          uint32_t hot_region_last_index_in_histogram,
+                          uint32_t cmt_entires,
+                          std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram);
+
+    void __uniform_warmup(const Utils::Workload_Statistics& stat,
+                          uint32_t cmt_entries,
+                          std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram);
+
+    void __stream_warmup(const Utils::Workload_Statistics& stat,
+                         const std::map<LPA_type, page_status_type>& lpa_set,
+                         uint32_t cmt_entries);
+
     void __warm_up(const Utils::Workload_Statistics& stat,
                    uint32_t total_workloads,
                    double overall_rate,
@@ -100,6 +118,7 @@ namespace SSD_Components
                    const std::map<LPA_type, page_status_type>& lpa_set,
                    std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram);
 
+    /// Unit pre-conditioning function
     uint32_t __unit_precondition(Utils::Workload_Statistics& stat,
                                  uint32_t total_workloads,
                                  double overall_rate);

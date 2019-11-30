@@ -53,7 +53,7 @@ include(CPack)
 option(FORCE_INLINE "User force inline functions on compile time" On)
 option(BLOCK_ERASE_HISTO "Gathering block erase histogram" Off)
 option(SKIP_EXCEPTION_CHECK "Skip exception status check in logic" On)
-option(STATIC_BOOST "Use boost's static libraries" On)
+option(STATIC_BOOST "Use boost's static libraries" Off)
 
 # Set the default output path
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)

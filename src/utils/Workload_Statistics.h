@@ -131,7 +131,7 @@ namespace Utils
         generator_type == RequestFlowControlType::QUEUE_DEPTH) {
       // QD 1 average arrival time
       avg_arrival_time = (Read_ratio * avg_rd_lat)
-                           + ((1 - Read_ratio) * avg_wr_lat);
+                           + ((1.0 - Read_ratio) * avg_wr_lat);
 
       // QD N's average arrival time
       avg_arrival_time /= Request_queue_depth;
