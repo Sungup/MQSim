@@ -1,14 +1,15 @@
 
 set(Boost_USE_STATIC_LIBS ${STATIC_BOOST})
 set(Boost_USE_STATIC_RUNTIME ${STATIC_BOOST})
-find_package(Boost COMPONENTS system filesystem)
 
-find_package(Boost COMPONENTS program_options REQUIRED)
-if (Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIR})
-else (Boost_FOUND)
-    message(FATAL_ERROR "Boost library doesn't exist in this system!!")
-endif (Boost_FOUND)
+#find_package(Boost COMPONENTS system filesystem program_options REQUIRED)
+
+#if (Boost_FOUND)
+#    include_directories(${Boost_INCLUDE_DIR})
+#else (Boost_FOUND)
+#    message(FATAL_ERROR "Boost library doesn't exist in this system!!")
+#endif (Boost_FOUND)
+set(Boost_NO_BOOST_CMAKE ON)
 
 # RapidJSON corrently not in use until
 #

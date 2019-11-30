@@ -287,17 +287,19 @@ namespace SSD_Components
   // ================================================
   // Declare of DmaReqBase, DmaReqPool and DmaReqItem
   // ================================================
+  enum class DmaReqType : uint8_t {
+    REQUEST_INFO = 0,
+    WRITE_DATA = 1
+  };
+
   class DmaReqBase
   {
   public:
-    static constexpr uint8_t REQUEST_INFO = 0;
-    static constexpr uint8_t WRITE_DATA = 1;
-
-    const uint8_t Type;
+    const DmaReqType Type;
     const void* object;
 
     force_inline
-    DmaReqBase(uint8_t type, void* object)
+    DmaReqBase(DmaReqType type, void* object)
       : Type(type),
         object(object)
     { }

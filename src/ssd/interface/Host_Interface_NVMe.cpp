@@ -210,7 +210,7 @@ namespace SSD_Components
 
     switch (dma_req_item->Type)
     {
-    case DmaReqBase::REQUEST_INFO:
+    case DmaReqType::REQUEST_INFO:
     {
       auto stream_id = stream_id_type(uint64_t(dma_req_item->object));
       auto priority = ((Input_Stream_Manager_NVMe*)_interface->input_stream_manager)->Get_priority_class(stream_id);
@@ -219,7 +219,7 @@ namespace SSD_Components
       ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Handle_new_arrived_request(new_request);
       break;
     }
-    case DmaReqBase::WRITE_DATA:
+    case DmaReqType::WRITE_DATA:
       ((UserRequest*)dma_req_item->object)->assign_data(payload, payload_size);
       ((Input_Stream_Manager_NVMe*)(hi->input_stream_manager))->Handle_arrived_write_data((UserRequest*)dma_req_item->object);
       break;
@@ -231,7 +231,7 @@ namespace SSD_Components
 
   void Request_Fetch_Unit_NVMe::Fetch_next_request(stream_id_type stream_id)
   {
-    _dma_req_list.push_back(_dma_req_pool.construct(DmaReqBase::REQUEST_INFO,
+    _dma_req_list.push_back(_dma_req_pool.construct(DmaReqType::REQUEST_INFO,
                                                     (void*)(intptr_t) stream_id));
 
     auto* hi = (Host_Interface_NVMe*)_interface;
@@ -243,8 +243,9 @@ namespace SSD_Components
 
   void Request_Fetch_Unit_NVMe::Fetch_write_data(UserRequest* request)
   {
-    _dma_req_list.push_back(_dma_req_pool.construct(DmaReqBase::WRITE_DATA,
-                                                    (void *)request));
+    _dma_req_list.push_back(
+      _dma_req_pool.construct(DmaReqType::WRITE_DATA, (void *)request)
+    );
 
     auto* sqe = (SQEntry*) request->IO_command_info;
 
