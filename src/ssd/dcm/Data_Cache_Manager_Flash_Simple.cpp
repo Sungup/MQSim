@@ -109,6 +109,7 @@ Data_Cache_Manager_Flash_Simple::process_new_user_request(UserRequest* user_requ
       if (!user_request->Transaction_list.empty())
         nvm_firmware->dispatch_transactions(user_request->Transaction_list);
 
+      // TODO Latest version has been deleted return clause. But that will be fell into following PRINT_ERROR clause
       return;
     }
     default:
@@ -128,6 +129,7 @@ Data_Cache_Manager_Flash_Simple::process_new_user_request(UserRequest* user_requ
 
       if (!user_request->Transaction_list.empty())
         waiting_user_requests_queue_for_dram_free_slot[user_request->Stream_id].push_back(user_request);
+      // TODO Latest version has been deleted return clause. But that will be fell into following PRINT_ERROR clause
       return;
     }
     default:

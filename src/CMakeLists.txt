@@ -163,7 +163,9 @@ set(MQSIM_SSD_SOURCES
     ssd/Queue_Probe.h
     ssd/SSD_Defs.h
     ssd/Stats.cpp
-    ssd/Stats.h)
+    ssd/Stats.h
+    ssd/warmup/ReqSizeGenerator.cpp
+    ssd/warmup/ReqSizeGenerator.h)
 
 set(MQSIM_UTILS_SOURCES
     utils/rapidxml/rapidxml.hpp
@@ -183,7 +185,6 @@ set(MQSIM_UTILS_SOURCES
     utils/Logical_Address_Partitioning_Unit.h
     utils/ObjectPool.h
     utils/ProgressBar.h
-    utils/RandomGenerator.cpp
     utils/RandomGenerator.h
     utils/ServiceHandler.h
     utils/StringTools.h

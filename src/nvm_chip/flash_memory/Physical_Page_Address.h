@@ -22,32 +22,47 @@ namespace NVM
       flash_block_ID_type BlockID;
       flash_page_ID_type PageID;
 
-      Physical_Page_Address(const flash_channel_ID_type channel_id = 0, const flash_chip_ID_type chip_id = 0, const flash_die_ID_type die_id = 0,
-        const flash_plane_ID_type plane_id = 0, const flash_block_ID_type block_id = 0, const flash_page_ID_type page_id = 0)
-      {
-        ChannelID = channel_id;
-        ChipID = chip_id;
-        DieID = die_id;
-        PlaneID = plane_id;
-        BlockID = block_id;
-        PageID = page_id;
-      }
+      explicit Physical_Page_Address(const flash_channel_ID_type channel_id = 0,
+                                     const flash_chip_ID_type chip_id = 0,
+                                     const flash_die_ID_type die_id = 0,
+                                     const flash_plane_ID_type plane_id = 0,
+                                     const flash_block_ID_type block_id = 0,
+                                     const flash_page_ID_type page_id = 0)
+        : ChannelID(channel_id),
+          ChipID(chip_id),
+          DieID(die_id),
+          PlaneID(plane_id),
+          BlockID(block_id),
+          PageID(page_id)
+      { }
 
       Physical_Page_Address(const Physical_Page_Address& addressToCopy)
-      {
-        ChannelID = addressToCopy.ChannelID;
-        ChipID = addressToCopy.ChipID;
-        DieID = addressToCopy.DieID;
-        PlaneID = addressToCopy.PlaneID;
-        BlockID = addressToCopy.BlockID;
-        PageID = addressToCopy.PageID;
-      }
+        : ChannelID(addressToCopy.ChannelID),
+          ChipID(addressToCopy.ChipID),
+          DieID(addressToCopy.DieID),
+          PlaneID(addressToCopy.PlaneID),
+          BlockID(addressToCopy.BlockID),
+          PageID(addressToCopy.PageID)
+      { }
 
       static void SetBlockAddressConstraint(const bool BAConstraint)
       {
         block_address_constraint_for_multiplane = BAConstraint;
       }
     };
+
+    force_inline std::ostream&
+    operator<<(std::ostream& os, const Physical_Page_Address& obj)
+    {
+      os << "PPA[" << obj.ChannelID << "]"
+         << "[" << obj.ChipID << "]"
+         << "[" << obj.DieID << "]"
+         << "[" << obj.PlaneID << "]"
+         << "[" << obj.BlockID << "]"
+         << "[" << obj.PageID << "]";
+
+      return os;
+    }
   }
 }
 #endif // !PageAddress_H

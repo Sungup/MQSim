@@ -34,7 +34,7 @@ namespace SSD_Components
     flash_block_ID_type Get_coldest_block_id(const NVM::FlashMemory::Physical_Page_Address& plane_address);
     uint32_t Get_min_max_erase_difference(const NVM::FlashMemory::Physical_Page_Address& plane_address);
     void Set_GC_and_WL_Unit(GC_and_WL_Unit_Base* );
-    PlaneBookKeepingType* Get_plane_bookkeeping_entry(const NVM::FlashMemory::Physical_Page_Address& plane_address);
+    PlaneBookKeepingType& Get_plane_bookkeeping_entry(const NVM::FlashMemory::Physical_Page_Address& ppa);
     bool Block_has_ongoing_gc_wl(const NVM::FlashMemory::Physical_Page_Address& block_address);//Checks if there is an ongoing gc for block_address
     bool Can_execute_gc_wl(const NVM::FlashMemory::Physical_Page_Address& block_address);//Checks if the gc request can be executed on block_address (there shouldn't be any ongoing user read/program requests targeting block_address)
     void GC_WL_started(const NVM::FlashMemory::Physical_Page_Address& block_address);//Updates the block bookkeeping record
@@ -63,6 +63,12 @@ namespace SSD_Components
   };
 
   typedef std::shared_ptr<Flash_Block_Manager_Base> FlashBlockManagerPtr;
+
+  force_inline PlaneBookKeepingType&
+  Flash_Block_Manager_Base::Get_plane_bookkeeping_entry(const NVM::FlashMemory::Physical_Page_Address& ppa)
+  {
+    return plane_manager[ppa.ChannelID][ppa.ChipID][ppa.DieID][ppa.PlaneID];
+  }
 
   FlashBlockManagerPtr build_fbm_object(const DeviceParameterSet& params,
                                         uint32_t concurrent_stream_count,

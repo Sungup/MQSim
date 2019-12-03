@@ -43,9 +43,9 @@ namespace SSD_Components
     if (free_block_pool_size < block_pool_gc_threshold)
     {
       flash_block_ID_type gc_candidate_block_id = block_manager->Get_coldest_block_id(plane_address);
-      PlaneBookKeepingType* pbke = block_manager->Get_plane_bookkeeping_entry(plane_address);
+      PlaneBookKeepingType& pbke = block_manager->Get_plane_bookkeeping_entry(plane_address);
 
-      if (pbke->Ongoing_erase_operations.size() >= max_ongoing_gc_reqs_per_plane)
+      if (pbke.Ongoing_erase_operations.size() >= max_ongoing_gc_reqs_per_plane)
         return;
 
       switch (block_selection_policy)
@@ -53,12 +53,12 @@ namespace SSD_Components
       case SSD_Components::GC_Block_Selection_Policy_Type::GREEDY://Find the set of blocks with maximum number of invalid pages and no free pages
       {
         gc_candidate_block_id = 0;
-        if (pbke->Ongoing_erase_operations.find(0) != pbke->Ongoing_erase_operations.end())
+        if (pbke.Ongoing_erase_operations.find(0) != pbke.Ongoing_erase_operations.end())
           gc_candidate_block_id++;
         for (flash_block_ID_type block_id = 1; block_id < block_no_per_plane; block_id++)
         {
-          if (pbke->Blocks[block_id].Invalid_page_count > pbke->Blocks[gc_candidate_block_id].Invalid_page_count
-            && pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+          if (pbke.Blocks[block_id].Invalid_page_count > pbke.Blocks[gc_candidate_block_id].Invalid_page_count
+            && pbke.Blocks[block_id].Current_page_write_index == pages_no_per_block
             && is_safe_gc_wl_candidate(pbke, block_id))
             gc_candidate_block_id = block_id;
         }
@@ -70,14 +70,14 @@ namespace SSD_Components
         while (random_set.size() < rga_set_size)
         {
           flash_block_ID_type block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
-          if (pbke->Ongoing_erase_operations.find(block_id) == pbke->Ongoing_erase_operations.end()
+          if (pbke.Ongoing_erase_operations.find(block_id) == pbke.Ongoing_erase_operations.end()
             && is_safe_gc_wl_candidate(pbke, block_id))
             random_set.insert(block_id);
         }
         gc_candidate_block_id = *random_set.begin();
         for(auto &block_id : random_set)
-          if (pbke->Blocks[block_id].Invalid_page_count > pbke->Blocks[gc_candidate_block_id].Invalid_page_count
-            && pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block)
+          if (pbke.Blocks[block_id].Invalid_page_count > pbke.Blocks[gc_candidate_block_id].Invalid_page_count
+            && pbke.Blocks[block_id].Current_page_write_index == pages_no_per_block)
             gc_candidate_block_id = block_id;
         break;
       }
@@ -95,7 +95,7 @@ namespace SSD_Components
         uint32_t repeat = 0;
 
         //A write frontier block or a block with free pages should not be selected for garbage collection
-        while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block || !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
+        while ((pbke.Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block || !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
           && repeat++ < block_no_per_plane)
           gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
         break;
@@ -106,33 +106,35 @@ namespace SSD_Components
         uint32_t repeat = 0;
 
         //The selected gc block should have a minimum number of invalid pages
-        while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block 
-          || pbke->Blocks[gc_candidate_block_id].Invalid_page_count < random_pp_threshold
+        while ((pbke.Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block
+          || pbke.Blocks[gc_candidate_block_id].Invalid_page_count < random_pp_threshold
           || !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
           && repeat++ < block_no_per_plane)
           gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
         break;
       }
       case SSD_Components::GC_Block_Selection_Policy_Type::FIFO:
-        gc_candidate_block_id = pbke->Block_usage_history.front();
-        pbke->Block_usage_history.pop();
+        gc_candidate_block_id = pbke.Block_usage_history.front();
+        pbke.Block_usage_history.pop();
         break;
       default:
         break;
       }
       
-      if (pbke->Ongoing_erase_operations.find(gc_candidate_block_id) != pbke->Ongoing_erase_operations.end())//This should never happen, but we check it here for safty
+      if (pbke.Ongoing_erase_operations.find(gc_candidate_block_id) != pbke.Ongoing_erase_operations.end())//This should never happen, but we check it here for safty
         return;
       
       NVM::FlashMemory::Physical_Page_Address gc_candidate_address(plane_address);
       gc_candidate_address.BlockID = gc_candidate_block_id;
-      Block_Pool_Slot_Type& block = pbke->Blocks[gc_candidate_block_id];
+
+      Block_Pool_Slot_Type& block = pbke.Blocks[gc_candidate_block_id];
       if (block.Current_page_write_index == 0 || block.Invalid_page_count == 0)//No invalid page to erase
         return;
       
       //Run the state machine to protect against race condition
       block_manager->GC_WL_started(gc_candidate_address);
-      pbke->Ongoing_erase_operations.insert(gc_candidate_block_id);
+      pbke.Ongoing_erase_operations.insert(gc_candidate_block_id);
+
       address_mapping_unit->Set_barrier_for_accessing_physical_block(gc_candidate_address);//Lock the block, so no user request can intervene while the GC is progressing
 
       // If there are ongoing requests targeting the candidate block, the gc execution should be postponed

@@ -4,11 +4,14 @@
 #include <map>
 #include <functional>
 #include <iterator>
+
 #include "../sim/Sim_Defs.h"
 #include "../utils/DistributionTypes.h"
 #include "../utils/Helper_Functions.h"
 #include "FTL.h"
 #include "mapping/AddressMappingUnitDefs.h"
+
+#include "warmup/ReqSizeGenerator.h"
 
 using namespace SSD_Components;
 
@@ -176,33 +179,16 @@ FTL::__gen_synthetic_lpa_set(Utils::Workload_Statistics& stat,
     }
   }
 
-  Utils::RandomGenerator* random_request_size_generator = nullptr;
-
-  if (stat.Request_size_distribution_type == Utils::Request_Size_Distribution_Type::NORMAL)
-    random_request_size_generator = new Utils::RandomGenerator(stat.random_request_size_generator_seed);
-
-  uint32_t size = 0;
+  ReqSizeGenerator req_size = build_req_size_gen(stat);
 
   bool hot_range_finished = false; // Only for hot-cold distribution
+
+  LPA_type max_lpa_within_device = Convert_host_logical_address_to_device_address(stat.Max_LHA) - Convert_host_logical_address_to_device_address(stat.Min_LHA);
 
   while (lpa_set.size() < steady_state_pages)
   {
     LHA_type start_LBA = 0;
-
-    switch (stat.Request_size_distribution_type)
-    {
-      case Utils::Request_Size_Distribution_Type::FIXED:
-        size = stat.avg_request_sectors;
-        break;
-      case Utils::Request_Size_Distribution_Type::NORMAL:
-      {
-        double temp_request_size = random_request_size_generator->Normal(stat.avg_request_sectors, stat.STDEV_reuqest_size);
-        size = (uint32_t)(std::ceil(temp_request_size));
-        if (size <= 0)
-          size = 1;
-        break;
-      }
-    }
+    uint32_t size = req_size->generate();
 
     bool is_hot_address = false;
 
@@ -274,11 +260,9 @@ FTL::__gen_synthetic_lpa_set(Utils::Workload_Statistics& stat,
     if (stat.generate_aligned_addresses)
       start_LBA -= start_LBA % stat.alignment_value;
 
-
     uint32_t hanled_sectors_count = 0;
     LHA_type lsa = start_LBA - min_lha;
     uint32_t transaction_size = 0;
-    LPA_type max_lpa_within_device = Convert_host_logical_address_to_device_address(stat.Max_LHA) - Convert_host_logical_address_to_device_address(stat.Min_LHA);
     while (hanled_sectors_count < size)
     {
       transaction_size = page_size_in_sectors - (uint32_t)(lsa % page_size_in_sectors);
@@ -313,7 +297,6 @@ FTL::__gen_synthetic_lpa_set(Utils::Workload_Statistics& stat,
   delete random_address_generator;
   delete random_hot_address_generator;
   delete random_hot_cold_generator;
-  delete random_request_size_generator;
 
   return accessed_cmt_entries;
 }

@@ -63,9 +63,9 @@ uint32_t Flash_Block_Manager_Base::Get_min_max_erase_difference(const NVM::Flash
 
   for (uint32_t i = 1; i < block_no_per_plane; i++)
   {
-    if (plane_record->Blocks[i].Erase_count > plane_record->Blocks[i].Erase_count)
+    if (plane_record->Blocks[i].Erase_count > plane_record->Blocks[max_erased_block].Erase_count)
       max_erased_block = i;
-    if (plane_record->Blocks[i].Erase_count < plane_record->Blocks[i].Erase_count)
+    if (plane_record->Blocks[i].Erase_count < plane_record->Blocks[min_erased_block].Erase_count)
       min_erased_block = i;
   }
   return max_erased_block - min_erased_block;
@@ -78,16 +78,10 @@ flash_block_ID_type Flash_Block_Manager_Base::Get_coldest_block_id(const NVM::Fl
 
   for (uint32_t i = 1; i < block_no_per_plane; i++)
   {
-    /// TODO ?????? Is this meaning block???????
-    if (plane_record->Blocks[i].Erase_count < plane_record->Blocks[i].Erase_count)
+    if (plane_record->Blocks[i].Erase_count < plane_record->Blocks[min_erased_block].Erase_count)
       min_erased_block = i;
   }
   return min_erased_block;
-}
-
-PlaneBookKeepingType* Flash_Block_Manager_Base::Get_plane_bookkeeping_entry(const NVM::FlashMemory::Physical_Page_Address& plane_address)
-{
-  return &(plane_manager[plane_address.ChannelID][plane_address.ChipID][plane_address.DieID][plane_address.PlaneID]);
 }
 
 bool Flash_Block_Manager_Base::Block_has_ongoing_gc_wl(const NVM::FlashMemory::Physical_Page_Address& block_address)
@@ -98,14 +92,14 @@ bool Flash_Block_Manager_Base::Block_has_ongoing_gc_wl(const NVM::FlashMemory::P
 
 bool Flash_Block_Manager_Base::Can_execute_gc_wl(const NVM::FlashMemory::Physical_Page_Address& block_address)
 {
-  PlaneBookKeepingType *plane_record = &plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID];
-  return (plane_record->Blocks[block_address.BlockID].Ongoing_user_program_count + plane_record->Blocks[block_address.BlockID].Ongoing_user_read_count == 0);
+  auto& block_record = Get_plane_bookkeeping_entry(block_address).Blocks[block_address.BlockID];
+  return (block_record.Ongoing_user_program_count + block_record.Ongoing_user_read_count == 0);
 }
 
 void Flash_Block_Manager_Base::GC_WL_started(const NVM::FlashMemory::Physical_Page_Address& block_address)
 {
-  PlaneBookKeepingType *plane_record = &plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID];
-  plane_record->Blocks[block_address.BlockID].Has_ongoing_gc_wl = true;
+  auto& block_record = Get_plane_bookkeeping_entry(block_address).Blocks[block_address.BlockID];
+  block_record.Has_ongoing_gc_wl = true;
 }
 
 void Flash_Block_Manager_Base::program_transaction_issued(const NVM::FlashMemory::Physical_Page_Address& page_address)
@@ -140,8 +134,8 @@ bool Flash_Block_Manager_Base::Is_having_ongoing_program(const NVM::FlashMemory:
 
 void Flash_Block_Manager_Base::GC_WL_finished(const NVM::FlashMemory::Physical_Page_Address& block_address)
 {
-  PlaneBookKeepingType *plane_record = &plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID];
-  plane_record->Blocks[block_address.BlockID].Has_ongoing_gc_wl = false;
+  auto& block_record = Get_plane_bookkeeping_entry(block_address).Blocks[block_address.BlockID];
+  block_record.Has_ongoing_gc_wl = false;
 }
 
 bool Flash_Block_Manager_Base::Is_page_valid(const Block_Pool_Slot_Type& block, flash_page_ID_type page_id)

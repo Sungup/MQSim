@@ -3,19 +3,24 @@
 
 #include <cstdint>
 
+#include "InlineTools.h"
+
 // TODO Remove static features
 
 namespace Utils
 {
   class CMRRandomGenerator
   {
-    public:
-      CMRRandomGenerator(int64_t n, int e);
-      void Advance(int64_t n, int e);
-      double NextDouble();
     private:
+      static constexpr double norm = 2.328306549295728e-10;
+      static constexpr double m1 = 4294967087.0;
+      static constexpr double m2 = 4294944443.0;
+      static constexpr double a12 = 1403580.0;
+      static constexpr double a13 = -810728.0;
+      static constexpr double a21 = 527612.0;
+      static constexpr double a23 = -1370589.0;
+
       double s[2][3];
-      static const double norm, m1, m2, a12, a13, a21, a23;
       static const double a[2][3][3];
       static const double m[2];
       static const double init_s[2][3];
@@ -105,6 +110,69 @@ namespace Utils
         }
         m_copy(d, c);
       }
+
+  public:
+    force_inline
+    CMRRandomGenerator(int64_t n, int e)
+      : s { {0, }, }
+    {
+      for (int i = 0; i <= 1; i++)
+        for (int j = 0; j <= 2; j++)
+          s[i][j] = init_s[i][j];
+      Advance(n, e);
+    }
+
+    force_inline void Advance(int64_t n, int e)
+    {
+      int64_t B[2][3][3];
+
+      int64_t S[2][3];
+      int64_t M[2];
+
+      for (int i = 0; i <= 1; i++)
+      {
+        m_ftoi(a[i], B[i], m[i]);
+        v_ftoi(s[i], S[i], m[i]);
+        M[i] = (int64_t)(m[i]);
+      }
+
+      while (e-- != 0)
+      {
+        for (int i = 0; i <= 1; i++)
+          mm_mul(B[i], B[i], B[i], M[i]);
+      }
+
+      while (n != 0)
+      {
+        if ((n & 0x1U) != 0)
+          for (int i = 0; i <= 1; i++)
+            mv_mul(B[i], S[i], S[i], M[i]);
+        n >>= 1U;
+        if (n != 0)
+          for (int i = 0; i <= 1; i++)
+            mm_mul(B[i], B[i], B[i], M[i]);
+      }
+
+      for (int i = 0; i <= 1; i++)
+        v_itof(S[i], s[i], M[i]);
+    }
+
+    force_inline double NextDouble()
+    {
+      double p1 = mod(a12 * s[0][1] + a13 * s[0][0], m1);
+      s[0][0] = s[0][1];
+      s[0][1] = s[0][2];
+      s[0][2] = p1;
+      double p2 = mod(a21 * s[1][2] + a23 * s[1][0], m2);
+      s[1][0] = s[1][1];
+      s[1][1] = s[1][2];
+      s[1][2] = p2;
+      double p = p1 - p2;
+      if (p < 0.0)
+        p += m1;
+      return (p + 1) * norm;
+    }
+
   };
 }
 

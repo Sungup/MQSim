@@ -10,10 +10,10 @@
 
 namespace SSD_Components
 {
-  enum class WriteExecutionModeType { SIMPLE, COPYBACK };
-
   class NvmTransactionFlashRD;
   class NvmTransactionFlashER;
+
+  enum class WriteExecutionModeType { SIMPLE, COPYBACK };
 
   class NvmTransactionFlashWR : public NvmTransactionFlash
   {

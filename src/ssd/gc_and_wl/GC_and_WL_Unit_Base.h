@@ -110,8 +110,8 @@ namespace SSD_Components
 
     // Checks if block_address is a safe candidate for gc execution, i.e., 1) it
     // is not a write frontier, and 2) there is no ongoing program operation
-    bool is_safe_gc_wl_candidate(const PlaneBookKeepingType* pbke,
-                                 const flash_block_ID_type gc_wl_candidate_block_id);
+    bool is_safe_gc_wl_candidate(const PlaneBookKeepingType& pbke,
+                                 flash_block_ID_type gc_wl_candidate_block_id);
     bool check_static_wl_required(const NVM::FlashMemory::Physical_Page_Address& plane_address);
     void run_static_wearleveling(const NVM::FlashMemory::Physical_Page_Address& plane_address);
 

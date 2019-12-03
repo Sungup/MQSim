@@ -154,7 +154,7 @@ namespace SSD_Components {
   {
     Free_block_pool.insert(
       FreeBlockPoolPair(consider_dynamic_wl ? block.Erase_count : 0, &block)
-                          );
+    );
   }
 
 }

@@ -52,8 +52,8 @@ inline bool Cached_Mapping_Table::Exists(const stream_id_type streamID, const LP
   }
   if (it->second->Status != CMTEntryStatus::VALID)
   {
-    return false;
     PRINT_DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", MISS")
+    return false;
   }
   PRINT_DEBUG("Address mapping table query - Stream ID:" << streamID << ", LPA:" << lpa << ", HIT")
     return true;
@@ -468,7 +468,8 @@ Address_Mapping_Unit_Page_Level::allocate_page_in_plane_for_translation_write(Nv
   AddressMappingDomain& domain = domains[transaction->Stream_id];
 
   MPPN_type old_MPPN = domain.GlobalTranslationDirectory[mvpn].MPPN;
-  if (old_MPPN == NO_MPPN)  /*this is the first access to the mvpn*/
+  /*this is the first access to the mvpn*/
+  if (old_MPPN == NO_MPPN)
   {
     if (is_for_gc)
     PRINT_ERROR("Unexpected mapping table status in allocate_page_in_plane_for_translation_write for a GC/WL write!")
