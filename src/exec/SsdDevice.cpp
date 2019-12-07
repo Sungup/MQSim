@@ -118,7 +118,7 @@ SsdDevice::SsdDevice(const DeviceParameterSet& params,
 LPA_type
 SsdDevice::__convert_lha_to_lpa(LHA_type lha) const
 {
-  return __ftl.Convert_host_logical_address_to_device_address(lha);
+  return __ftl.convert_lha_to_lpa(lha);
 }
 
 page_status_type

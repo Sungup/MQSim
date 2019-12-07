@@ -117,6 +117,10 @@ namespace Utils
 
   public:
     double io_rate(sim_time_type avg_rd_lat, sim_time_type avg_wr_lat) const;
+
+    Utils::Address_Distribution_Type address_distribution() const;
+    void min_max_lha(LHA_type& min, LHA_type& max) const;
+    LPA_type steady_state_pages(LPA_type logical_pages) const;
   };
 
   force_inline double
@@ -138,6 +142,38 @@ namespace Utils
     }
 
     return 1.0 / avg_arrival_time * NSEC_TO_SEC_COEFF * avg_request_sectors;
+  }
+
+  force_inline Utils::Address_Distribution_Type
+  Workload_Statistics::address_distribution() const
+  {
+    if ((Type == Utils::Workload_Type::SYNTHETIC) &&
+        (Address_distribution_type == Utils::Address_Distribution_Type::RANDOM_HOTCOLD) &&
+        (Ratio_of_hot_addresses_to_whole_working_set > 0.3))
+      return Utils::Address_Distribution_Type::RANDOM_UNIFORM;
+    else
+      return Address_distribution_type;
+  }
+
+  force_inline void
+  Workload_Statistics::min_max_lha(LHA_type& min, LHA_type& max) const
+  {
+    min = Min_LHA;
+    max = Max_LHA - 1;
+
+    if (generate_aligned_addresses) {
+      if (min % alignment_value != 0)
+        min += alignment_value - (min % alignment_value);
+
+      if (max % alignment_value != 0)
+        max -= min % alignment_value;
+    }
+  }
+
+  force_inline LPA_type
+  Workload_Statistics::steady_state_pages(LPA_type logical_pages) const
+  {
+    return LPA_type(Initial_occupancy_ratio * logical_pages);
   }
 
   typedef std::vector<Workload_Statistics>     WorkloadStatsList;

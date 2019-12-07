@@ -46,7 +46,6 @@ namespace SSD_Components
 
     /// LPA set generator
     uint32_t __gen_synthetic_lpa_set(Utils::Workload_Statistics& stat,
-                                     Utils::Address_Distribution_Type& decision_dist_type,
                                      std::map<LPA_type, page_status_type>& lpa_set,
                                      std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram,
                                      uint32_t& hot_region_last_index_in_histogram);
@@ -57,7 +56,6 @@ namespace SSD_Components
                                  uint32_t& hot_region_last_index_in_histogram);
 
     uint32_t __gen_lpa_set(Utils::Workload_Statistics& stat,
-                           Utils::Address_Distribution_Type& decision_dist_type,
                            std::map<LPA_type, page_status_type>& lpa_set,
                            std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram,
                            uint32_t& hot_region_last_index_in_histogram);
@@ -88,7 +86,6 @@ namespace SSD_Components
                                    std::vector<double>& steady_state_probability) const;
 
     void __make_steady_state_probability(const Utils::Workload_Statistics& stats,
-                                         Utils::Address_Distribution_Type decision_dist_type,
                                          std::vector<double>& steady_state_probability);
 
     /// Warm-up related functions
@@ -113,7 +110,6 @@ namespace SSD_Components
     void __warm_up(const Utils::Workload_Statistics& stat,
                    uint32_t total_workloads,
                    double overall_rate,
-                   Utils::Address_Distribution_Type decision_dist_type,
                    uint32_t hot_region_last_index_in_histogram,
                    const std::map<LPA_type, page_status_type>& lpa_set,
                    std::multimap<int, LPA_type, std::greater<int>>& trace_lpas_sorted_histogram);
@@ -133,7 +129,7 @@ namespace SSD_Components
 
     void Perform_precondition(Utils::WorkloadStatsList& workload_stats);
     void Validate_simulation_config();
-    LPA_type Convert_host_logical_address_to_device_address(LHA_type lha) const;
+    LPA_type convert_lha_to_lpa(LHA_type lha) const;
     page_status_type Find_NVM_subunit_access_bitmap(LHA_type lha) const;
 
     void Report_results_in_XML(std::string name_prefix, Utils::XmlWriter& xmlwriter);

@@ -26,7 +26,7 @@ namespace SSD_Components
 
     void Validate_simulation_config() override;
 
-    virtual LPA_type Convert_host_logical_address_to_device_address(LHA_type lha) const = 0;
+    virtual LPA_type convert_lha_to_lpa(LHA_type lha) const = 0;
 
     // Returns a bitstring with only one bit in it and determines which subunit
     // (e.g., sub-page in flash memory) is accessed with the target NVM unit
